@@ -1,12 +1,12 @@
 # dotfiles
 
 
-## TL;DR
+## How to use it
 
-- See the neovim's procedure, and dein's one
-```
-$ 
-```
+- Install neovim, dein
+  - [neovim/neovim: Vim-fork focused on extensibility and usability](https://github.com/neovim/neovim)
+  - [Shougo/dein.vim: Dark powered Vim/Neovim plugin manager](https://github.com/Shougo/dein.vim)
+
 
 ## Technology used
 
