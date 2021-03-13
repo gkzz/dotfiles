@@ -49,9 +49,9 @@ filetype plugin indent on
 syntax enable
 
 " If you want to install not installed plugins on startup.
-if dein#check_install()
-  call dein#install()
-endif
+"if dein#check_install()
+"  call dein#install()
+"endif
 
 "End dein Scripts-------------------------
 
@@ -59,8 +59,12 @@ endif
 "  au! BufRead,BufNewFile *.tsx setfiletype typescript
 "augroup END
 
-"[Vimカスタマイズ入門
+"Vimカスタマイズ入門
 "https://www.slideshare.net/mollifier/vim-237039453/mollifier/vim-237039453
 set laststatus=2
 set statusline=%F%m%=%l/%L
 
+" If you want to install not installed plugins on startup.
+if dein#check_install()
+  call dein#install()
+endif
