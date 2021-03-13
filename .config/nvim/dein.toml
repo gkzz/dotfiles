@@ -15,67 +15,69 @@ hook_add = '''
   source ~/.config/nvim/vim-plug/deoplete.vim
 '''
 
-#[[plugins]]
-#repo ="kristijanhusak/defx-git"
-#hook_add = '''
-#  source ~/.config/nvim/vim-plug/defx-git.vim
-#'''
+[[plugins]]
+repo ="kristijanhusak/defx-git"
+hook_add = '''
+  source ~/.config/nvim/vim-plug/defx-git.vim
+'''
 
-#[[plugins]]
-#repo ="kristijanhusak/defx-icons"
+[[plugins]]
+repo ="kristijanhusak/defx-icons"
 
-#[[plugins]]
-#repo = 'Shougo/defx.nvim'
-#depends = ['defx-git', 'defx-icons']
-#hook_add = '''
-#  source ~/.config/nvim/vim-plug/defx.vim
-#'''
+[[plugins]]
+repo = 'Shougo/defx.nvim'
+depends = ['defx-git', 'defx-icons']
+hook_add = '''
+  source ~/.config/nvim/vim-plug/defx.vim
+'''
 
-#[[plugins]]
-#repo = 'tpope/vim-endwise'
+[[plugins]]
+repo = 'tpope/vim-endwise'
 
-#[[plugins]]
-#repo = 'Townk/vim-autoclose'
+[[plugins]]
+repo = 'Townk/vim-autoclose'
 
-#[[plugins]]
-#repo = 'joshdick/onedark.vim'
-#hook_add = '''
-#  source ~/.config/nvim/vim-plug/onedark.vim
-#'''
+[[plugins]]
+repo = 'joshdick/onedark.vim'
+hook_add = '''
+  source ~/.config/nvim/vim-plug/onedark.vim
+'''
 
-#[[plugins]]
-#repo = 'airblade/vim-gitgutter'
-#hook_add = '''
-#  source ~/.config/nvim/vim-plug/gitgutter.vim
-#'''
+[[plugins]]
+repo = 'airblade/vim-gitgutter'
+hook_add = '''
+  source ~/.config/nvim/vim-plug/gitgutter.vim
+'''
 
-#[[plugins]]
-#repo = 'tpope/vim-fugitive'
-#hook_add = '''
-#  source ~/.config/nvim/vim-plug/fugitive.vim
-#'''
+[[plugins]]
+repo = 'tpope/vim-fugitive'
+hook_add = '''
+  source ~/.config/nvim/vim-plug/fugitive.vim
+'''
 
 
-#[[plugins]]
-#repo = 'osyo-manga/vim-anzu'
-#hook_add = '''
-#  source ~/.config/nvim/vim-plug/anzu.vim
-#'''
+[[plugins]]
+repo = 'osyo-manga/vim-anzu'
+hook_add = '''
+  source ~/.config/nvim/vim-plug/anzu.vim
+'''
 
-#[[plugins]]
-#repo = 'prabirshrestha/vim-lsp'
-#hook_add = '''
-#  source ~/.config/nvim/vim-plug/vim-lsp.vim
-#'''
+[[plugins]]
+repo = 'prabirshrestha/vim-lsp'
+hook_add = '''
+  source ~/.config/nvim/vim-plug/vim-lsp.vim
+'''
 
-#[[plugins]]
-#repo = 'mattn/vim-lsp-settings'
+[[plugins]]
+repo = 'mattn/vim-lsp-settings'
 
-#[[plugins]]
-#repo = 'prabirshrestha/asyncomplete.vim'
+[[plugins]]
+repo = 'prabirshrestha/asyncomplete.vim'
 
-#[[plugins]]
-#repo = 'prabirshrestha/asyncomplete-lsp.vim'
+[[plugins]]
+repo = 'prabirshrestha/asyncomplete-lsp.vim'
 
-#[[plugins]]
-#repo = 'lighttiger2505/deoplete-vim-lsp'
+[[plugins]]
+repo = 'lighttiger2505/deoplete-vim-lsp'
+
+
