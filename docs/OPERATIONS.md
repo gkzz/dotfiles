@@ -4,7 +4,7 @@
 
 | 操作 | dry-run | `--apply` |
 | --- | --- | --- |
-| `install` | デフォルト。導入内容を表示する | package、tool、managed symlink を適用する |
+| `install` | デフォルト。インストール内容を表示する | package、tool、managed symlink を適用する |
 | `uninstall` | デフォルト。削除対象を表示する | managed symlink を削除する |
 | `check` | 対象外 | 対象外。現在の状態を確認するだけ |
 
@@ -28,7 +28,7 @@ bin/dotfiles uninstall [--dry-run|--apply]
 
 最初に `make install` で内容を確認し、問題がなければ `make install-apply` を実行します。mise config、mise lock、Brewfile を変更した場合も同じ手順で反映します。
 
-mise が未導入の場合、apply 時には `curl` と SHA-256 検証コマンド、ネットワーク接続が必要です。repository に固定した version と checksum を使って mise を導入します。
+mise がインストールされていない場合、apply 時には `curl`、SHA-256 checksumを照合できるコマンド、ネットワーク接続が必要です。repository に固定した version と checksum を使って mise をインストールします。
 
 既存の regular file または symlink と競合した場合は停止します。置き換える場合は `--force --dry-run` で対象を確認してから `--force --apply` を実行します。directory と特殊ファイルは置き換えません。
 

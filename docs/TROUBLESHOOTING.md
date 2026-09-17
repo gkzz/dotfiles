@@ -37,7 +37,7 @@ bin/dotfiles install --dry-run
 mise version
 ```
 
-mise がなければ、install は repository に固定した mise release asset の SHA-256 を検証して導入します。既存 mise は自動更新しません。`curl`、SHA-256 検証、ネットワーク、version、config、lock に関する mise のエラーを確認し、必要なら対応版を導入してください。
+mise がなければ、install は repository に固定した mise release asset の SHA-256 checksumを照合してインストールします。既存 mise は自動更新しません。`curl`、SHA-256 checksumの照合、ネットワーク、version、config、lock に関する mise のエラーを確認し、必要なら対応版をインストールしてください。
 
 ## Homebrew が利用できない
 

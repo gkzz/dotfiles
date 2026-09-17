@@ -64,7 +64,7 @@ install は Homebrew Bundle、mise、managed symlink をまとめて適用しま
 
 machine-local な Git 設定は `~/.gitconfig.local`、shell 設定は `~/.bashrc.local` に置きます。
 
-## 補助操作と検証
+## 補助操作とテスト
 
 Git Credential Manager は lifecycle 外の補助操作です。
 
@@ -73,5 +73,7 @@ make gcm
 make gcm-apply
 make validate
 ```
+
+`make validate` は、シェルスクリプトの構文チェックと lifecycle テストを実行します。
 
 詳細は [docs/](./docs/) を参照してください。
