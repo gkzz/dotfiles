@@ -1,0 +1,202 @@
+name: Validate
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - .github/workflows/*.yml
+      - .github/actions/**
+      - .config/mise/config.toml
+      - .config/mise/mise.lock
+      - Brewfile
+      - bin/**
+      - Makefile
+      - setup/*.env
+      - setup/*.bash
+      - setup/*.sh
+      - tests/*.sh
+      - bash/*.bash
+      - .bashrc
+      - .bash_profile
+      - .gitconfig
+      - README.md
+      - docs/**
+  pull_request:
+    paths:
+      - .github/workflows/*.yml
+      - .github/actions/**
+      - .config/mise/config.toml
+      - .config/mise/mise.lock
+      - Brewfile
+      - bin/**
+      - Makefile
+      - setup/*.env
+      - setup/*.bash
+      - setup/*.sh
+      - tests/*.sh
+      - bash/*.bash
+      - .bashrc
+      - .bash_profile
+      - .gitconfig
+      - README.md
+      - docs/**
+  workflow_dispatch:
+    inputs:
+      apply_mise:
+        description: "一時 HOME で install/uninstall と mise tool の保持を検証する"
+        required: false
+        default: false
+        type: boolean
+
+permissions:
+  contents: read
+
+jobs:
+  workflow-lint:
+    name: Workflow syntax lint
+    runs-on: ubuntu-24.04
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Run actionlint on workflow files
+        uses: docker://rhysd/actionlint:1.7.12@sha256:b1934ee5f1c509618f2508e6eb47ee0d3520686341fec936f3b79331f9315667
+        with:
+          args: -color
+
+  shellcheck:
+    name: Shell script lint
+    runs-on: ubuntu-24.04
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Run ShellCheck on dotfile scripts
+        # https://github.com/koalaman/shellcheck/releases/tag/v0.11.0
+        # tag: b12c2a6a0834a5b8c12b1c0eb36704f698de5bac
+        # commit: aac0823e6b58f8a499e856e93738082691cbf212
+        run: |
+          docker run --rm -v "$PWD:/workspace:ro" -w /workspace koalaman/shellcheck:v0.11.0@sha256:61862eba1fcf09a484ebcc6feea46f1782532571a34ed51fedf90dd25f925a8d \
+            --shell=bash \
+            --exclude=SC1090,SC1091 \
+            bin/dotfiles \
+            setup/lib.bash \
+            setup/context.bash \
+            setup/lifecycle.bash \
+            setup/plan.bash \
+            setup/packages.bash \
+            setup/resources.bash \
+            setup/homebrew-install.sh \
+            setup/gcm.sh \
+            setup/mise-install.sh \
+            tests/*.sh \
+            bash/*.bash \
+            .bashrc \
+            .bash_profile
+
+  dotfiles-dry-run:
+    name: Dotfiles script dry-run
+    runs-on: ubuntu-24.04
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Verify install and uninstall help output
+        run: |
+          make help
+          ./bin/dotfiles --help
+          ./setup/gcm.sh --help
+          ./setup/mise-install.sh --help
+
+      - name: Verify setup contracts
+        run: make validate
+
+      - name: Dry-run mise bootstrap
+        run: ./setup/mise-install.sh --dry-run
+
+  mise-isolation:
+    name: Mise config isolation
+    runs-on: ubuntu-24.04
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Install mise CLI
+        uses: ./.github/actions/setup-mise
+
+      - name: Print mise version
+        run: mise --version
+
+      - name: Reject caller and HOME mise configuration
+        run: ./tests/mise-isolation.sh
+
+  mise-managed-tool-apply:
+    name: Mise managed tool apply validation
+    runs-on: ubuntu-24.04
+    if: github.event_name == 'workflow_dispatch' && inputs.apply_mise
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Prepare test HOME directory
+        run: |
+          test_home="$RUNNER_TEMP/home"
+          mkdir -p "$test_home"
+          {
+            printf 'HOME=%s\n' "$test_home"
+            printf 'XDG_CONFIG_HOME=%s/.config\n' "$test_home"
+            printf 'XDG_STATE_HOME=%s/.local/state\n' "$test_home"
+          } >> "$GITHUB_ENV"
+
+      - name: Install mise CLI
+        uses: ./.github/actions/setup-mise
+        with:
+          cache-installs: "false"
+
+      - name: Apply install in temporary mise directories
+        run: ./bin/dotfiles install --skip-brew --apply
+
+      - name: Verify mise global config symlink was created
+        run: |
+          test -L "$HOME/.config/mise/config.toml"
+          test "$(readlink "$HOME/.config/mise/config.toml")" = "$PWD/.config/mise/config.toml"
+
+      - name: Apply uninstall in temporary mise directories
+        run: ./bin/dotfiles uninstall --apply
+
+      - name: Verify mise tools remain and the config symlink was removed
+        run: |
+          tools="$(awk '/^\[tools\]/{in_tools=1;next} /^\[/{in_tools=0} in_tools && /^[[:space:]]*[A-Za-z0-9_.-]+[[:space:]]*=/ {key=$1; gsub(/[[:space:]]/, "", key); print key}' .config/mise/config.toml)"
+          for tool in $tools; do
+            test -n "$(find "$MISE_DATA_DIR/installs/$tool" -mindepth 1 -maxdepth 1 -type d -print -quit)"
+          done
+          test ! -e "$HOME/.config/mise/config.toml"
+
+      - name: Apply install again after uninstall
+        run: ./bin/dotfiles install --skip-brew --apply
+
+      - name: Verify managed config symlink was restored
+        run: |
+          test -L "$HOME/.config/mise/config.toml"
+          test "$(readlink "$HOME/.config/mise/config.toml")" = "$PWD/.config/mise/config.toml"
+
+  portability:
+    name: Bash lifecycle portability (${{ matrix.os }})
+    strategy:
+      matrix:
+        os: [ubuntu-24.04, macos-15]
+    runs-on: ${{ matrix.os }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Run setup flow tests
+        run: |
+          ./tests/setup-flow.sh

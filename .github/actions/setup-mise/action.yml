@@ -1,0 +1,89 @@
+name: Setup mise
+description: Install the repository-pinned mise binary and expose mise paths.
+
+inputs:
+  cache-installs:
+    description: Cache mise-managed runtime installs.
+    required: false
+    default: "true"
+
+runs:
+  using: composite
+  steps:
+    - name: Load pinned mise version
+      id: mise-release
+      shell: bash
+      run: |
+        set -euo pipefail
+        . ./setup/mise.env
+        echo "version=$MISE_VERSION" >> "$GITHUB_OUTPUT"
+
+    - name: Resolve mise paths
+      id: mise-paths
+      shell: bash
+      run: |
+        set -euo pipefail
+
+        echo "data_dir=${MISE_DATA_DIR:-$PWD/.mise-ci/data}" >> "$GITHUB_OUTPUT"
+        echo "cache_dir=${MISE_CACHE_DIR:-$PWD/.mise-ci/cache}" >> "$GITHUB_OUTPUT"
+        echo "state_dir=${MISE_STATE_DIR:-$PWD/.mise-ci/state}" >> "$GITHUB_OUTPUT"
+        echo "config_dir=${MISE_CONFIG_DIR:-$PWD/.mise-ci/config}" >> "$GITHUB_OUTPUT"
+        echo "install_path=${MISE_INSTALL_PATH:-$PWD/.mise-ci/mise-bin/mise}" >> "$GITHUB_OUTPUT"
+
+    - name: Restore mise installs cache
+      id: mise-cache
+      if: inputs.cache-installs == 'true'
+      uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+      with:
+        path: ${{ steps.mise-paths.outputs.data_dir }}/installs
+        key: mise-installs-${{ runner.os }}-${{ runner.arch }}-${{ steps.mise-release.outputs.version }}-${{ hashFiles('.config/mise/config.toml', '.config/mise/mise.lock') }}
+
+    - name: Install mise CLI
+      shell: bash
+      run: |
+        set -euo pipefail
+
+        mise_data_dir="${{ steps.mise-paths.outputs.data_dir }}"
+        mise_cache_dir="${{ steps.mise-paths.outputs.cache_dir }}"
+        mise_state_dir="${{ steps.mise-paths.outputs.state_dir }}"
+        mise_config_dir="${{ steps.mise-paths.outputs.config_dir }}"
+        mise_install_path="${{ steps.mise-paths.outputs.install_path }}"
+
+        {
+          echo "MISE_DATA_DIR=$mise_data_dir"
+          echo "MISE_CACHE_DIR=$mise_cache_dir"
+          echo "MISE_STATE_DIR=$mise_state_dir"
+          echo "MISE_CONFIG_DIR=$mise_config_dir"
+          echo "MISE_INSTALL_PATH=$mise_install_path"
+        } >> "$GITHUB_ENV"
+
+        export MISE_DATA_DIR="$mise_data_dir"
+        export MISE_CACHE_DIR="$mise_cache_dir"
+        export MISE_STATE_DIR="$mise_state_dir"
+        export MISE_CONFIG_DIR="$mise_config_dir"
+        export MISE_INSTALL_PATH="$mise_install_path"
+
+        DOTFILES_MISE_BOOTSTRAP_TARGET="$MISE_INSTALL_PATH" \
+          ./setup/mise-install.sh --apply
+
+        installed_version="$("$MISE_INSTALL_PATH" version | head -n 1 | cut -d ' ' -f 1)"
+        if [ "$installed_version" != "${{ steps.mise-release.outputs.version }}" ]; then
+          echo "error: expected mise ${{ steps.mise-release.outputs.version }}, got ${installed_version:-unknown}" >&2
+          exit 1
+        fi
+
+        echo "$(dirname "$MISE_INSTALL_PATH")" >> "$GITHUB_PATH"
+        echo "$MISE_DATA_DIR/shims" >> "$GITHUB_PATH"
+
+        mise_cache_hit="disabled"
+        if [ "${{ inputs.cache-installs }}" = "true" ]; then
+          mise_cache_hit="${{ steps.mise-cache.outputs.cache-hit }}"
+          mise_cache_hit="${mise_cache_hit:-false}"
+        fi
+
+        {
+          echo "mise-version=${{ steps.mise-release.outputs.version }}"
+          echo "mise-cache-hit=$mise_cache_hit"
+          echo "MISE_INSTALL_PATH=$MISE_INSTALL_PATH"
+          echo "MISE_DATA_DIR=$MISE_DATA_DIR"
+        } >> "$GITHUB_STEP_SUMMARY"

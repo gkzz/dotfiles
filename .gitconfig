@@ -1,0 +1,11 @@
+[user]
+	name = gkzz
+[alias]
+	showsig = -c gpg.ssh.program=ssh-keygen show --show-signature
+[init]
+	defaultBranch = main
+[credential]
+	helper = manager
+	credentialStore = cache
+[include]
+	path = ~/.gitconfig.local

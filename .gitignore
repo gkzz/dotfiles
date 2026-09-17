@@ -1,0 +1,24 @@
+# general
+.
+..
+
+.DS_Store
+.svn
+*~
+.*.swp
+
+# .bashrc
+.bashrc.local
+
+# machine-local config and credentials
+.gitconfig.local
+.config/gh/hosts.yml
+.ssh/
+.aws/
+.azure/
+.docker/
+.kube/
+.terraform.d/
+
+# mise bootstrap generated runtime/cache
+.mise-ci/

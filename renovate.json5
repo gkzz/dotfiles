@@ -1,0 +1,11 @@
+{
+  $schema: "https://docs.renovatebot.com/renovate-schema.json",
+
+  extends: ["github>gkzz/renovate-config"],
+
+  mise: {
+    managerFilePatterns: [
+      "**/.config/mise/config.toml",
+    ],
+  },
+}

@@ -1,0 +1,52 @@
+min_version = "2026.8.6"
+
+[env]
+# The managed config is linked from $XDG_CONFIG_HOME/mise/config.toml. Resolve
+# that link instead of config_source: mise 2026.8 does not provide that template
+# variable while parsing [env].
+DOTFILES = "{{ [xdg_config_home, 'mise', 'config.toml'] | join_path | canonicalize | dirname | dirname | dirname }}"
+
+[tools]
+node = "24.19.0"
+python = "3.14.7"
+go = "1.27.0"
+java = "27.0.0"
+pnpm = "11.19.0"
+ghq = "1.10.1"
+peco = "0.6.0"
+direnv = "2.37.1"
+
+[task_config]
+dir = "{{cwd}}"
+
+[tasks."dotfiles:install"]
+description = "dry-run dotfiles install"
+run = 'cd "$DOTFILES" && make install'
+
+[tasks."dotfiles:install:apply"]
+description = "Apply dotfiles install"
+run = 'cd "$DOTFILES" && make install-apply'
+
+[tasks."dotfiles:uninstall"]
+description = "dry-run managed symlink removal"
+run = 'cd "$DOTFILES" && make uninstall'
+
+[tasks."dotfiles:uninstall:apply"]
+description = "Remove managed symlinks"
+run = 'cd "$DOTFILES" && make uninstall-apply'
+
+[tasks."dotfiles:check"]
+description = "Check the installed lifecycle state"
+run = 'cd "$DOTFILES" && make check'
+
+[tasks."dotfiles:gcm"]
+description = "dry-run Git Credential Manager setup"
+run = 'cd "$DOTFILES" && ./setup/gcm.sh --dry-run'
+
+[tasks."dotfiles:gcm:apply"]
+description = "Configure Git Credential Manager"
+run = 'cd "$DOTFILES" && ./setup/gcm.sh --apply'
+
+[tasks."dotfiles:validate"]
+description = "Run local syntax and dry-run validation"
+run = 'cd "$DOTFILES" && make validate'

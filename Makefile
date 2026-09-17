@@ -1,0 +1,39 @@
+.DEFAULT_GOAL := help
+
+.PHONY: help install install-apply check uninstall uninstall-apply gcm gcm-apply validate
+
+help:
+	@printf '%s\n' 'Targets:'
+	@printf '  %-24s %s\n' 'make install' 'dry-run package, tool, and symlink convergence'
+	@printf '  %-24s %s\n' 'make install-apply' 'Apply package, tool, and symlink convergence'
+	@printf '  %-24s %s\n' 'make check' 'Check installed lifecycle state'
+	@printf '  %-24s %s\n' 'make uninstall' 'dry-run managed symlink removal'
+	@printf '  %-24s %s\n' 'make uninstall-apply' 'Remove managed symlinks'
+	@printf '  %-24s %s\n' 'make gcm' 'dry-run Git Credential Manager setup'
+	@printf '  %-24s %s\n' 'make gcm-apply' 'Configure Git Credential Manager'
+	@printf '  %-24s %s\n' 'make validate' 'Run syntax and lifecycle tests'
+
+install:
+	./bin/dotfiles install
+
+install-apply:
+	./bin/dotfiles install --apply
+
+check:
+	./bin/dotfiles check
+
+uninstall:
+	./bin/dotfiles uninstall
+
+uninstall-apply:
+	./bin/dotfiles uninstall --apply
+
+gcm:
+	./setup/gcm.sh --dry-run
+
+gcm-apply:
+	./setup/gcm.sh --apply
+
+validate:
+	bash -n bin/dotfiles setup/*.bash setup/*.sh tests/*.sh bash/*.bash .bashrc .bash_profile
+	./tests/setup-flow.sh
