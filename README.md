@@ -4,7 +4,7 @@ WSL2 を主環境とする Bash 環境用の dotfiles です。mise の開発ツ
 
 処理の流れと内部構成は [Architecture](docs/ARCHITECTURE.md) を参照してください。
 
-対応環境は Linux/WSL2（x86_64、arm64）、、Bash 3.2 以降です。zsh の起動ファイルは管理しません。
+対応環境は Linux/WSL2（x86_64、arm64）です。zsh の起動ファイルは管理しません。
 
 macOS も対応できるように目指しているところです。
 
