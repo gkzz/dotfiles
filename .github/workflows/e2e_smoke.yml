@@ -15,6 +15,16 @@ jobs:
       - name: Checkout
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
+      - name: Prepare test HOME directory
+        run: |
+          test_home="$RUNNER_TEMP/home"
+          mkdir -p "$test_home"
+          {
+            printf 'HOME=%s\n' "$test_home"
+            printf 'XDG_CONFIG_HOME=%s/.config\n' "$test_home"
+            printf 'XDG_STATE_HOME=%s/.local/state\n' "$test_home"
+          } >> "$GITHUB_ENV"
+
       - name: Verify lifecycle
         run: |
           if make check; then
