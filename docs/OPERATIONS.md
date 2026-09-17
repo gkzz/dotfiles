@@ -32,12 +32,14 @@ mise がインストールされていない場合、apply 時には `curl`、SH
 
 既存の regular file または symlink と競合した場合は停止します。置き換える場合は `--force --dry-run` で対象を確認してから `--force --apply` を実行します。directory と特殊ファイルは置き換えません。
 
-Homebrew を対象外にする場合は次を使います。
+Homebrew package をこの lifecycle の管理対象にしない場合や、Homebrew を利用できない環境で mise と managed symlink だけを適用したい場合は `--skip-brew` を使います。Homebrew の検出、bootstrap、Brewfile の適用を省略しますが、mise と managed symlink は通常どおり処理します。
 
 ```bash
 bin/dotfiles install --skip-brew
 bin/dotfiles install --skip-brew --apply
 ```
+
+たとえば E2E smoke では、Homebrew に依存せず lifecycle を確認するために `--skip-brew --apply` を使います。
 
 managed symlink の source file の内容だけを変更した場合、install の再実行は不要です。
 
@@ -45,7 +47,7 @@ managed symlink の source file の内容だけを変更した場合、install �
 
 `make check` は Bash、Git、Homebrew、mise、managed symlink を確認します。修復は行いません。
 
-Homebrew を対象外にする場合は `bin/dotfiles check --skip-brew` を使います。
+Homebrew package を管理対象にしない場合や Homebrew を利用できない環境では `bin/dotfiles check --skip-brew` を使います。この場合、Brewfile に記載した Homebrew package / cask などが現在の環境にすべて入っているかの確認を省略します。
 
 ## uninstall
 

@@ -19,11 +19,14 @@ flowchart TD
     preflight_i --> plan_i[install の処理を組み立てて表示]
     plan_i --> apply_i{apply?}
     apply_i -->|no| done_i[dry-run 完了]
-    apply_i -->|yes| packages[Homebrew / mise を適用]
+    apply_i -->|yes| skip_brew{--skip-brew?}
+    skip_brew -->|no| packages[Homebrew / mise を適用]
+    skip_brew -->|yes| mise_only[mise を適用]
     packages --> links[managed symlink を作成・置換]
+    mise_only --> links
     links --> unlock_i[lock を解放]
 
-    check --> check_env[Bash / Git / Homebrew / mise を確認]
+    check --> check_env[Bash / Git / mise と Homebrew 任意を確認]
     check_env --> check_links[managed symlink を確認]
     check_links --> done_c[結果を表示]
 
@@ -46,7 +49,7 @@ flowchart TD
 
 | ファイル | 担当 |
 | --- | --- |
-| `bin/dotfiles` | コマンドと option の受付 |
+| `bin/dotfiles` | コマンドと option のインタフェース |
 | `setup/lifecycle.bash` | install / check / uninstall、lock、preflight の進行管理 |
 | `setup/plan.bash` | dry-run と apply で共通する処理計画の保持と実行 |
 | `setup/packages.bash` | Homebrew / mise の確認、bootstrap、適用 |

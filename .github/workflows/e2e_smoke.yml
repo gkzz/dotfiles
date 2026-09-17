@@ -1,0 +1,89 @@
+name: E2E smoke
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  smoke:
+    name: Lifecycle smoke test
+    runs-on: ubuntu-24.04
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Verify lifecycle
+        run: |
+          if make check; then
+            echo "error: initial check unexpectedly succeeded" >&2
+            exit 1
+          fi
+
+          make install
+          make install-apply
+
+          make check
+
+          make uninstall
+          make uninstall-apply
+
+          if make check; then
+            echo "error: check unexpectedly succeeded after uninstall" >&2
+            exit 1
+          fi
+
+          make install
+          make install-apply
+
+  skip-brew-lifecycle-smoke:
+    name: Lifecycle smoke without Homebrew
+    runs-on: ubuntu-24.04
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Prepare test HOME directory
+        run: |
+          test_home="$RUNNER_TEMP/home"
+          mkdir -p "$test_home"
+          {
+            printf 'HOME=%s\n' "$test_home"
+            printf 'XDG_CONFIG_HOME=%s/.config\n' "$test_home"
+            printf 'XDG_STATE_HOME=%s/.local/state\n' "$test_home"
+          } >> "$GITHUB_ENV"
+
+      - name: Install mise CLI
+        uses: ./.github/actions/setup-mise
+        with:
+          cache-installs: "false"
+
+      - name: Apply install without Homebrew
+        run: ./bin/dotfiles install --skip-brew --apply
+
+      - name: Verify mise global config symlink was created
+        run: |
+          test -L "$HOME/.config/mise/config.toml"
+          test "$(readlink "$HOME/.config/mise/config.toml")" = "$PWD/.config/mise/config.toml"
+
+      - name: Apply uninstall
+        run: ./bin/dotfiles uninstall --apply
+
+      - name: Verify mise tools remain and the config symlink was removed
+        run: |
+          tools="$(awk '/^\[tools\]/{in_tools=1;next} /^\[/{in_tools=0} in_tools && /^[[:space:]]*[A-Za-z0-9_.-]+[[:space:]]*=/ {key=$1; gsub(/[[:space:]]/, "", key); print key}' .config/mise/config.toml)"
+          for tool in $tools; do
+            test -n "$(find "$MISE_DATA_DIR/installs/$tool" -mindepth 1 -maxdepth 1 -type d -print -quit)"
+          done
+          test ! -e "$HOME/.config/mise/config.toml"
+
+      - name: Apply install again without Homebrew
+        run: ./bin/dotfiles install --skip-brew --apply
+
+      - name: Verify managed config symlink was restored
+        run: |
+          test -L "$HOME/.config/mise/config.toml"
+          test "$(readlink "$HOME/.config/mise/config.toml")" = "$PWD/.config/mise/config.toml"
