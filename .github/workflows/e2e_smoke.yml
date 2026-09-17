@@ -47,3 +47,4 @@ jobs:
 
           make install
           make install-apply
+          make check
