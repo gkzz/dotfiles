@@ -56,7 +56,7 @@ flowchart TD
 
 設定の解析や package/tool の状態確認には、それぞれの公式コマンドを使います。dotfiles 側では lifecycle と symlink の処理だけを管理します。
 
-mise が PATH にない場合は、`setup/mise-install.sh` が repository に固定した mise version と platform ごとの SHA-256 で公式 release asset を検証して導入します。
+mise が PATH にない場合は、`setup/mise-install.sh` が repository に固定した mise version と platform ごとの SHA-256 checksumを照合して、公式 release asset をインストールします。
 
 ## 管理対象
 

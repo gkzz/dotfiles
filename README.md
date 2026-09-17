@@ -4,7 +4,7 @@ WSL2 を主環境とする Bash 環境用の dotfiles です。mise の開発ツ
 
 処理の流れと内部構成は [Architecture](docs/ARCHITECTURE.md) を参照してください。
 
-対応環境は Linux/WSL2（x86_64、arm64）、、Bash 3.2 以降です。zsh の起動ファイルは管理しません。
+対応環境は Linux/WSL2（x86_64、arm64）です。zsh の起動ファイルは管理しません。
 
 macOS も対応できるように目指しているところです。
 
@@ -64,7 +64,7 @@ install は Homebrew Bundle、mise、managed symlink をまとめて適用しま
 
 machine-local な Git 設定は `~/.gitconfig.local`、shell 設定は `~/.bashrc.local` に置きます。
 
-## 補助操作と検証
+## 補助操作とテスト
 
 Git Credential Manager は lifecycle 外の補助操作です。
 
@@ -73,5 +73,7 @@ make gcm
 make gcm-apply
 make validate
 ```
+
+`make validate` は、シェルスクリプトの構文チェックと lifecycle テストを実行します。
 
 詳細は [docs/](./docs/) を参照してください。
