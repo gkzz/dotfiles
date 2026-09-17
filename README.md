@@ -28,6 +28,17 @@ bin/dotfiles check [--skip-brew]
 bin/dotfiles uninstall [--dry-run|--apply]
 ```
 
+### OS パッケージの更新
+
+WSL の Bash を含む OS パッケージは、このリポジトリでは管理しません。Ubuntu の通常のメンテナンスとして更新してください。
+
+```bash
+sudo apt update
+sudo apt upgrade
+```
+
+`install` と `install-apply` は `apt` や `sudo` を実行しません。
+
 ### 操作と確認の関係
 
 | 操作 | 役割 | dry-run | `--apply` |
