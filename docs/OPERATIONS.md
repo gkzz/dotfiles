@@ -39,7 +39,7 @@ bin/dotfiles install --skip-brew
 bin/dotfiles install --skip-brew --apply
 ```
 
-たとえば E2E smoke では、Homebrew に依存せず lifecycle を確認するために `--skip-brew --apply` を使います。
+たとえば E2E smoke では、Homebrew に依存せず lifecycle を確認するために `bin/dotfiles install --skip-brew --apply` を明示的に実行します。
 
 managed symlink の source file の内容だけを変更した場合、install の再実行は不要です。
 
