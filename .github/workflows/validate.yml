@@ -6,12 +6,6 @@ on:
       - main
   pull_request:
   workflow_dispatch:
-    inputs:
-      apply_mise:
-        description: "一時 HOME で install/uninstall と mise tool の保持を検証する"
-        required: false
-        default: false
-        type: boolean
 
 permissions:
   contents: read
@@ -76,7 +70,7 @@ jobs:
           ./setup/gcm.sh --help
           ./setup/mise-install.sh --help
 
-      - name: Verify setup contracts
+      - name: Run script validation and lifecycle tests
         run: make validate
 
       - name: Dry-run mise bootstrap
@@ -98,57 +92,6 @@ jobs:
 
       - name: Reject caller and HOME mise configuration
         run: ./tests/mise-isolation.sh
-
-  mise-managed-tool-apply:
-    name: Mise managed tool apply validation
-    runs-on: ubuntu-24.04
-    if: github.event_name == 'workflow_dispatch' && inputs.apply_mise
-
-    steps:
-      - name: Checkout
-        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-
-      - name: Prepare test HOME directory
-        run: |
-          test_home="$RUNNER_TEMP/home"
-          mkdir -p "$test_home"
-          {
-            printf 'HOME=%s\n' "$test_home"
-            printf 'XDG_CONFIG_HOME=%s/.config\n' "$test_home"
-            printf 'XDG_STATE_HOME=%s/.local/state\n' "$test_home"
-          } >> "$GITHUB_ENV"
-
-      - name: Install mise CLI
-        uses: ./.github/actions/setup-mise
-        with:
-          cache-installs: "false"
-
-      - name: Apply install in temporary mise directories
-        run: ./bin/dotfiles install --skip-brew --apply
-
-      - name: Verify mise global config symlink was created
-        run: |
-          test -L "$HOME/.config/mise/config.toml"
-          test "$(readlink "$HOME/.config/mise/config.toml")" = "$PWD/.config/mise/config.toml"
-
-      - name: Apply uninstall in temporary mise directories
-        run: ./bin/dotfiles uninstall --apply
-
-      - name: Verify mise tools remain and the config symlink was removed
-        run: |
-          tools="$(awk '/^\[tools\]/{in_tools=1;next} /^\[/{in_tools=0} in_tools && /^[[:space:]]*[A-Za-z0-9_.-]+[[:space:]]*=/ {key=$1; gsub(/[[:space:]]/, "", key); print key}' .config/mise/config.toml)"
-          for tool in $tools; do
-            test -n "$(find "$MISE_DATA_DIR/installs/$tool" -mindepth 1 -maxdepth 1 -type d -print -quit)"
-          done
-          test ! -e "$HOME/.config/mise/config.toml"
-
-      - name: Apply install again after uninstall
-        run: ./bin/dotfiles install --skip-brew --apply
-
-      - name: Verify managed config symlink was restored
-        run: |
-          test -L "$HOME/.config/mise/config.toml"
-          test "$(readlink "$HOME/.config/mise/config.toml")" = "$PWD/.config/mise/config.toml"
 
   portability:
     name: Bash lifecycle portability (${{ matrix.os }})

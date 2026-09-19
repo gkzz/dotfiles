@@ -1,0 +1,55 @@
+name: E2E smoke
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  smoke:
+    name: Lifecycle smoke (Homebrew disabled)
+    runs-on: ubuntu-24.04
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Prepare test HOME directory
+        run: |
+          test_home="$RUNNER_TEMP/home"
+          mkdir -p "$test_home"
+          {
+            printf 'HOME=%s\n' "$test_home"
+            printf 'XDG_CONFIG_HOME=%s/.config\n' "$test_home"
+            printf 'XDG_STATE_HOME=%s/.local/state\n' "$test_home"
+          } >> "$GITHUB_ENV"
+
+      - name: Verify lifecycle
+        run: |
+          test ! -e "$HOME/.bashrc"
+          test ! -e "$HOME/.bash_profile"
+          test ! -e "$HOME/.gitconfig"
+          test ! -e "$XDG_CONFIG_HOME/mise/config.toml"
+
+          ./bin/dotfiles install --skip-brew
+          ./bin/dotfiles install --skip-brew --apply
+
+          ./bin/dotfiles check --skip-brew
+
+          ./bin/dotfiles uninstall
+          ./bin/dotfiles uninstall --apply
+
+          test ! -e "$HOME/.bashrc"
+          test ! -e "$HOME/.bash_profile"
+          test ! -e "$HOME/.gitconfig"
+          test ! -e "$XDG_CONFIG_HOME/mise/config.toml"
+
+          tools="$(awk '/^\[tools\]/{in_tools=1;next} /^\[/{in_tools=0} in_tools && /^[[:space:]]*[A-Za-z0-9_.-]+[[:space:]]*=/ {key=$1; gsub(/[[:space:]]/, "", key); print key}' .config/mise/config.toml)"
+          for tool in $tools; do
+            test -n "$(find "$RUNNER_TEMP/mise-data/installs/$tool" -mindepth 1 -maxdepth 1 -type d -print -quit)"
+          done
+
+          ./bin/dotfiles install --skip-brew
+          ./bin/dotfiles install --skip-brew --apply
+          ./bin/dotfiles check --skip-brew
