@@ -46,7 +46,7 @@ jobs:
             setup/lifecycle.bash \
             setup/plan.bash \
             setup/packages.bash \
-            setup/resources.bash \
+            setup/symlinks.bash \
             setup/homebrew-install.sh \
             setup/gcm.sh \
             setup/mise-install.sh \

@@ -34,8 +34,7 @@ const backups = (home, name) =>
     .map((entry) => path.join(home, entry));
 
 describe("managed resources", () => {
-  it("reject malformed resource definitions before lifecycle work", (t) => {
-    const fixture = new TestFixture(t);
+  it("reject malformed resource definitions before lifecycle work", () => {
     const cases = [
       {
         name: "incomplete triple",
@@ -59,7 +58,8 @@ describe("managed resources", () => {
       },
       {
         name: "duplicate destination",
-        definition: "MANAGED_RESOURCES=(symlink source-a destination symlink source-b destination)",
+        definition:
+          "MANAGED_RESOURCES=(symlink source-a destination symlink source-b destination)",
         message: "destination is duplicated",
       },
     ];
