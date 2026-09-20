@@ -176,11 +176,20 @@ check_managed_links() {
   for ((index = 0; index < ${#MANAGED_SOURCES[@]}; index++)); do
     src="${MANAGED_SOURCES[$index]}"
     dst="${MANAGED_DESTINATIONS[$index]}"
-    if [ ! -L "$dst" ] || [ "$(readlink "$dst")" != "$src" ]; then
-      printf 'check failed: %s is not linked to %s\n' "$dst" "$src" >&2
-      # Consumed by lifecycle.bash after all checks finish.
-      # shellcheck disable=SC2034
-      CHECK_FAILED=true
+    if [ ! -r "$src" ]; then
+      continue
+    fi
+    if [ ! -e "$dst" ] && [ ! -L "$dst" ]; then
+      check_failure "managed symlink is missing: path=$dst expected=$src"
+    elif [ ! -L "$dst" ]; then
+      check_failure "managed destination is not a symlink: path=$dst expected=$src"
+    else
+      local actual
+      if ! actual="$(readlink "$dst")"; then
+        check_error "failed to read managed symlink target: path=$dst"
+      elif [ "$actual" != "$src" ]; then
+        check_failure "managed symlink target differs: path=$dst expected=$src actual=$actual"
+      fi
     fi
   done
 }
