@@ -1,10 +1,9 @@
-min_version = "2026.8.6"
+min_version = "2026.8.15"
 
 [env]
-# The managed config is linked from $XDG_CONFIG_HOME/mise/config.toml. Resolve
-# that link instead of config_source: mise 2026.8 does not provide that template
-# variable while parsing [env].
-DOTFILES = "{{ [xdg_config_home, 'mise', 'config.toml'] | join_path | canonicalize | dirname | dirname | dirname }}"
+# Resolve the repository from this config file so `mise install` works before
+# the managed global config symlink exists.
+DOTFILES = "{{ config_source | canonicalize | dirname | dirname | dirname }}"
 
 [tools]
 biome = "2.5.14"

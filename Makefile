@@ -11,7 +11,7 @@ help:
 	@printf '  %-24s %s\n' 'make uninstall-apply' 'Remove managed symlinks'
 	@printf '  %-24s %s\n' 'make gcm' 'dry-run Git Credential Manager setup'
 	@printf '  %-24s %s\n' 'make gcm-apply' 'Configure Git Credential Manager'
-	@printf '  %-24s %s\n' 'make validate' 'Run syntax, Biome, and lifecycle tests'
+	@printf '  %-24s %s\n' 'make validate' 'Run syntax checks, Biome, and lifecycle tests'
 
 install:
 	./bin/dotfiles install

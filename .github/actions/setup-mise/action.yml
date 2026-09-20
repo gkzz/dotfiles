@@ -97,10 +97,6 @@ runs:
       shell: bash
       run: |
         set -euo pipefail
-        # The repository config resolves this path while mise renders [env].
-        # Keep the path canonicalizable even on clean GitHub-hosted runners.
-        mkdir -p "${XDG_CONFIG_HOME:-$HOME/.config}/mise"
-        touch "${XDG_CONFIG_HOME:-$HOME/.config}/mise/config.toml"
         mise --cd "$GITHUB_WORKSPACE/.config/mise" install node biome
         mise --cd "$GITHUB_WORKSPACE/.config/mise" exec -- node --version
         mise --cd "$GITHUB_WORKSPACE/.config/mise" exec -- biome --version

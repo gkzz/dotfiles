@@ -77,6 +77,7 @@ make validate
 `make validate` は、シェルスクリプトの構文チェック、BiomeによるJavaScriptの検査、`node:test` によるlifecycleテストを実行します。実行には `mise` と、repository の mise 設定で固定された Node.js / Biome が必要です。必要なツールは次で導入・確認できます。
 
 ```bash
+./setup/mise-install.sh --apply
 mise --cd .config/mise install
 ```
 
