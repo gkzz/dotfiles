@@ -172,22 +172,31 @@ install_lifecycle() {
 
 check_lifecycle() {
   CHECK_FAILED=false
+  CHECK_MODE=true
   preflight_common validate_check_commands
   if [ "$PREFLIGHT_FAILED" = "true" ]; then
     CHECK_FAILED=true
   fi
 
-  check_managed_links
-  if ! "${skip_brew:-false}" && [ "${DOTFILES_SKIP_BREW:-}" != "1" ]; then
+  if [ "${CHECK_HAVE_READLINK:-true}" = true ]; then
+    check_managed_links
+  fi
+  if ! "${skip_brew:-false}" && [ "${DOTFILES_SKIP_BREW:-}" != "1" ] &&
+    [ -r "$DOTFILES/Brewfile" ]; then
     check_brew_bundle
   fi
-  if find_mise; then
-    PREFLIGHT_FAILED=false
-    validate_mise_compatibility
-    [ "$PREFLIGHT_FAILED" = "false" ] || CHECK_FAILED=true
+  if [ -r "$MISE_CONFIG_SOURCE" ] && [ -r "$MISE_LOCK_SOURCE" ] &&
+    [ "${CHECK_HAVE_CP:-true}" = true ] && [ "${CHECK_HAVE_MKDIR:-true}" = true ] &&
+    [ "${CHECK_HAVE_MKTEMP:-true}" = true ] && [ "${CHECK_HAVE_RM:-true}" = true ]; then
+    if find_mise; then
+      validate_mise_compatibility
+      check_mise_tools
+    else
+      check_error "mise is unavailable"
+    fi
   fi
-  check_mise_tools
 
+  CHECK_MODE=false
   [ "$CHECK_FAILED" = "false" ] || return 1
   log "check complete"
 }

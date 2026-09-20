@@ -31,22 +31,55 @@ preflight_error() {
   PREFLIGHT_FAILED=true
 }
 
+check_failure() {
+  printf 'check failed: %s\n' "$*" >&2
+  # Consumed by lifecycle.bash after all checks finish.
+  # shellcheck disable=SC2034
+  CHECK_FAILED=true
+}
+
+check_error() {
+  printf 'check error: %s\n' "$*" >&2
+  # Consumed by lifecycle.bash after all checks finish.
+  # shellcheck disable=SC2034
+  CHECK_FAILED=true
+}
+
+report_check_or_preflight() {
+  if [ "${CHECK_MODE:-false}" = true ]; then
+    check_failure "$*"
+  else
+    preflight_error "$*"
+  fi
+}
+
+report_check_error_or_preflight() {
+  if [ "${CHECK_MODE:-false}" = true ]; then
+    check_error "$*"
+  else
+    preflight_error "$*"
+  fi
+}
+
 validate_context() {
   case "$HOME$DOTFILES$CONFIG_HOME$DOTFILES_LOCK_DIR" in
-    *$'\t'*|*$'\n'*) preflight_error "HOME, repository, config, and lock paths must not contain tabs or newlines" ;;
+    *$'\t'*|*$'\n'*) report_check_error_or_preflight "HOME, repository, config, and lock paths must not contain tabs or newlines" ;;
   esac
-  case "$HOME" in /*) ;; *) preflight_error "HOME must be an absolute path: $HOME" ;; esac
-  case "$CONFIG_HOME" in /*) ;; *) preflight_error "XDG_CONFIG_HOME must resolve to an absolute path: $CONFIG_HOME" ;; esac
-  [ -d "$HOME" ] || preflight_error "HOME does not exist: $HOME"
-  [ -r "$HOME" ] || preflight_error "HOME is not readable: $HOME"
+  case "$HOME" in /*) ;; *) report_check_error_or_preflight "HOME must be an absolute path: $HOME" ;; esac
+  case "$CONFIG_HOME" in /*) ;; *) report_check_error_or_preflight "XDG_CONFIG_HOME must resolve to an absolute path: $CONFIG_HOME" ;; esac
+  [ -d "$HOME" ] || report_check_error_or_preflight "HOME does not exist: $HOME"
+  [ -r "$HOME" ] || report_check_error_or_preflight "HOME is not readable: $HOME"
 }
 
 validate_platform() {
-  case "$(uname -s)" in Linux|Darwin) ;; *) preflight_error "unsupported OS: $(uname -s)" ;; esac
-  case "$(uname -m)" in x86_64|amd64|aarch64|arm64) ;; *) preflight_error "unsupported architecture: $(uname -m)" ;; esac
+  if [ "${CHECK_MODE:-false}" = true ] && [ "${CHECK_HAVE_UNAME:-true}" != true ]; then
+    return
+  fi
+  case "$(uname -s)" in Linux|Darwin) ;; *) report_check_error_or_preflight "unsupported OS: $(uname -s)" ;; esac
+  case "$(uname -m)" in x86_64|amd64|aarch64|arm64) ;; *) report_check_error_or_preflight "unsupported architecture: $(uname -m)" ;; esac
   if [ "${BASH_VERSINFO[0]}" -lt 3 ] ||
     { [ "${BASH_VERSINFO[0]}" -eq 3 ] && [ "${BASH_VERSINFO[1]}" -lt 2 ]; }; then
-    preflight_error "Bash 3.2 or newer is required"
+    report_check_error_or_preflight "Bash 3.2 or newer is required"
   fi
 }
 
@@ -58,10 +91,31 @@ validate_install_commands() {
 }
 
 validate_check_commands() {
-  local command_name
-  for command_name in bash cp env git mkdir mktemp readlink rm uname; do
-    have_cmd "$command_name" || preflight_error "required command is missing: $command_name"
-  done
+  # Most flags are consumed by lifecycle.bash to skip dependent checks.
+  # shellcheck disable=SC2034
+  CHECK_HAVE_BASH=true
+  CHECK_HAVE_CP=true
+  CHECK_HAVE_GIT=true
+  CHECK_HAVE_MKDIR=true
+  CHECK_HAVE_MKTEMP=true
+  CHECK_HAVE_READLINK=true
+  CHECK_HAVE_RM=true
+  CHECK_HAVE_UNAME=true
+  have_cmd bash || { check_error "required command is missing: bash"; CHECK_HAVE_BASH=false; }
+  # Flags below are consumed by lifecycle.bash to skip dependent checks.
+  # shellcheck disable=SC2034
+  have_cmd cp || { check_error "required command is missing: cp"; CHECK_HAVE_CP=false; }
+  have_cmd env || check_error "required command is missing: env"
+  have_cmd git || { check_error "required command is missing: git"; CHECK_HAVE_GIT=false; }
+  # shellcheck disable=SC2034
+  have_cmd mkdir || { check_error "required command is missing: mkdir"; CHECK_HAVE_MKDIR=false; }
+  # shellcheck disable=SC2034
+  have_cmd mktemp || { check_error "required command is missing: mktemp"; CHECK_HAVE_MKTEMP=false; }
+  # shellcheck disable=SC2034
+  have_cmd readlink || { check_error "required command is missing: readlink"; CHECK_HAVE_READLINK=false; }
+  # shellcheck disable=SC2034
+  have_cmd rm || { check_error "required command is missing: rm"; CHECK_HAVE_RM=false; }
+  have_cmd uname || { check_error "required command is missing: uname"; CHECK_HAVE_UNAME=false; }
 }
 
 validate_uninstall_commands() {
@@ -72,16 +126,17 @@ validate_repository() {
   local path
   for path in "$DOTFILES/.bashrc" "$DOTFILES/.bash_profile" "$DOTFILES/.gitconfig" \
     "$DOTFILES/Brewfile" "$MISE_CONFIG_SOURCE" "$MISE_LOCK_SOURCE"; do
-    [ -r "$path" ] || preflight_error "required repository file is not readable: $path"
+    [ -r "$path" ] || report_check_or_preflight "required repository file is not readable: $path"
   done
-  if [ -r "$DOTFILES/.bashrc" ] && [ -r "$DOTFILES/.bash_profile" ]; then
+  if [ -r "$DOTFILES/.bashrc" ] && [ -r "$DOTFILES/.bash_profile" ] &&
+    [ "${CHECK_HAVE_BASH:-true}" = true ]; then
     bash -n "$DOTFILES/.bashrc" "$DOTFILES/.bash_profile" "$DOTFILES"/bash/*.bash ||
-      preflight_error "Bash configuration syntax is invalid"
+      report_check_or_preflight "Bash configuration syntax is invalid"
   fi
-  if [ -r "$DOTFILES/.gitconfig" ]; then
+  if [ -r "$DOTFILES/.gitconfig" ] && [ "${CHECK_HAVE_GIT:-true}" = true ]; then
     GIT_CONFIG_GLOBAL=/dev/null GIT_CONFIG_SYSTEM=/dev/null \
       git config --no-includes --file "$DOTFILES/.gitconfig" --list >/dev/null ||
-      preflight_error "Git configuration syntax is invalid: $DOTFILES/.gitconfig"
+      report_check_or_preflight "Git configuration syntax is invalid: $DOTFILES/.gitconfig"
   fi
 }
 

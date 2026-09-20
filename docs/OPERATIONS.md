@@ -45,7 +45,11 @@ managed symlink の source file の内容だけを変更した場合、install �
 
 ## check
 
-`make check` は Bash、Git、Homebrew、mise、managed symlink を確認します。修復は行いません。
+`make check` は Bash、Git、Homebrew、mise、managed symlink を確認します。修復や lifecycle lock の作成は行いません。
+
+mise の config、lock file、tool を確認するときは、一時ディレクトリに repository の設定をコピーして検査します。このディレクトリは検査の終了時に削除されます。削除できなかった場合は `check error:` を表示し、check は失敗します。
+
+`check failed:` は設定やインストール状態の不一致、`check error:` は検査に必要な処理を完了できなかったことを表します。どちらの場合も終了コードは `1` です。
 
 Homebrew package を管理対象にしない場合や Homebrew を利用できない環境では `bin/dotfiles check --skip-brew` を使います。この場合、Brewfile に記載した Homebrew package / cask などが現在の環境にすべて入っているかの確認を省略します。
 
