@@ -45,41 +45,27 @@ check_error() {
   CHECK_FAILED=true
 }
 
-report_check_or_preflight() {
-  if [ "${CHECK_MODE:-false}" = true ]; then
-    check_failure "$*"
-  else
-    preflight_error "$*"
-  fi
-}
-
-report_check_error_or_preflight() {
-  if [ "${CHECK_MODE:-false}" = true ]; then
-    check_error "$*"
-  else
-    preflight_error "$*"
-  fi
-}
-
 validate_context() {
+  local reporter="${1:-preflight_error}"
   case "$HOME$DOTFILES$CONFIG_HOME$DOTFILES_LOCK_DIR" in
-    *$'\t'*|*$'\n'*) report_check_error_or_preflight "HOME, repository, config, and lock paths must not contain tabs or newlines" ;;
+    *$'\t'*|*$'\n'*) "$reporter" "HOME, repository, config, and lock paths must not contain tabs or newlines" ;;
   esac
-  case "$HOME" in /*) ;; *) report_check_error_or_preflight "HOME must be an absolute path: $HOME" ;; esac
-  case "$CONFIG_HOME" in /*) ;; *) report_check_error_or_preflight "XDG_CONFIG_HOME must resolve to an absolute path: $CONFIG_HOME" ;; esac
-  [ -d "$HOME" ] || report_check_error_or_preflight "HOME does not exist: $HOME"
-  [ -r "$HOME" ] || report_check_error_or_preflight "HOME is not readable: $HOME"
+  case "$HOME" in /*) ;; *) "$reporter" "HOME must be an absolute path: $HOME" ;; esac
+  case "$CONFIG_HOME" in /*) ;; *) "$reporter" "XDG_CONFIG_HOME must resolve to an absolute path: $CONFIG_HOME" ;; esac
+  [ -d "$HOME" ] || "$reporter" "HOME does not exist: $HOME"
+  [ -r "$HOME" ] || "$reporter" "HOME is not readable: $HOME"
 }
 
 validate_platform() {
-  if [ "${CHECK_MODE:-false}" = true ] && [ "${CHECK_HAVE_UNAME:-true}" != true ]; then
+  local reporter="${1:-preflight_error}"
+  if [ "${CHECK_HAVE_UNAME:-true}" != true ]; then
     return
   fi
-  case "$(uname -s)" in Linux|Darwin) ;; *) report_check_error_or_preflight "unsupported OS: $(uname -s)" ;; esac
-  case "$(uname -m)" in x86_64|amd64|aarch64|arm64) ;; *) report_check_error_or_preflight "unsupported architecture: $(uname -m)" ;; esac
+  case "$(uname -s)" in Linux|Darwin) ;; *) "$reporter" "unsupported OS: $(uname -s)" ;; esac
+  case "$(uname -m)" in x86_64|amd64|aarch64|arm64) ;; *) "$reporter" "unsupported architecture: $(uname -m)" ;; esac
   if [ "${BASH_VERSINFO[0]}" -lt 3 ] ||
     { [ "${BASH_VERSINFO[0]}" -eq 3 ] && [ "${BASH_VERSINFO[1]}" -lt 2 ]; }; then
-    report_check_error_or_preflight "Bash 3.2 or newer is required"
+    "$reporter" "Bash 3.2 or newer is required"
   fi
 }
 
@@ -124,19 +110,20 @@ validate_uninstall_commands() {
 
 validate_repository() {
   local path
+  local reporter="${1:-check_failure}"
   for path in "$DOTFILES/.bashrc" "$DOTFILES/.bash_profile" "$DOTFILES/.gitconfig" \
     "$DOTFILES/Brewfile" "$MISE_CONFIG_SOURCE" "$MISE_LOCK_SOURCE"; do
-    [ -r "$path" ] || report_check_or_preflight "required repository file is not readable: $path"
+    [ -r "$path" ] || "$reporter" "required repository file is not readable: $path"
   done
   if [ -r "$DOTFILES/.bashrc" ] && [ -r "$DOTFILES/.bash_profile" ] &&
     [ "${CHECK_HAVE_BASH:-true}" = true ]; then
     bash -n "$DOTFILES/.bashrc" "$DOTFILES/.bash_profile" "$DOTFILES"/bash/*.bash ||
-      report_check_or_preflight "Bash configuration syntax is invalid"
+      "$reporter" "Bash configuration syntax is invalid"
   fi
   if [ -r "$DOTFILES/.gitconfig" ] && [ "${CHECK_HAVE_GIT:-true}" = true ]; then
     GIT_CONFIG_GLOBAL=/dev/null GIT_CONFIG_SYSTEM=/dev/null \
       git config --no-includes --file "$DOTFILES/.gitconfig" --list >/dev/null ||
-      report_check_or_preflight "Git configuration syntax is invalid: $DOTFILES/.gitconfig"
+      "$reporter" "Git configuration syntax is invalid: $DOTFILES/.gitconfig"
   fi
 }
 

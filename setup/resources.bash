@@ -1,5 +1,28 @@
 #!/usr/bin/env bash
 
+validate_managed_resources_definition() {
+  local index
+  local other_index
+  local type
+  local src
+  local dst
+
+  [ $((${#MANAGED_RESOURCES[@]} % 3)) -eq 0 ] ||
+    die "managed resource definition must contain type/source/destination triples"
+  for ((index = 0; index < ${#MANAGED_RESOURCES[@]}; index += 3)); do
+    type="${MANAGED_RESOURCES[$index]}"
+    src="${MANAGED_RESOURCES[$((index + 1))]}"
+    dst="${MANAGED_RESOURCES[$((index + 2))]}"
+    [ "$type" = symlink ] || die "unknown managed resource type: $type"
+    [ -n "$src" ] || die "managed resource source must not be empty"
+    [ -n "$dst" ] || die "managed resource destination must not be empty"
+    for ((other_index = index + 3; other_index < ${#MANAGED_RESOURCES[@]}; other_index += 3)); do
+      [ "$dst" != "${MANAGED_RESOURCES[$((other_index + 2))]}" ] ||
+        die "managed resource destination is duplicated: $dst"
+    done
+  done
+}
+
 link_status() {
   local src="$1"
   local dst="$2"
@@ -48,18 +71,18 @@ restore_backup_without_clobber() {
 
 preflight_managed_links() {
   local index
+  local type
   local src
   local dst
   local status
 
-  MANAGED_LINK_STATUSES=()
-
-  for ((index = 0; index < ${#MANAGED_SOURCES[@]}; index++)); do
-    src="${MANAGED_SOURCES[$index]}"
-    dst="${MANAGED_DESTINATIONS[$index]}"
+  for ((index = 0; index < ${#MANAGED_RESOURCES[@]}; index += 3)); do
+    type="${MANAGED_RESOURCES[$index]}"
+    src="${MANAGED_RESOURCES[$((index + 1))]}"
+    dst="${MANAGED_RESOURCES[$((index + 2))]}"
+    [ "$type" = symlink ] || die "unknown managed resource type: $type"
     [ -e "$src" ] || { preflight_error "symlink source does not exist: $src"; continue; }
     status="$(link_status "$src" "$dst")"
-    MANAGED_LINK_STATUSES[index]="$status"
     case "$status" in
       expected) log "ok: $dst -> $src" ;;
       missing)
@@ -83,17 +106,37 @@ preflight_managed_links() {
 
 plan_managed_links() {
   local index
+  local type
   local src
   local dst
   local status
+  local failed_before
 
-  for ((index = 0; index < ${#MANAGED_SOURCES[@]}; index++)); do
-    src="${MANAGED_SOURCES[$index]}"
-    dst="${MANAGED_DESTINATIONS[$index]}"
-    status="${MANAGED_LINK_STATUSES[$index]}"
+  for ((index = 0; index < ${#MANAGED_RESOURCES[@]}; index += 3)); do
+    type="${MANAGED_RESOURCES[$index]}"
+    src="${MANAGED_RESOURCES[$((index + 1))]}"
+    dst="${MANAGED_RESOURCES[$((index + 2))]}"
+    [ "$type" = symlink ] || die "unknown managed resource type: $type"
+    failed_before="$PREFLIGHT_FAILED"
+    [ -e "$src" ] || { preflight_error "symlink source does not exist: $src"; continue; }
+    status="$(link_status "$src" "$dst")"
     case "$status" in
-      missing) plan_add ensure_symlink "$dst" "$src" ;;
-      replaceable_conflict) plan_add replace_symlink "$dst" "$src" ;;
+      expected) log "ok: $dst -> $src" ;;
+      missing)
+        validate_destination_parent "$dst"
+        [ "$failed_before" != "$PREFLIGHT_FAILED" ] || plan_add ensure_symlink "$dst" "$src"
+        ;;
+      replaceable_conflict)
+        validate_destination_parent "$dst"
+        if [ "$src" = "$dst" ] || { [ -e "$dst" ] && [ "$src" -ef "$dst" ]; }; then
+          preflight_error "symlink source and destination are the same file: $dst"
+        fi
+        if ! "${force:-false}"; then
+          preflight_error "destination conflict: $dst (rerun install with --force)"
+        fi
+        [ "$failed_before" != "$PREFLIGHT_FAILED" ] || plan_add replace_symlink "$dst" "$src"
+        ;;
+      fatal_conflict) preflight_error "destination is not replaceable: $dst" ;;
     esac
   done
 }
@@ -141,12 +184,15 @@ ensure_symlink() {
 
 preflight_uninstall_links() {
   local index
+  local type
   local src
   local dst
 
-  for ((index = 0; index < ${#MANAGED_SOURCES[@]}; index++)); do
-    src="${MANAGED_SOURCES[$index]}"
-    dst="${MANAGED_DESTINATIONS[$index]}"
+  for ((index = 0; index < ${#MANAGED_RESOURCES[@]}; index += 3)); do
+    type="${MANAGED_RESOURCES[$index]}"
+    src="${MANAGED_RESOURCES[$((index + 1))]}"
+    dst="${MANAGED_RESOURCES[$((index + 2))]}"
+    [ "$type" = symlink ] || die "unknown managed resource type: $type"
     if [ -L "$dst" ] && [ "$(readlink "$dst")" = "$src" ]; then
       validate_destination_parent "$dst"
       plan_add remove_symlink "$dst" "$src"
@@ -170,12 +216,15 @@ remove_symlink() {
 
 check_managed_links() {
   local index
+  local type
   local src
   local dst
 
-  for ((index = 0; index < ${#MANAGED_SOURCES[@]}; index++)); do
-    src="${MANAGED_SOURCES[$index]}"
-    dst="${MANAGED_DESTINATIONS[$index]}"
+  for ((index = 0; index < ${#MANAGED_RESOURCES[@]}; index += 3)); do
+    type="${MANAGED_RESOURCES[$index]}"
+    src="${MANAGED_RESOURCES[$((index + 1))]}"
+    dst="${MANAGED_RESOURCES[$((index + 2))]}"
+    [ "$type" = symlink ] || die "unknown managed resource type: $type"
     if [ ! -r "$src" ]; then
       continue
     fi

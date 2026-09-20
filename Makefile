@@ -35,5 +35,6 @@ gcm-apply:
 	./setup/gcm.sh --apply
 
 validate:
-	bash -n bin/dotfiles setup/*.bash setup/*.sh tests/*.sh bash/*.bash .bashrc .bash_profile
-	./tests/setup-flow.sh
+	bash -n bin/dotfiles setup/*.bash setup/*.sh tests/*.bash tests/*.sh tests/fixtures/*.bash bash/*.bash .bashrc .bash_profile
+	mise --cd .config/mise exec -- biome check --config-path "$$(pwd)/biome.json" "$$(pwd)/tests"
+	./tests/run.sh

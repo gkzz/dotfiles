@@ -34,7 +34,8 @@ Bash 3.2 には nameref や associative array がない。複数の結果をす�
 
 | ファイル | 対象 |
 | --- | --- |
-| `tests/test-helper.bash` | 一時 root、fake command、`run_dotfiles`、assertion |
+| `tests/test-helper.bash` | assertion |
+| `tests/fixtures/` | 一時 root、fake command、`run_dotfiles` |
 | `tests/cli.sh` | CLI parser、option、終了コード `2` |
 | `tests/bootstrap.sh` | Homebrew / mise bootstrap、GitHub Actions 用 setup |
 | `tests/lifecycle.sh` | install / uninstall、dry-run / apply、lock、idempotency |
@@ -96,7 +97,7 @@ run_dotfiles
 2. `tests/run.sh` から全テストを実行する
 3. 現在の `make validate` の利用方法と成功時の意味を変えない
 
-GitHub Actions の portability job も `tests/run.sh` を呼ぶ。Ubuntu と macOS がローカルの一括実行と同じ入口を使う状態にする。ShellCheck は従来の `tests/*.sh` に加え、source 専用の `tests/*.bash` も対象にする。
+GitHub Actions の portability job も `tests/run.sh` を呼ぶ。Ubuntu と macOS がローカルの一括実行と同じ入口を使う状態にする。ShellCheck は従来の `tests/*.sh` に加え、source 専用の `tests/*.bash` と `tests/fixtures/*.bash` も対象にする。
 
 ## 3. managed resource を1つの宣言へまとめる
 
@@ -154,7 +155,7 @@ plan の並びは現在と同じく、Homebrew、mise、managed symlink の順�
 
 ### mise コマンドの実行
 
-`execute_repository_mise` は isolated root と mise command、引数を受け取り、`run_isolated_mise` を実行する。I/O は operation の用途に応じて次の2種類に分ける。
+`execute_repository_mise_capture` と `execute_repository_mise_stream` は isolated root と mise command、引数を受け取り、`run_isolated_mise` を実行する。I/O は operation の用途に応じて次の2種類に分ける。
 
 | 用途 | I/O 方針 |
 | --- | --- |
@@ -162,7 +163,7 @@ plan の並びは現在と同じく、Homebrew、mise、managed symlink の順�
 | install preflight の config / lock 検証 | 診断用に stdout と stderr を分離して capture する |
 | install apply | stdout と stderr を端末へ直接流し、現在の進捗表示と出力順を保つ |
 
-低レベル helper に呼び出し側の状態を表す boolean mode は持たせない。`run_repository_mise_check` と `run_repository_mise_apply` のように用途が分かる薄い入口を設け、isolated 環境の準備、mise 起動、cleanup の実装は内部で共有する。
+低レベル helper に呼び出し側の状態を表す boolean mode は持たせない。capture 用の `run_repository_mise_capture` と streaming 用の `run_repository_mise_apply` を入口とし、isolated 環境の準備、mise 起動、cleanup の実装は `run_repository_mise_with_io` で共有する。内部の I/O mode は `capture` と `stream` だけを受け入れ、未知の値は終了コード `2` で拒否する。
 
 `run_isolated_mise` は環境変数を隔離して mise を起動する責務だけを維持する。診断の接頭辞や lifecycle の種類は知らない。
 
@@ -178,6 +179,7 @@ Bash 3.2 で複数の結果を同時に返す必要があるため、次の結�
 
 ```text
 REPOSITORY_MISE_RESULT_STAGE
+REPOSITORY_MISE_RESULT_REASON
 REPOSITORY_MISE_RESULT_STATUS
 REPOSITORY_MISE_RESULT_STDOUT
 REPOSITORY_MISE_RESULT_STDERR
@@ -186,7 +188,7 @@ REPOSITORY_MISE_RESULT_CLEANUP_STDERR
 REPOSITORY_MISE_RESULT_TEMP_PATH
 ```
 
-`STAGE` は `prepare`、`mise`、`cleanup`、空文字のいずれかとする。未実行の status は空文字、成功は `0` とし、formatter が未実行と成功を区別できるようにする。各 operation の開始時に全項目を初期化する。
+`STAGE` は `prepare`、`mise`、`cleanup`、空文字のいずれかとする。`REASON` は `mktemp`、`mkdir`、`config-copy`、`lock-copy`、`mise`、`cleanup`、空文字のいずれかとし、`prepare` 内の失敗箇所を formatter が判別するために使う。未実行の status は空文字、成功は `0` とし、formatter が未実行と成功を区別できるようにする。各 operation の開始時に全項目を初期化する。
 
 終了コードの優先順位は次のとおり。
 
@@ -201,7 +203,7 @@ REPOSITORY_MISE_RESULT_TEMP_PATH
 
 準備途中で isolated root を作成済みなら、準備失敗時も cleanup を試みる。mise と cleanup が両方失敗した場合は mise の終了コードを優先し、cleanup の診断も失わず表示する。
 
-orchestrator は結果状態の唯一の writer とし、formatter と呼び出し元だけが読み取る。各変数の writer / reader と「次の呼び出しで上書きされる」契約を関数の直前へ記載する。現在の `RUN_REPOSITORY_MISE_CAPTURE` は削除し、呼び出し側が設定する暗黙の mode をなくす。
+結果状態はmise実行処理全体が所有する。`reset_repository_mise_result` が初期化し、prepare、execute、cleanup の各helperは自分が担当する項目だけを書き込む。formatterと呼び出し元は読み取りだけを行う。状態は次の呼び出しで上書きされる。現在の `RUN_REPOSITORY_MISE_CAPTURE` は削除し、呼び出し側が設定する暗黙のmodeをなくす。
 
 ## 5. 共通処理と表示処理を分ける
 
@@ -260,6 +262,7 @@ refactor 前後で、既存テストの assertion と利用者向け出力を維
 
 - config、lock、tool inspection の成功と失敗を区別する
 - mise の stdout と stderr を失わない
+- 成功、準備失敗、mise失敗、cleanup失敗について、result stateの各項目を直接検証する
 - `mktemp`、`mkdir`、config copy、lock copy の失敗理由を維持する
 - 準備途中でも作成済みの isolated root を cleanup する
 - mise 成功 / cleanup 失敗で全体が失敗する
@@ -411,3 +414,4 @@ Issue #10 で新規追加する次のケースも、分割後の対応先で管�
 | Mise prepare and cleanup both fail | `tests/check-diagnostics.sh` | failing preparation helper / `rm` | primary と cleanup の両診断、終了コード契約 |
 | Mise command and cleanup both fail | `tests/check-diagnostics.sh` | failing fake mise / `rm` | mise status を優先し cleanup 診断も保持 |
 | Install apply streams mise output | `tests/packages.sh` | marker 後に release を待つ fake mise | process 終了前に marker を観測 |
+| Mise result state fields | `tests/packages.sh` | success / preparation failure / mise failure / cleanup failure | stage、reason、status、stdout、stderr、cleanup status、終了コードを直接検証 |

@@ -7,6 +7,7 @@ min_version = "2026.8.6"
 DOTFILES = "{{ [xdg_config_home, 'mise', 'config.toml'] | join_path | canonicalize | dirname | dirname | dirname }}"
 
 [tools]
+biome = "2.5.14"
 node = "24.19.0"
 python = "3.14.7"
 go = "1.27.0"

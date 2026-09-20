@@ -50,7 +50,9 @@ jobs:
             setup/homebrew-install.sh \
             setup/gcm.sh \
             setup/mise-install.sh \
+            tests/*.bash \
             tests/*.sh \
+            tests/fixtures/*.bash \
             bash/*.bash \
             .bashrc \
             .bash_profile
@@ -62,6 +64,11 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Install repository toolchain
+        uses: ./.github/actions/setup-mise
+        with:
+          install-node: "true"
 
       - name: Verify install and uninstall help output
         run: |
@@ -104,6 +111,10 @@ jobs:
       - name: Checkout
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
+      - name: Install repository toolchain
+        uses: ./.github/actions/setup-mise
+        with:
+          install-node: "true"
+
       - name: Run setup flow tests
-        run: |
-          ./tests/setup-flow.sh
+        run: ./tests/run.sh

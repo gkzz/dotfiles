@@ -56,10 +56,20 @@ flowchart TD
 | `setup/resources.bash` | managed symlink の確認、backup、作成、削除 |
 | `setup/context.bash` | HOME / XDG と管理対象パスの決定 |
 | `setup/lib.bash` | 共通の検証とログ出力 |
+| `tests/helpers/` | `node:test` から使う process 実行、共通 assertion、`TestFixture` |
+| `tests/test-helper.bash` | 移行中の Bash 回帰テスト用 assertion |
+| `tests/fixtures/` | 一時HOME、fake command、共通 fixture |
+| `tests/run.sh` | mise 管理の Node.js で `node:test` を実行する入口 |
 
 設定の解析や package/tool の状態確認には、それぞれの公式コマンドを使います。dotfiles 側では lifecycle と symlink の処理だけを管理します。
 
+`setup/context.bash` は managed symlink を種類・source・destination の3要素で宣言します。install、check、uninstall は同じ宣言を参照します。install は最初の preflight に加え、処理計画を作る直前と実行時にも destination を確認します。確認後に別のプロセスが destination を変更しても、未検証の置換へ切り替えません。
+
 mise が PATH にない場合は、`setup/mise-install.sh` が repository に固定した mise version と platform ごとの SHA-256 checksumを照合して、公式 release asset をインストールします。
+
+repository の mise config と lock file を検査するときは、一時ディレクトリに両ファイルをコピーし、呼び出し元の mise 設定から隔離します。check と preflight は stdout と stderr を保持して診断へ使います。`install --apply` は進捗を端末へ直接流します。準備、mise の実行、cleanup の結果は別々に保持し、mise と cleanup が同時に失敗した場合は mise の終了コードを優先しつつ、両方の診断を表示します。
+
+テストはCLI、bootstrap、lifecycle、resource、package、check診断の単位に分けています。CLI テストは依存パッケージを持たない `node:test` で実行し、残る Bash 回帰テストも移行中は同じ runner から実行します。Node.js は mise config と lock file で固定し、`tests/run.sh` が管理版を選択します。
 
 ## 管理対象
 

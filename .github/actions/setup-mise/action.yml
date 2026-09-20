@@ -6,6 +6,10 @@ inputs:
     description: Cache mise-managed runtime installs.
     required: false
     default: "true"
+  install-node:
+    description: Install the repository-pinned Node.js and Biome validation tools.
+    required: false
+    default: "false"
 
 runs:
   using: composite
@@ -87,3 +91,16 @@ runs:
           echo "MISE_INSTALL_PATH=$MISE_INSTALL_PATH"
           echo "MISE_DATA_DIR=$MISE_DATA_DIR"
         } >> "$GITHUB_STEP_SUMMARY"
+
+    - name: Install repository validation tools
+      if: inputs.install-node == 'true'
+      shell: bash
+      run: |
+        set -euo pipefail
+        # The repository config resolves this path while mise renders [env].
+        # Keep the path canonicalizable even on clean GitHub-hosted runners.
+        mkdir -p "${XDG_CONFIG_HOME:-$HOME/.config}/mise"
+        touch "${XDG_CONFIG_HOME:-$HOME/.config}/mise/config.toml"
+        mise --cd "$GITHUB_WORKSPACE/.config/mise" install node biome
+        mise --cd "$GITHUB_WORKSPACE/.config/mise" exec -- node --version
+        mise --cd "$GITHUB_WORKSPACE/.config/mise" exec -- biome --version
