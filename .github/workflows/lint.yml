@@ -1,0 +1,79 @@
+name: Lint
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  workflow-lint:
+    name: Workflow syntax lint
+    runs-on: ubuntu-24.04
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Run actionlint on workflow files
+        uses: docker://rhysd/actionlint:1.7.12@sha256:b1934ee5f1c509618f2508e6eb47ee0d3520686341fec936f3b79331f9315667
+        with:
+          args: -color
+
+  shellcheck:
+    name: Shell script lint
+    runs-on: ubuntu-24.04
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Run ShellCheck on dotfile scripts
+        # https://github.com/koalaman/shellcheck/releases/tag/v0.11.0
+        # tag: b12c2a6a0834a5b8c12b1c0eb36704f698de5bac
+        # commit: aac0823e6b58f8a499e856e93738082691cbf212
+        run: |
+          docker run --rm -v "$PWD:/workspace:ro" -w /workspace koalaman/shellcheck:v0.11.0@sha256:61862eba1fcf09a484ebcc6feea46f1782532571a34ed51fedf90dd25f925a8d \
+            --shell=bash \
+            --exclude=SC1090,SC1091 \
+            bin/dotfiles \
+            setup/lib.bash \
+            setup/context.bash \
+            setup/lifecycle.bash \
+            setup/plan.bash \
+            setup/packages.bash \
+            setup/symlinks.bash \
+            setup/homebrew-install.sh \
+            setup/gcm.sh \
+            setup/mise-install.sh \
+            tests/*.bash \
+            tests/*.sh \
+            tests/fixtures/*.bash \
+            bash/*.bash \
+            .bashrc \
+            .bash_profile
+
+  static:
+    name: Static validation
+    runs-on: ubuntu-24.04
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Install repository toolchain
+        uses: ./.github/actions/setup-mise
+        env:
+          MISE_GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          install-node: "true"
+
+      - name: Run Bash syntax checks
+        run: bash -n bin/dotfiles setup/*.bash setup/*.sh tests/*.bash tests/*.sh tests/fixtures/*.bash bash/*.bash .bashrc .bash_profile
+
+      - name: Run Biome
+        run: mise --cd .config/mise exec -- biome check --config-path "$(pwd)/biome.jsonc" "$(pwd)/tests"
