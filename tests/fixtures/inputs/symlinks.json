@@ -1,0 +1,18 @@
+{
+  "conflict": {
+    "gitconfig": "local git config\n"
+  },
+  "ensure_symlink": {
+    "rollback": {
+      "initial": "restore me\n",
+      "expected": "restore me\n"
+    },
+    "concurrent": {
+      "initial": "preserve in backup\n",
+      "expected": "concurrent replacement\n"
+    },
+    "planned_missing": {
+      "expected": "concurrent missing-plan replacement\n"
+    }
+  }
+}

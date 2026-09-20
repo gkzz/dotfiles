@@ -1,0 +1,17 @@
+{
+  // Biomeの設定スキーマ。エディターの補完と設定値の検証に使う。
+  "$schema": "https://biomejs.dev/schemas/2.5.14/schema.json",
+
+  // Biomeが処理するファイルを設定ファイルの場所を基準に指定する。
+  // このリポジトリでは、テスト用のES moduleだけをフォーマット・検査する。
+  "files": {
+    // globパターンで対象を絞り込む。指定しない場合はBiomeの既定の対象範囲になる。
+    "includes": ["tests/**/*.mjs"]
+  },
+
+  // フォーマッター共通の設定。
+  "formatter": {
+    // インデントにスペースを使う。Biomeの既定値はtab。
+    "indentStyle": "space"
+  }
+}

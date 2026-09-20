@@ -29,98 +29,139 @@ find_mise() {
   return 1
 }
 
-run_repository_mise() {
-  local mise_project_root
-  local status
-  local cleanup_output
-  local operation_output
-  local stderr_path
-  local stdout_path
-  local mise_command="$MISE_CMD"
-  local mise_data_dir="${MISE_DATA_DIR:-}"
-  local mise_cache_dir="${MISE_CACHE_DIR:-}"
-  local mise_state_dir="${MISE_STATE_DIR:-}"
+# Result state is reset by the orchestrator, written by the prepare/execute/cleanup
+# helper responsible for each field, and read by formatters until the next call.
+reset_repository_mise_result() {
+  REPOSITORY_MISE_RESULT_STAGE=""
+  REPOSITORY_MISE_RESULT_REASON=""
+  REPOSITORY_MISE_RESULT_STATUS=""
+  REPOSITORY_MISE_RESULT_STDOUT=""
+  REPOSITORY_MISE_RESULT_STDERR=""
+  REPOSITORY_MISE_RESULT_CLEANUP_STATUS=0
+  REPOSITORY_MISE_RESULT_CLEANUP_STDERR=""
+  REPOSITORY_MISE_RESULT_TEMP_PATH=""
+}
 
-  RUN_REPOSITORY_MISE_FAILURE=""
-  RUN_REPOSITORY_MISE_OUTPUT=""
-  RUN_REPOSITORY_MISE_STDERR=""
-  RUN_REPOSITORY_MISE_CLEANUP_FAILED=false
-  RUN_REPOSITORY_MISE_CLEANUP_OUTPUT=""
-  RUN_REPOSITORY_MISE_TEMP_PATH=""
+prepare_repository_mise_environment() {
+  local output
 
-  if ! mise_project_root="$(mktemp -d "${TMPDIR:-/tmp}/dotfiles-mise.XXXXXX" 2>&1)"; then
-    RUN_REPOSITORY_MISE_FAILURE=mktemp
-    RUN_REPOSITORY_MISE_STDERR="$mise_project_root"
-    if [ "${RUN_REPOSITORY_MISE_CAPTURE:-false}" != true ]; then
-      printf '%s\n' 'failed to create temporary directory for mise inspection' "$mise_project_root" >&2
-    fi
+  if ! output="$(mktemp -d "${TMPDIR:-/tmp}/dotfiles-mise.XXXXXX" 2>&1)"; then
+    REPOSITORY_MISE_RESULT_STAGE=prepare
+    REPOSITORY_MISE_RESULT_REASON=mktemp
+    REPOSITORY_MISE_RESULT_STDERR="$output"
     return 1
   fi
-  RUN_REPOSITORY_MISE_TEMP_PATH="$mise_project_root"
-  if ! operation_output="$(mkdir "$mise_project_root/system" 2>&1)"; then
-    RUN_REPOSITORY_MISE_FAILURE="mkdir"
-    RUN_REPOSITORY_MISE_STDERR="$operation_output"
-    status=1
-  elif ! operation_output="$(cp "$MISE_CONFIG_SOURCE" "$mise_project_root/config.toml" 2>&1)"; then
-    RUN_REPOSITORY_MISE_FAILURE=config-copy
-    RUN_REPOSITORY_MISE_STDERR="$operation_output"
-    status=1
-  elif ! operation_output="$(cp "$MISE_LOCK_SOURCE" "$mise_project_root/mise.lock" 2>&1)"; then
-    RUN_REPOSITORY_MISE_FAILURE=lock-copy
-    RUN_REPOSITORY_MISE_STDERR="$operation_output"
-    status=1
+  REPOSITORY_MISE_RESULT_TEMP_PATH="$output"
+  if ! output="$(mkdir "$REPOSITORY_MISE_RESULT_TEMP_PATH/system" 2>&1)"; then
+    REPOSITORY_MISE_RESULT_STAGE=prepare
+    REPOSITORY_MISE_RESULT_REASON="mkdir"
+  elif ! output="$(cp "$MISE_CONFIG_SOURCE" "$REPOSITORY_MISE_RESULT_TEMP_PATH/config.toml" 2>&1)"; then
+    REPOSITORY_MISE_RESULT_STAGE=prepare
+    REPOSITORY_MISE_RESULT_REASON=config-copy
+  elif ! output="$(cp "$MISE_LOCK_SOURCE" "$REPOSITORY_MISE_RESULT_TEMP_PATH/mise.lock" 2>&1)"; then
+    REPOSITORY_MISE_RESULT_STAGE=prepare
+    REPOSITORY_MISE_RESULT_REASON=lock-copy
   else
-    status=0
+    return 0
   fi
+  REPOSITORY_MISE_RESULT_STDERR="$output"
+  return 1
+}
 
-  if [ "$status" -eq 0 ]; then
-    if [ "${RUN_REPOSITORY_MISE_CAPTURE:-false}" = true ]; then
-      stdout_path="$mise_project_root/stdout"
-      stderr_path="$mise_project_root/stderr"
-      if (run_isolated_mise "$mise_project_root" "$mise_command" \
-        "$mise_data_dir" "$mise_cache_dir" "$mise_state_dir" "$@" \
-        >"$stdout_path" 2>"$stderr_path"); then
-        status=0
-      else
-        status=$?
-      fi
-      RUN_REPOSITORY_MISE_OUTPUT="$(<"$stdout_path")"
-      RUN_REPOSITORY_MISE_STDERR="$(<"$stderr_path")"
-    else
-      if (run_isolated_mise "$mise_project_root" "$mise_command" \
-        "$mise_data_dir" "$mise_cache_dir" "$mise_state_dir" "$@"); then
-        status=0
-      else
-        status=$?
-      fi
-    fi
-    if [ "$status" -ne 0 ]; then
-      RUN_REPOSITORY_MISE_FAILURE=mise
-    fi
+execute_repository_mise_capture() {
+  local stderr_path="$REPOSITORY_MISE_RESULT_TEMP_PATH/stderr"
+  local stdout_path="$REPOSITORY_MISE_RESULT_TEMP_PATH/stdout"
+  local status
+
+  if (run_isolated_mise "$REPOSITORY_MISE_RESULT_TEMP_PATH" "$MISE_CMD" \
+    "${MISE_DATA_DIR:-}" "${MISE_CACHE_DIR:-}" "${MISE_STATE_DIR:-}" "$@" \
+    >"$stdout_path" 2>"$stderr_path"); then
+    status=0
+  else
+    status=$?
   fi
-  if [ "${RUN_REPOSITORY_MISE_CAPTURE:-false}" != true ]; then
-    case "$RUN_REPOSITORY_MISE_FAILURE" in
-      mkdir) printf 'failed to create temporary mise system directory: path=%s\n' "$mise_project_root/system" >&2 ;;
-      config-copy) printf 'failed to copy mise config into temporary directory: source=%s\n' "$MISE_CONFIG_SOURCE" >&2 ;;
-      lock-copy) printf 'failed to copy mise lockfile into temporary directory: source=%s\n' "$MISE_LOCK_SOURCE" >&2 ;;
-    esac
-    case "$RUN_REPOSITORY_MISE_FAILURE" in
-      mkdir|config-copy|lock-copy) [ -z "$RUN_REPOSITORY_MISE_STDERR" ] || printf '%s\n' "$RUN_REPOSITORY_MISE_STDERR" >&2 ;;
-    esac
-  fi
-  if ! cleanup_output="$(rm -rf "$mise_project_root" 2>&1)"; then
-    RUN_REPOSITORY_MISE_CLEANUP_FAILED=true
-    RUN_REPOSITORY_MISE_CLEANUP_OUTPUT="$cleanup_output"
-    RUN_REPOSITORY_MISE_CLEANUP_PATH="$mise_project_root"
-    if [ "${RUN_REPOSITORY_MISE_CAPTURE:-false}" != true ]; then
-      printf 'failed to remove temporary mise directory: path=%s\n' "$mise_project_root" >&2
-      [ -z "$cleanup_output" ] || printf '%s\n' "$cleanup_output" >&2
-    fi
-    if [ "$status" -eq 0 ]; then
-      status=1
-    fi
+  # The status is part of the diagnostic state consumed by callers/tests.
+  # shellcheck disable=SC2034
+  REPOSITORY_MISE_RESULT_STATUS="$status"
+  REPOSITORY_MISE_RESULT_STDOUT="$(<"$stdout_path")"
+  REPOSITORY_MISE_RESULT_STDERR="$(<"$stderr_path")"
+  if [ "$status" -ne 0 ]; then
+    REPOSITORY_MISE_RESULT_STAGE=mise
+    REPOSITORY_MISE_RESULT_REASON=mise
   fi
   return "$status"
+}
+
+execute_repository_mise_stream() {
+  local status
+
+  if (run_isolated_mise "$REPOSITORY_MISE_RESULT_TEMP_PATH" "$MISE_CMD" \
+    "${MISE_DATA_DIR:-}" "${MISE_CACHE_DIR:-}" "${MISE_STATE_DIR:-}" "$@"); then
+    status=0
+  else
+    status=$?
+  fi
+  # The status is part of the diagnostic state consumed by callers/tests.
+  # shellcheck disable=SC2034
+  REPOSITORY_MISE_RESULT_STATUS="$status"
+  if [ "$status" -ne 0 ]; then
+    REPOSITORY_MISE_RESULT_STAGE=mise
+    REPOSITORY_MISE_RESULT_REASON=mise
+  fi
+  return "$status"
+}
+
+cleanup_repository_mise_environment() {
+  local output
+  local status
+
+  [ -n "$REPOSITORY_MISE_RESULT_TEMP_PATH" ] || return 0
+  if output="$(rm -rf "$REPOSITORY_MISE_RESULT_TEMP_PATH" 2>&1)"; then
+    status=0
+  else
+    status=$?
+  fi
+  REPOSITORY_MISE_RESULT_CLEANUP_STATUS="$status"
+  REPOSITORY_MISE_RESULT_CLEANUP_STDERR="$output"
+  if [ "$status" -ne 0 ] && [ -z "$REPOSITORY_MISE_RESULT_STAGE" ]; then
+    REPOSITORY_MISE_RESULT_STAGE=cleanup
+    REPOSITORY_MISE_RESULT_REASON=cleanup
+  fi
+  return "$status"
+}
+
+run_repository_mise_with_io() {
+  local io_mode="$1"
+  local primary_status=0
+  shift
+
+  reset_repository_mise_result
+  case "$io_mode" in
+    capture|stream) ;;
+    *)
+      printf 'error: unknown repository mise I/O mode: %s\n' "$io_mode" >&2
+      return 2
+      ;;
+  esac
+  if prepare_repository_mise_environment; then
+    case "$io_mode" in
+      capture) execute_repository_mise_capture "$@" || primary_status=$? ;;
+      stream) execute_repository_mise_stream "$@" || primary_status=$? ;;
+    esac
+  else
+    primary_status=1
+  fi
+  cleanup_repository_mise_environment || true
+  [ "$primary_status" -eq 0 ] || return "$primary_status"
+  [ "$REPOSITORY_MISE_RESULT_CLEANUP_STATUS" -eq 0 ] || return 1
+}
+
+run_repository_mise_capture() {
+  run_repository_mise_with_io capture "$@"
+}
+
+run_repository_mise_apply() {
+  run_repository_mise_with_io stream "$@"
 }
 
 run_isolated_mise() {
@@ -157,59 +198,89 @@ run_isolated_mise() {
 report_repository_mise_check_error() {
   local operation_message="$1"
 
-  case "$RUN_REPOSITORY_MISE_FAILURE" in
+  case "$REPOSITORY_MISE_RESULT_REASON" in
     mktemp) check_error "failed to create temporary directory for mise inspection" ;;
-    mkdir) check_error "failed to create temporary mise system directory: path=$RUN_REPOSITORY_MISE_TEMP_PATH/system" ;;
+    mkdir) check_error "failed to create temporary mise system directory: path=$REPOSITORY_MISE_RESULT_TEMP_PATH/system" ;;
     config-copy) check_error "failed to copy mise config into temporary directory: source=$MISE_CONFIG_SOURCE" ;;
     lock-copy) check_error "failed to copy mise lockfile into temporary directory: source=$MISE_LOCK_SOURCE" ;;
     mise) check_error "$operation_message" ;;
   esac
-  [ -z "$RUN_REPOSITORY_MISE_OUTPUT" ] || printf '%s\n' "$RUN_REPOSITORY_MISE_OUTPUT" >&2
-  [ -z "$RUN_REPOSITORY_MISE_STDERR" ] || printf '%s\n' "$RUN_REPOSITORY_MISE_STDERR" >&2
-  if [ "$RUN_REPOSITORY_MISE_CLEANUP_FAILED" = true ]; then
-    check_error "failed to remove temporary mise directory: path=$RUN_REPOSITORY_MISE_CLEANUP_PATH"
-    [ -z "$RUN_REPOSITORY_MISE_CLEANUP_OUTPUT" ] || printf '%s\n' "$RUN_REPOSITORY_MISE_CLEANUP_OUTPUT" >&2
+  [ -z "$REPOSITORY_MISE_RESULT_STDOUT" ] || printf '%s\n' "$REPOSITORY_MISE_RESULT_STDOUT" >&2
+  [ -z "$REPOSITORY_MISE_RESULT_STDERR" ] || printf '%s\n' "$REPOSITORY_MISE_RESULT_STDERR" >&2
+  if [ "$REPOSITORY_MISE_RESULT_CLEANUP_STATUS" -ne 0 ]; then
+    check_error "failed to remove temporary mise directory: path=$REPOSITORY_MISE_RESULT_TEMP_PATH"
+    [ -z "$REPOSITORY_MISE_RESULT_CLEANUP_STDERR" ] ||
+      printf '%s\n' "$REPOSITORY_MISE_RESULT_CLEANUP_STDERR" >&2
   fi
 }
 
-repository_mise_diagnostic() {
-  [ -z "$RUN_REPOSITORY_MISE_OUTPUT" ] || printf '%s\n' "$RUN_REPOSITORY_MISE_OUTPUT"
-  [ -z "$RUN_REPOSITORY_MISE_STDERR" ] || printf '%s\n' "$RUN_REPOSITORY_MISE_STDERR"
+report_repository_mise_preflight_error() {
+  local operation_message="$1"
+
+  case "$REPOSITORY_MISE_RESULT_REASON" in
+    mktemp) preflight_error "failed to create temporary directory for mise inspection" ;;
+    mkdir) preflight_error "failed to create temporary mise system directory: path=$REPOSITORY_MISE_RESULT_TEMP_PATH/system" ;;
+    config-copy) preflight_error "failed to copy mise config into temporary directory: source=$MISE_CONFIG_SOURCE" ;;
+    lock-copy) preflight_error "failed to copy mise lockfile into temporary directory: source=$MISE_LOCK_SOURCE" ;;
+    mise) preflight_error "$operation_message" ;;
+  esac
+  [ -z "$REPOSITORY_MISE_RESULT_STDOUT" ] || printf '%s\n' "$REPOSITORY_MISE_RESULT_STDOUT" >&2
+  [ -z "$REPOSITORY_MISE_RESULT_STDERR" ] || printf '%s\n' "$REPOSITORY_MISE_RESULT_STDERR" >&2
+  if [ "$REPOSITORY_MISE_RESULT_CLEANUP_STATUS" -ne 0 ]; then
+    preflight_error "failed to remove temporary mise directory: path=$REPOSITORY_MISE_RESULT_TEMP_PATH"
+    [ -z "$REPOSITORY_MISE_RESULT_CLEANUP_STDERR" ] ||
+      printf '%s\n' "$REPOSITORY_MISE_RESULT_CLEANUP_STDERR" >&2
+  fi
+}
+
+validate_repository_mise_config() {
+  run_repository_mise_capture config --json
+}
+
+validate_repository_mise_lock() {
+  run_repository_mise_capture install --locked --dry-run
+}
+
+print_repository_mise_success_stderr() {
+  [ -z "$REPOSITORY_MISE_RESULT_STDERR" ] ||
+    printf '%s\n' "$REPOSITORY_MISE_RESULT_STDERR" >&2
 }
 
 validate_mise_compatibility() {
-  local diagnostic
   local status
-  RUN_REPOSITORY_MISE_CAPTURE=true
-  if run_repository_mise config --json; then
+  if validate_repository_mise_config; then
     status=0
   else
     status=$?
   fi
   if [ "$status" -ne 0 ]; then
-    if [ "${CHECK_MODE:-false}" = true ]; then
-      report_repository_mise_check_error "mise could not load the isolated repository config"
-    else
-      diagnostic="$(repository_mise_diagnostic)"
-      preflight_error "mise cannot load the isolated repository config: $diagnostic"
-    fi
+    report_repository_mise_preflight_error "mise cannot load the isolated repository config"
+  else
+    print_repository_mise_success_stderr
   fi
-  [ "$status" -ne 0 ] || [ -z "$RUN_REPOSITORY_MISE_STDERR" ] || printf '%s\n' "$RUN_REPOSITORY_MISE_STDERR" >&2
-  if run_repository_mise install --locked --dry-run; then
+  if validate_repository_mise_lock; then
     status=0
   else
     status=$?
   fi
   if [ "$status" -ne 0 ]; then
-    if [ "${CHECK_MODE:-false}" = true ]; then
-      report_repository_mise_check_error "mise could not validate the repository lockfile"
-    else
-      diagnostic="$(repository_mise_diagnostic)"
-      preflight_error "mise cannot validate the repository lockfile: $diagnostic"
-    fi
+    report_repository_mise_preflight_error "mise cannot validate the repository lockfile"
+  else
+    print_repository_mise_success_stderr
   fi
-  [ "$status" -ne 0 ] || [ -z "$RUN_REPOSITORY_MISE_STDERR" ] || printf '%s\n' "$RUN_REPOSITORY_MISE_STDERR" >&2
-  RUN_REPOSITORY_MISE_CAPTURE=false
+}
+
+check_mise_compatibility() {
+  if validate_repository_mise_config; then
+    print_repository_mise_success_stderr
+  else
+    report_repository_mise_check_error "mise could not load the isolated repository config"
+  fi
+  if validate_repository_mise_lock; then
+    print_repository_mise_success_stderr
+  else
+    report_repository_mise_check_error "mise could not validate the repository lockfile"
+  fi
 }
 
 validate_mise_bootstrap() {
@@ -270,8 +341,30 @@ apply_brew_bundle() {
 }
 
 apply_mise_tools() {
+  local status
   [ -n "${MISE_CMD:-}" ] || find_mise || die "mise is unavailable"
-  run_repository_mise install --locked --yes
+  if run_repository_mise_apply install --locked --yes; then
+    return 0
+  else
+    status=$?
+  fi
+  case "$REPOSITORY_MISE_RESULT_REASON" in
+    mktemp) printf '%s\n' 'failed to create temporary directory for mise inspection' >&2 ;;
+    mkdir) printf 'failed to create temporary mise system directory: path=%s/system\n' "$REPOSITORY_MISE_RESULT_TEMP_PATH" >&2 ;;
+    config-copy) printf 'failed to copy mise config into temporary directory: source=%s\n' "$MISE_CONFIG_SOURCE" >&2 ;;
+    lock-copy) printf 'failed to copy mise lockfile into temporary directory: source=%s\n' "$MISE_LOCK_SOURCE" >&2 ;;
+  esac
+  case "$REPOSITORY_MISE_RESULT_REASON" in
+    mktemp|mkdir|config-copy|lock-copy)
+      [ -z "$REPOSITORY_MISE_RESULT_STDERR" ] || printf '%s\n' "$REPOSITORY_MISE_RESULT_STDERR" >&2
+      ;;
+  esac
+  if [ "$REPOSITORY_MISE_RESULT_CLEANUP_STATUS" -ne 0 ]; then
+    printf 'failed to remove temporary mise directory: path=%s\n' "$REPOSITORY_MISE_RESULT_TEMP_PATH" >&2
+    [ -z "$REPOSITORY_MISE_RESULT_CLEANUP_STDERR" ] ||
+      printf '%s\n' "$REPOSITORY_MISE_RESULT_CLEANUP_STDERR" >&2
+  fi
+  return "$status"
 }
 
 check_brew_bundle() {
@@ -290,23 +383,20 @@ check_mise_tools() {
     check_error "mise is unavailable"
     return
   fi
-  RUN_REPOSITORY_MISE_CAPTURE=true
-  if run_repository_mise ls --missing --no-header; then
+  if run_repository_mise_capture ls --missing --no-header; then
     status=0
   else
     status=$?
   fi
   if [ "$status" -ne 0 ]; then
     report_repository_mise_check_error "mise could not inspect tools"
-    RUN_REPOSITORY_MISE_CAPTURE=false
     return
   fi
-  [ -z "$RUN_REPOSITORY_MISE_STDERR" ] || printf '%s\n' "$RUN_REPOSITORY_MISE_STDERR" >&2
-  if [ -n "$RUN_REPOSITORY_MISE_OUTPUT" ]; then
-    printf 'check failed: mise tools are missing:\n%s\n' "$RUN_REPOSITORY_MISE_OUTPUT" >&2
+  [ -z "$REPOSITORY_MISE_RESULT_STDERR" ] || printf '%s\n' "$REPOSITORY_MISE_RESULT_STDERR" >&2
+  if [ -n "$REPOSITORY_MISE_RESULT_STDOUT" ]; then
+    printf 'check failed: mise tools are missing:\n%s\n' "$REPOSITORY_MISE_RESULT_STDOUT" >&2
     # Consumed by lifecycle.bash after all checks finish.
     # shellcheck disable=SC2034
     CHECK_FAILED=true
   fi
-  RUN_REPOSITORY_MISE_CAPTURE=false
 }

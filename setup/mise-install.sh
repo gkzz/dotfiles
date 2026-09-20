@@ -12,9 +12,9 @@ case "$mode" in
   *) printf '%s\n' 'usage: ./setup/mise-install.sh [--dry-run|--apply]' >&2; exit 2 ;;
 esac
 
-script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-# shellcheck source=setup/mise.env
-. "$script_dir/mise.env"
+repository_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+# shellcheck source=.config/mise/mise.env
+. "$repository_root/.config/mise/mise.env"
 
 install_path="${DOTFILES_MISE_BOOTSTRAP_TARGET:-$HOME/.local/bin/mise}"
 case "$install_path" in

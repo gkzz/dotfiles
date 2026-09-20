@@ -6,8 +6,8 @@
 . "$DOTFILES/setup/context.bash"
 # shellcheck source=setup/plan.bash
 . "$DOTFILES/setup/plan.bash"
-# shellcheck source=setup/resources.bash
-. "$DOTFILES/setup/resources.bash"
+# shellcheck source=setup/symlinks.bash
+. "$DOTFILES/setup/symlinks.bash"
 # shellcheck source=setup/packages.bash
 . "$DOTFILES/setup/packages.bash"
 
@@ -104,18 +104,21 @@ lifecycle_lock_acquire() {
 
 preflight_common() {
   local command_validator="$1"
+  local execution_reporter="$2"
+  local state_reporter="$3"
   PREFLIGHT_FAILED=false
-  validate_context
+  validate_managed_resources_definition
+  validate_context "$execution_reporter"
   "$command_validator"
-  validate_platform
-  validate_repository
+  validate_platform "$execution_reporter"
+  validate_repository "$state_reporter"
 }
 
 preflight_install() {
   plan_reset
   HOMEBREW_BOOTSTRAP_NEEDED=false
   MISE_BOOTSTRAP_NEEDED=false
-  preflight_common validate_install_commands
+  preflight_common validate_install_commands preflight_error preflight_error
   preflight_managed_links
 
   # A known filesystem conflict must stop package-manager inspection and apply.
@@ -142,6 +145,7 @@ preflight_install() {
 
   [ "$PREFLIGHT_FAILED" = "false" ] || return 1
   build_install_plan
+  [ "$PREFLIGHT_FAILED" = "false" ]
 }
 
 build_install_plan() {
@@ -172,8 +176,7 @@ install_lifecycle() {
 
 check_lifecycle() {
   CHECK_FAILED=false
-  CHECK_MODE=true
-  preflight_common validate_check_commands
+  preflight_common validate_check_commands check_error check_failure
   if [ "$PREFLIGHT_FAILED" = "true" ]; then
     CHECK_FAILED=true
   fi
@@ -189,14 +192,13 @@ check_lifecycle() {
     [ "${CHECK_HAVE_CP:-true}" = true ] && [ "${CHECK_HAVE_MKDIR:-true}" = true ] &&
     [ "${CHECK_HAVE_MKTEMP:-true}" = true ] && [ "${CHECK_HAVE_RM:-true}" = true ]; then
     if find_mise; then
-      validate_mise_compatibility
+      check_mise_compatibility
       check_mise_tools
     else
       check_error "mise is unavailable"
     fi
   fi
 
-  CHECK_MODE=false
   [ "$CHECK_FAILED" = "false" ] || return 1
   log "check complete"
 }
@@ -204,7 +206,8 @@ check_lifecycle() {
 preflight_uninstall() {
   plan_reset
   PREFLIGHT_FAILED=false
-  validate_context
+  validate_managed_resources_definition
+  validate_context preflight_error
   validate_uninstall_commands
   preflight_uninstall_links
   [ "$PREFLIGHT_FAILED" = "false" ]

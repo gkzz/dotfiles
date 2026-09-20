@@ -1,4 +1,4 @@
-name: Validate
+name: Lint
 
 on:
   push:
@@ -46,64 +46,34 @@ jobs:
             setup/lifecycle.bash \
             setup/plan.bash \
             setup/packages.bash \
-            setup/resources.bash \
+            setup/symlinks.bash \
             setup/homebrew-install.sh \
             setup/gcm.sh \
             setup/mise-install.sh \
+            tests/*.bash \
             tests/*.sh \
+            tests/fixtures/*.bash \
             bash/*.bash \
             .bashrc \
             .bash_profile
 
-  dotfiles-dry-run:
-    name: Dotfiles script dry-run
+  static:
+    name: Static validation
     runs-on: ubuntu-24.04
 
     steps:
       - name: Checkout
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
-      - name: Verify install and uninstall help output
-        run: |
-          make help
-          ./bin/dotfiles --help
-          ./setup/gcm.sh --help
-          ./setup/mise-install.sh --help
-
-      - name: Run script validation and lifecycle tests
-        run: make validate
-
-      - name: Dry-run mise bootstrap
-        run: ./setup/mise-install.sh --dry-run
-
-  mise-isolation:
-    name: Mise config isolation
-    runs-on: ubuntu-24.04
-
-    steps:
-      - name: Checkout
-        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-
-      - name: Install mise CLI
+      - name: Install repository toolchain
         uses: ./.github/actions/setup-mise
+        env:
+          MISE_GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          install-node: "true"
 
-      - name: Print mise version
-        run: mise --version
+      - name: Run Bash syntax checks
+        run: bash -n bin/dotfiles setup/*.bash setup/*.sh tests/*.bash tests/*.sh tests/fixtures/*.bash bash/*.bash .bashrc .bash_profile
 
-      - name: Reject caller and HOME mise configuration
-        run: ./tests/mise-isolation.sh
-
-  portability:
-    name: Bash lifecycle portability (${{ matrix.os }})
-    strategy:
-      matrix:
-        os: [ubuntu-24.04, macos-15]
-    runs-on: ${{ matrix.os }}
-
-    steps:
-      - name: Checkout
-        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-
-      - name: Run setup flow tests
-        run: |
-          ./tests/setup-flow.sh
+      - name: Run Biome
+        run: mise --cd .config/mise exec -- biome check --config-path "$(pwd)/biome.jsonc" "$(pwd)/tests"

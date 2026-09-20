@@ -10,20 +10,13 @@ initialize_setup_context() {
   # create concurrent writers for the same managed destinations.
   DOTFILES_LOCK_DIR="$HOME/.dotfiles-lifecycle.lock"
 
-  # Consumed by resources.bash after context initialization.
+  # Flat type/source/destination triples consumed by symlinks.bash.
   # shellcheck disable=SC2034
-  MANAGED_SOURCES=(
-    "$DOTFILES/.bashrc"
-    "$DOTFILES/.bash_profile"
-    "$DOTFILES/.gitconfig"
-    "$MISE_CONFIG_SOURCE"
-  )
-  # shellcheck disable=SC2034
-  MANAGED_DESTINATIONS=(
-    "$HOME/.bashrc"
-    "$HOME/.bash_profile"
-    "$HOME/.gitconfig"
-    "$MISE_CONFIG_TARGET"
+  MANAGED_RESOURCES=(
+    symlink "$DOTFILES/.bashrc" "$HOME/.bashrc"
+    symlink "$DOTFILES/.bash_profile" "$HOME/.bash_profile"
+    symlink "$DOTFILES/.gitconfig" "$HOME/.gitconfig"
+    symlink "$MISE_CONFIG_SOURCE" "$MISE_CONFIG_TARGET"
   )
 
   export CONFIG_HOME MISE_CONFIG_SOURCE MISE_LOCK_SOURCE MISE_CONFIG_TARGET

@@ -45,9 +45,9 @@ initialize_setup_context
 MISE_CMD="$(command -v mise)"
 
 cd "$caller_dir"
-config_json="$(run_repository_mise config --json)"
+config_json="$(run_repository_mise_apply config --json)"
 source_checksum_before="$(cksum "$DOTFILES/.config/mise/mise.lock")"
-run_repository_mise install --locked --yes --dry-run >/dev/null
+run_repository_mise_apply install --locked --yes --dry-run >/dev/null
 source_checksum_after="$(cksum "$DOTFILES/.config/mise/mise.lock")"
 test "$source_checksum_after" = "$source_checksum_before"
 
@@ -71,7 +71,7 @@ env = ["hostile"]
 EOF
 DOTFILES="$isolated_repo"
 initialize_setup_context
-isolated_json="$(run_repository_mise config --json)"
+isolated_json="$(run_repository_mise_apply config --json)"
 if printf '%s\n' "$isolated_json" | grep -E 'ruby|local\.toml|miserc\.toml' >/dev/null; then
   printf '%s\n' 'test failed: repository-local discovery files crossed the temporary project boundary' >&2
   printf '%s\n' "$isolated_json" >&2

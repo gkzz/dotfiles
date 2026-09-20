@@ -11,7 +11,7 @@ help:
 	@printf '  %-24s %s\n' 'make uninstall-apply' 'Remove managed symlinks'
 	@printf '  %-24s %s\n' 'make gcm' 'dry-run Git Credential Manager setup'
 	@printf '  %-24s %s\n' 'make gcm-apply' 'Configure Git Credential Manager'
-	@printf '  %-24s %s\n' 'make validate' 'Run syntax and lifecycle tests'
+	@printf '  %-24s %s\n' 'make validate' 'Run syntax checks, Biome, and lifecycle tests'
 
 install:
 	./bin/dotfiles install
@@ -35,5 +35,6 @@ gcm-apply:
 	./setup/gcm.sh --apply
 
 validate:
-	bash -n bin/dotfiles setup/*.bash setup/*.sh tests/*.sh bash/*.bash .bashrc .bash_profile
-	./tests/setup-flow.sh
+	bash -n bin/dotfiles setup/*.bash setup/*.sh tests/*.bash tests/*.sh tests/fixtures/*.bash bash/*.bash .bashrc .bash_profile
+	mise --cd .config/mise exec -- biome check --config-path "$$(pwd)/biome.jsonc" "$$(pwd)/tests"
+	./tests/run.sh
