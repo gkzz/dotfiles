@@ -74,6 +74,12 @@ make gcm-apply
 make validate
 ```
 
-`make validate` は、シェルスクリプトの構文チェック、BiomeによるJavaScriptの検査、lifecycleテストを実行します。
+`make validate` は、シェルスクリプトの構文チェック、BiomeによるJavaScriptの検査、`node:test` によるlifecycleテストを実行します。実行には `mise` と、repository の mise 設定で固定された Node.js / Biome が必要です。必要なツールは次で導入・確認できます。
+
+```bash
+mise --cd .config/mise install
+```
+
+テストの一括実行入口は `tests/run.sh` です。テストファイルは機能別に分かれており、必要なファイルだけを `mise exec -- node --test ...` で単独実行できます。
 
 詳細は [docs/](./docs/) を参照してください。

@@ -28,6 +28,49 @@ const backups = (home, name) =>
     .map((entry) => path.join(home, entry));
 
 describe("managed resources", () => {
+  it("reject malformed resource definitions before lifecycle work", (t) => {
+    const fixture = new TestFixture(t);
+    const cases = [
+      {
+        name: "incomplete triple",
+        definition: "MANAGED_RESOURCES=(symlink source)",
+        message: "type/source/destination triples",
+      },
+      {
+        name: "unknown type",
+        definition: "MANAGED_RESOURCES=(file source destination)",
+        message: "unknown managed resource type",
+      },
+      {
+        name: "empty source",
+        definition: 'MANAGED_RESOURCES=(symlink "" destination)',
+        message: "source must not be empty",
+      },
+      {
+        name: "empty destination",
+        definition: 'MANAGED_RESOURCES=(symlink source "")',
+        message: "destination must not be empty",
+      },
+      {
+        name: "duplicate destination",
+        definition: "MANAGED_RESOURCES=(symlink source-a destination symlink source-b destination)",
+        message: "destination is duplicated",
+      },
+    ];
+
+    for (const scenario of cases) {
+      const script = `
+        . "$1/setup/lib.bash"
+        . "$1/setup/resources.bash"
+        ${scenario.definition}
+        validate_managed_resources_definition
+      `;
+      const result = run("bash", ["-c", script, "_", repositoryRoot]);
+      assert.notEqual(result.status, 0, scenario.name);
+      assert.match(result.stderr, new RegExp(scenario.message), scenario.name);
+    }
+  });
+
   it("handle conflicts, backups, and concurrent changes", (t) => {
     const fixture = new TestFixture(t);
     const home = fixture.createConvergedHome("home");
