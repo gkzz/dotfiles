@@ -1,5 +1,3 @@
-min_version = "2026.8.15"
-
 [env]
 # Resolve the repository from this config file so `mise install` works before
 # the managed global config symlink exists.

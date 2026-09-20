@@ -19,7 +19,7 @@ runs:
       shell: bash
       run: |
         set -euo pipefail
-        . ./setup/mise.env
+        . ./.config/mise/mise.env
         echo "version=$MISE_VERSION" >> "$GITHUB_OUTPUT"
 
     - name: Resolve mise paths

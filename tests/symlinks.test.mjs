@@ -221,7 +221,7 @@ describe("managed resources", () => {
     );
     const config = text(path.join(repositoryRoot, ".config/mise/config.toml"));
     assert.doesNotMatch(config, /github\.com\/gkzz\/dotfiles/);
-    assert.match(config, /DOTFILES = "\{\{ \[xdg_config_home/);
+    assert.match(config, /DOTFILES = "\{\{ config_source \| canonicalize/);
     assert.equal(
       readlinkSync(path.join(home, ".bashrc")),
       path.join(repositoryRoot, ".bashrc"),
