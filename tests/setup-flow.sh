@@ -40,6 +40,9 @@ case "${1:-}" in
     esac
     ;;
   ls)
+    if [ "${FAKE_MISE_LS_WARNING:-0}" = "1" ]; then
+      printf '%s\n' 'fake mise ls warning' >&2
+    fi
     if [ -n "${FAIL_MISE_LS_STATUS:-}" ]; then
       printf 'fake mise ls status %s\n' "$FAIL_MISE_LS_STATUS" >&2
       exit "$FAIL_MISE_LS_STATUS"
@@ -572,6 +575,13 @@ fi
 assert_contains "$mise_check_output" "check failed: mise tools are missing:"
 assert_contains "$mise_check_output" "node 24.19.0 missing"
 touch "$home/mise-data/tools-installed"
+
+# Successful stderr is preserved but is not mistaken for missing tools.
+mise_check_output="$test_root/mise-check-warning.out"
+FAKE_MISE_LS_WARNING=1 run_dotfiles "$home" check --skip-brew >"$mise_check_output" 2>&1
+assert_contains "$mise_check_output" "fake mise ls warning"
+assert_contains "$mise_check_output" "check complete"
+assert_not_contains "$mise_check_output" "mise tools are missing"
 
 # Repeated apply is idempotent and creates no backup.
 run_dotfiles "$home" install --apply >/dev/null
