@@ -41,7 +41,6 @@ run_repository_mise() {
 
   RUN_REPOSITORY_MISE_FAILURE=""
   RUN_REPOSITORY_MISE_OUTPUT=""
-  RUN_REPOSITORY_MISE_MISE_STATUS=0
   RUN_REPOSITORY_MISE_CLEANUP_FAILED=false
   RUN_REPOSITORY_MISE_CLEANUP_OUTPUT=""
   RUN_REPOSITORY_MISE_TEMP_PATH=""
@@ -56,7 +55,7 @@ run_repository_mise() {
   fi
   RUN_REPOSITORY_MISE_TEMP_PATH="$mise_project_root"
   if ! operation_output="$(mkdir "$mise_project_root/system" 2>&1)"; then
-    RUN_REPOSITORY_MISE_FAILURE=mkdir
+    RUN_REPOSITORY_MISE_FAILURE="mkdir"
     RUN_REPOSITORY_MISE_OUTPUT="$operation_output"
     status=1
   elif ! operation_output="$(cp "$MISE_CONFIG_SOURCE" "$mise_project_root/config.toml" 2>&1)"; then
@@ -89,7 +88,6 @@ run_repository_mise() {
     fi
     if [ "$status" -ne 0 ]; then
       RUN_REPOSITORY_MISE_FAILURE=mise
-      RUN_REPOSITORY_MISE_MISE_STATUS="$status"
     fi
   fi
   if [ "${RUN_REPOSITORY_MISE_CAPTURE:-false}" != true ]; then
@@ -286,6 +284,8 @@ check_mise_tools() {
   fi
   if [ -n "$RUN_REPOSITORY_MISE_OUTPUT" ]; then
     printf 'check failed: mise tools are missing:\n%s\n' "$RUN_REPOSITORY_MISE_OUTPUT" >&2
+    # Consumed by lifecycle.bash after all checks finish.
+    # shellcheck disable=SC2034
     CHECK_FAILED=true
   fi
   RUN_REPOSITORY_MISE_CAPTURE=false

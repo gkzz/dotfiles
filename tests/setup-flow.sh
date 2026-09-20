@@ -386,7 +386,7 @@ if [ "${FAIL_MISE_CLEANUP:-0}" = "1" ]; then
       ;;
   esac
 fi
-exec /usr/bin/rm "$@"
+exec /bin/rm "$@"
 RM
 chmod +x "$check_failure_bin/readlink" "$check_failure_bin/rm"
 
@@ -409,7 +409,7 @@ assert_contains "$cleanup_check_output" "fake cleanup failure"
 assert_not_contains "$cleanup_check_output" "check complete"
 while IFS= read -r cleanup_path; do
   case "$cleanup_path" in
-    "${TMPDIR:-/tmp}"/dotfiles-mise.*) /usr/bin/rm -rf "$cleanup_path" ;;
+    "${TMPDIR:-/tmp}"/dotfiles-mise.*) /bin/rm -rf "$cleanup_path" ;;
     *) fail "unexpected cleanup test path: $cleanup_path" ;;
   esac
 done < <(sed -n 's/^check error: failed to remove temporary mise directory: path=//p' "$cleanup_check_output")
@@ -418,6 +418,8 @@ done < <(sed -n 's/^check error: failed to remove temporary mise directory: path
 for helper_stage in mktemp mkdir config-copy lock-copy cleanup; do
   helper_output="$test_root/mise-helper-$helper_stage.out"
   set +e
+  # Variables in this single-quoted script are intentionally expanded by the child shell.
+  # shellcheck disable=SC2016
   env HELPER_STAGE="$helper_stage" LIB_FILE="$DOTFILES/setup/lib.bash" \
     PACKAGES_FILE="$DOTFILES/setup/packages.bash" CONFIG_SOURCE="$DOTFILES/.config/mise/config.toml" \
     LOCK_SOURCE="$DOTFILES/.config/mise/mise.lock" bash -c '
@@ -461,6 +463,8 @@ assert_contains "$test_root/mise-helper-cleanup.out" "check error: failed to rem
 
 install_helper_output="$test_root/mise-helper-install.out"
 set +e
+# Variables in this single-quoted script are intentionally expanded by the child shell.
+# shellcheck disable=SC2016
 env LIB_FILE="$DOTFILES/setup/lib.bash" PACKAGES_FILE="$DOTFILES/setup/packages.bash" \
   CONFIG_SOURCE="$DOTFILES/.config/mise/config.toml" LOCK_SOURCE="$DOTFILES/.config/mise/mise.lock" bash -c '
     . "$LIB_FILE"
@@ -505,6 +509,8 @@ test "$(readlink "$missing_source_home/.config/mise/config.toml")" = \
 
 # A missing command prevents only its dependent repository validator from running.
 command_check_output="$test_root/missing-command.out"
+# Variables in this single-quoted script are intentionally expanded by the child shell.
+# shellcheck disable=SC2016
 env LIB_FILE="$DOTFILES/setup/lib.bash" REPOSITORY="$DOTFILES" bash -c '
   . "$LIB_FILE"
   CHECK_FAILED=false
