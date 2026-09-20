@@ -7,5 +7,5 @@ exec mise --cd "$repository_root/.config/mise" exec -- \
   "$repository_root/tests/cli.test.mjs" \
   "$repository_root/tests/lifecycle.test.mjs" \
   "$repository_root/tests/packages.test.mjs" \
-  "$repository_root/tests/resources.test.mjs" \
+  "$repository_root/tests/symlinks.test.mjs" \
   "$repository_root/tests/shell-regression.test.mjs"

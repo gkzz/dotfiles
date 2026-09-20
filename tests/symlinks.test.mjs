@@ -22,6 +22,12 @@ import { repositoryRoot, run } from "./helpers/process.mjs";
  * 検証後に destination が変わる競合、clone path に依存しない設定解決が対象。
  */
 const text = (file) => readFileSync(file, "utf8");
+const seeds = JSON.parse(
+  readFileSync(
+    path.join(repositoryRoot, "tests/fixtures/inputs/symlinks.json"),
+    "utf8",
+  ),
+);
 const backups = (home, name) =>
   readdirSync(home)
     .filter((entry) => entry.startsWith(`${name}.backup.`))
@@ -61,7 +67,7 @@ describe("managed resources", () => {
     for (const scenario of cases) {
       const script = `
         . "$1/setup/lib.bash"
-        . "$1/setup/resources.bash"
+        . "$1/setup/symlinks.bash"
         ${scenario.definition}
         validate_managed_resources_definition
       `;
@@ -77,7 +83,7 @@ describe("managed resources", () => {
     const gitconfig = path.join(home, ".gitconfig");
 
     rmSync(gitconfig);
-    writeFileSync(gitconfig, "local git config\n");
+    writeFileSync(gitconfig, seeds.conflict.gitconfig);
     writeFileSync(path.join(home, "calls"), "");
     let result = fixture.runDotfiles(home, ["install", "--apply"]);
     // 通常の install は競合ファイルを保持し、package操作へ進まない。
@@ -129,17 +135,17 @@ describe("managed resources", () => {
     const cases = [
       {
         name: "rollback-home",
-        initial: "restore me\n",
+        initial: seeds.ensure_symlink.rollback.initial,
         body: 'ln() { [ "$1" != "-s" ] && { command ln "$@"; return; }; return 1; }',
-        expected: "restore me\n",
+        expected: seeds.ensure_symlink.rollback.expected,
         backupCount: 0,
         planned: "",
       },
       {
         name: "concurrent-home",
-        initial: "preserve in backup\n",
+        initial: seeds.ensure_symlink.concurrent.initial,
         body: 'ln() { if [ "$1" = "-s" ]; then printf "%s\\n" "concurrent replacement" > "$3"; return 1; fi; command ln "$@"; }',
-        expected: "concurrent replacement\n",
+        expected: seeds.ensure_symlink.concurrent.expected,
         backupCount: 1,
         planned: "",
       },
@@ -147,7 +153,7 @@ describe("managed resources", () => {
         name: "planned-missing-home",
         initial: null,
         body: 'ln() { printf "%s\\n" "concurrent missing-plan replacement" > "$3"; return 1; }',
-        expected: "concurrent missing-plan replacement\n",
+        expected: seeds.ensure_symlink.planned_missing.expected,
         backupCount: 0,
         planned: "ensure_symlink",
       },
@@ -159,7 +165,7 @@ describe("managed resources", () => {
         writeFileSync(path.join(targetHome, ".bashrc"), scenario.initial);
       const script = `
     . "$1/setup/lib.bash"
-    . "$1/setup/resources.bash"
+    . "$1/setup/symlinks.bash"
     force=true
     ${scenario.body}
   ensure_symlink "$1/.bashrc" "$2/.bashrc" ${scenario.planned}

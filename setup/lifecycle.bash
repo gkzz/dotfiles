@@ -6,8 +6,8 @@
 . "$DOTFILES/setup/context.bash"
 # shellcheck source=setup/plan.bash
 . "$DOTFILES/setup/plan.bash"
-# shellcheck source=setup/resources.bash
-. "$DOTFILES/setup/resources.bash"
+# shellcheck source=setup/symlinks.bash
+. "$DOTFILES/setup/symlinks.bash"
 # shellcheck source=setup/packages.bash
 . "$DOTFILES/setup/packages.bash"
 

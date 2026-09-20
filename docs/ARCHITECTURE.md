@@ -53,7 +53,7 @@ flowchart TD
 | `setup/lifecycle.bash` | install / check / uninstall、lock、preflight の進行管理 |
 | `setup/plan.bash` | dry-run と apply で共通する処理計画の保持と実行 |
 | `setup/packages.bash` | Homebrew / mise の確認、bootstrap、適用 |
-| `setup/resources.bash` | managed symlink の確認、backup、作成、削除 |
+| `setup/symlinks.bash` | managed symlink の定義検証、確認、backup、作成、削除 |
 | `setup/context.bash` | HOME / XDG と管理対象パスの決定 |
 | `setup/lib.bash` | 共通の検証とログ出力 |
 | `tests/helpers/` | `node:test` から使う process 実行、共通 assertion、`TestFixture` |

@@ -10,7 +10,7 @@ initialize_setup_context() {
   # create concurrent writers for the same managed destinations.
   DOTFILES_LOCK_DIR="$HOME/.dotfiles-lifecycle.lock"
 
-  # Flat type/source/destination triples consumed by resources.bash.
+  # Flat type/source/destination triples consumed by symlinks.bash.
   # shellcheck disable=SC2034
   MANAGED_RESOURCES=(
     symlink "$DOTFILES/.bashrc" "$HOME/.bashrc"
