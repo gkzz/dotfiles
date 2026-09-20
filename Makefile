@@ -36,5 +36,5 @@ gcm-apply:
 
 validate:
 	bash -n bin/dotfiles setup/*.bash setup/*.sh tests/*.bash tests/*.sh tests/fixtures/*.bash bash/*.bash .bashrc .bash_profile
-	mise --cd .config/mise exec -- biome check --config-path "$$(pwd)/biome.json" "$$(pwd)/tests"
+	mise --cd .config/mise exec -- biome check --config-path "$$(pwd)/biome.jsonc" "$$(pwd)/tests"
 	./tests/run.sh

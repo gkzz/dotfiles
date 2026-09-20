@@ -67,6 +67,12 @@ jobs:
 
       - name: Install repository toolchain
         uses: ./.github/actions/setup-mise
+        env:
+          # miseの公開リリース情報は通常mise-versionsの共有キャッシュから取得する。
+          # GitHub APIへフォールバックする場合未認証アクセスが403になる。
+          # これを防ぐため GITHUB_TOKEN を渡す。
+          # https://mise.jdx.dev/dev-tools/github-tokens.html#ci-github-actions
+          MISE_GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           install-node: "true"
 
@@ -113,6 +119,12 @@ jobs:
 
       - name: Install repository toolchain
         uses: ./.github/actions/setup-mise
+        env:
+          # miseの公開リリース情報は通常mise-versionsの共有キャッシュから取得する。
+          # GitHub APIへフォールバックする場合未認証アクセスが403になる。
+          # これを防ぐため GITHUB_TOKEN を渡す。
+          # https://mise.jdx.dev/dev-tools/github-tokens.html#ci-github-actions
+          MISE_GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           install-node: "true"
 
