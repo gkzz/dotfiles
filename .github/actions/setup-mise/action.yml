@@ -48,7 +48,7 @@ runs:
       uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
       with:
         path: ${{ steps.mise-paths.outputs.data_dir }}/installs
-        key: mise-installs-${{ runner.os }}-${{ runner.arch }}-${{ steps.mise-release.outputs.version }}-${{ hashFiles('.config/mise/config.toml', '.config/mise/mise.lock') }}
+        key: mise-installs-${{ runner.os }}-${{ runner.arch }}-${{ steps.mise-release.outputs.version }}-${{ hashFiles(format('{0}/mise.toml', inputs.working-directory), format('{0}/mise.lock', inputs.working-directory), format('{0}/.mise.toml', inputs.working-directory), format('{0}/.config/mise/config.toml', inputs.working-directory), format('{0}/.config/mise/mise.lock', inputs.working-directory)) }}
 
     - name: Install mise CLI
       shell: bash
