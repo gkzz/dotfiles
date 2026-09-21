@@ -120,7 +120,10 @@ assert_contains "$action_dry_run" "MISE_INSTALL_PATH=$action_target"
 # shellcheck disable=SC2016
 assert_contains "$DOTFILES/.github/actions/setup-mise/action.yml" \
   'DOTFILES_MISE_BOOTSTRAP_TARGET="$MISE_INSTALL_PATH"'
+# These dollar expressions must remain literal while inspecting the action.
+# shellcheck disable=SC2016
 assert_contains "$DOTFILES/.github/actions/setup-mise/action.yml" '$GITHUB_ACTION_PATH/../../../setup/mise-version.sh'
+# shellcheck disable=SC2016
 assert_contains "$DOTFILES/.github/actions/setup-mise/action.yml" '$GITHUB_ACTION_PATH/../../../setup/mise-install.sh'
 assert_contains "$DOTFILES/.github/actions/setup-mise/action.yml" 'mise install --locked --yes'
 
