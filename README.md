@@ -64,6 +64,12 @@ install は Homebrew Bundle、mise、managed symlink をまとめて適用しま
 
 machine-local な Git 設定は `~/.gitconfig.local`、shell 設定は `~/.bashrc.local` に置きます。
 
+### mise本体のバージョン
+
+`.config/mise/config.toml` の `min_version` は、設定を読み込める最低バージョンと、dotfilesがbootstrapする固定バージョンを兼ねます。ローカルとCIが参照するmise本体のバージョンを1か所で管理するため、この2つは意図的に同じ値とします。
+
+mise本体を更新するときは、`min_version` と `.config/mise/mise.env` のプラットフォーム別SHA-256を、同じリリースの値へまとめて更新してください。互換性の下限とbootstrapするバージョンを別々に管理する運用は、このリポジトリでは行いません。
+
 ## 補助操作とテスト
 
 Git Credential Manager は lifecycle 外の補助操作です。

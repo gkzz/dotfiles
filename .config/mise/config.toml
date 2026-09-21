@@ -1,5 +1,5 @@
-# This is also the source of truth for the bootstrap version. The bootstrap
-# helper reads it because mise validates min_version before rendering templates.
+# Policy: use the hard minimum as the exact bootstrap version as well. Keeping
+# both roles coupled gives local and CI setup a single version source of truth.
 min_version = "2026.8.15"
 
 [env]
