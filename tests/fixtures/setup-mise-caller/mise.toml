@@ -1,0 +1,4 @@
+min_version = "2026.8.15"
+
+[tools]
+biome = "2.5.14"

@@ -6,6 +6,14 @@ inputs:
     description: Cache mise-managed runtime installs.
     required: false
     default: "true"
+  install:
+    description: Install tools from the caller repository's mise config and lockfile.
+    required: false
+    default: "false"
+  working-directory:
+    description: Caller repository directory containing the mise config.
+    required: false
+    default: "."
   install-node:
     description: Install the repository-pinned Node.js and Biome validation tools.
     required: false
@@ -19,7 +27,7 @@ runs:
       shell: bash
       run: |
         set -euo pipefail
-        . ./.config/mise/mise.env
+        MISE_VERSION="$("$GITHUB_ACTION_PATH/../../../setup/mise-version.sh")"
         echo "version=$MISE_VERSION" >> "$GITHUB_OUTPUT"
 
     - name: Resolve mise paths
@@ -40,7 +48,7 @@ runs:
       uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
       with:
         path: ${{ steps.mise-paths.outputs.data_dir }}/installs
-        key: mise-installs-${{ runner.os }}-${{ runner.arch }}-${{ steps.mise-release.outputs.version }}-${{ hashFiles('.config/mise/config.toml', '.config/mise/mise.lock') }}
+        key: mise-installs-${{ runner.os }}-${{ runner.arch }}-${{ steps.mise-release.outputs.version }}-${{ hashFiles(format('{0}/mise.toml', inputs.working-directory), format('{0}/mise.lock', inputs.working-directory), format('{0}/.mise.toml', inputs.working-directory), format('{0}/.config/mise/config.toml', inputs.working-directory), format('{0}/.config/mise/mise.lock', inputs.working-directory)) }}
 
     - name: Install mise CLI
       shell: bash
@@ -68,7 +76,7 @@ runs:
         export MISE_INSTALL_PATH="$mise_install_path"
 
         DOTFILES_MISE_BOOTSTRAP_TARGET="$MISE_INSTALL_PATH" \
-          ./setup/mise-install.sh --apply
+          "$GITHUB_ACTION_PATH/../../../setup/mise-install.sh" --apply
 
         installed_version="$("$MISE_INSTALL_PATH" version | head -n 1 | cut -d ' ' -f 1)"
         if [ "$installed_version" != "${{ steps.mise-release.outputs.version }}" ]; then
@@ -91,6 +99,14 @@ runs:
           echo "MISE_INSTALL_PATH=$MISE_INSTALL_PATH"
           echo "MISE_DATA_DIR=$MISE_DATA_DIR"
         } >> "$GITHUB_STEP_SUMMARY"
+
+    - name: Install caller repository tools
+      if: inputs.install == 'true'
+      shell: bash
+      working-directory: ${{ inputs.working-directory }}
+      run: |
+        set -euo pipefail
+        mise install --locked --yes
 
     - name: Install repository validation tools
       if: inputs.install-node == 'true'
