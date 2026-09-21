@@ -5,8 +5,7 @@ set -euo pipefail
 . "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/test-helper.bash"
 
 # The bootstrap wrapper ignores ambient version overrides and verifies a pinned release asset.
-# shellcheck source=.config/mise/mise.env
-. "$DOTFILES/.config/mise/mise.env"
+MISE_VERSION="$("$DOTFILES/setup/mise-version.sh")"
 bootstrap_dry_run="$test_root/bootstrap-dry-run.out"
 env HOME="$test_root/bootstrap-dry-run-home" MISE_VERSION=v0.0.0 MISE_INSTALL_PATH=/tmp/unmanaged-mise \
   "$DOTFILES/setup/mise-install.sh" --dry-run > "$bootstrap_dry_run"
@@ -121,7 +120,9 @@ assert_contains "$action_dry_run" "MISE_INSTALL_PATH=$action_target"
 # shellcheck disable=SC2016
 assert_contains "$DOTFILES/.github/actions/setup-mise/action.yml" \
   'DOTFILES_MISE_BOOTSTRAP_TARGET="$MISE_INSTALL_PATH"'
-assert_contains "$DOTFILES/.github/actions/setup-mise/action.yml" '.config/mise/mise.env'
+assert_contains "$DOTFILES/.github/actions/setup-mise/action.yml" '$GITHUB_ACTION_PATH/../../../setup/mise-version.sh'
+assert_contains "$DOTFILES/.github/actions/setup-mise/action.yml" '$GITHUB_ACTION_PATH/../../../setup/mise-install.sh'
+assert_contains "$DOTFILES/.github/actions/setup-mise/action.yml" 'mise install --locked --yes'
 
 # A non-executable bootstrap target is always a hard conflict.
 bootstrap_home="$test_root/bootstrap-home"

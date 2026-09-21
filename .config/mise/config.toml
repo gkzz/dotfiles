@@ -1,3 +1,7 @@
+# This is also the source of truth for the bootstrap version. The bootstrap
+# helper reads it because mise validates min_version before rendering templates.
+min_version = "2026.8.15"
+
 [env]
 # Resolve the repository from this config file so `mise install` works before
 # the managed global config symlink exists.

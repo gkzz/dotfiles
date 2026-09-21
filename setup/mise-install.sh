@@ -13,6 +13,7 @@ case "$mode" in
 esac
 
 repository_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+MISE_VERSION="$("$repository_root/setup/mise-version.sh")"
 # shellcheck source=.config/mise/mise.env
 . "$repository_root/.config/mise/mise.env"
 
