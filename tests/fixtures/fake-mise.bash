@@ -50,7 +50,26 @@ case "${1:-}" in
       exit 19
     fi
     if [ ! -e "$MISE_DATA_DIR/tools-installed" ]; then
-      printf '%s\n' 'node 24.19.0 missing'
+      node_version="$(awk '
+        /^[[:space:]]*\[[[:space:]]*tools[[:space:]]*\][[:space:]]*(#.*)?$/ {
+          tools_section = 1
+          next
+        }
+        tools_section && /^[[:space:]]*\[/ { exit }
+        tools_section && /^[[:space:]]*node[[:space:]]*=/ {
+          value = $0
+          sub(/^[[:space:]]*node[[:space:]]*=[[:space:]]*"/, "", value)
+          if (value == $0) next
+          sub(/"[[:space:]]*(#.*)?$/, "", value)
+          print value
+          exit
+        }
+      ' "$MISE_GLOBAL_CONFIG_FILE")"
+      if [ -z "$node_version" ]; then
+        printf 'fake mise could not read the Node.js version: %s\n' "$MISE_GLOBAL_CONFIG_FILE" >&2
+        exit 1
+      fi
+      printf 'node %s missing\n' "$node_version"
     fi
     ;;
   version|--version) printf '%s\n' '2026.8.6 linux-x64' ;;

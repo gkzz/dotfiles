@@ -1,5 +1,6 @@
 import assert from "node:assert/strict";
 import {
+  chmodSync,
   existsSync,
   lstatSync,
   mkdirSync,
@@ -13,8 +14,8 @@ import {
 import path from "node:path";
 import { describe, it } from "node:test";
 
-import { TestFixture } from "./helpers/fixture.mjs";
-import { repositoryRoot, run } from "./helpers/process.mjs";
+import { TestFixture } from "./helpers/fixture.js";
+import { repositoryRoot, run } from "./helpers/process.js";
 
 /**
  * managed symlink の安全性を検証する。
@@ -34,6 +35,126 @@ const backups = (home, name) =>
     .map((entry) => path.join(home, entry));
 
 describe("managed resources", () => {
+  describe("verify", () => {
+    it("reports each managed symlink mismatch without repairing it", async (t) => {
+      const cases = [
+        {
+          name: "missing",
+          arrange(destination) {
+            rmSync(destination);
+          },
+          message: "managed symlink is missing",
+          verify(destination) {
+            assert.equal(existsSync(destination), false);
+          },
+        },
+        {
+          name: "regular file",
+          arrange(destination) {
+            rmSync(destination);
+            writeFileSync(destination, "keep this local file\n");
+          },
+          message: "managed destination is not a symlink",
+          verify(destination) {
+            assert.equal(text(destination), "keep this local file\n");
+          },
+        },
+        {
+          name: "directory",
+          arrange(destination) {
+            rmSync(destination);
+            mkdirSync(destination);
+          },
+          message: "managed destination is not a symlink",
+          verify(destination) {
+            assert.equal(lstatSync(destination).isDirectory(), true);
+          },
+        },
+        {
+          name: "wrong target",
+          arrange(destination, home) {
+            rmSync(destination, { recursive: true });
+            symlinkSync(path.join(home, "wrong-target"), destination);
+          },
+          message: "managed symlink target differs",
+          verify(destination, home) {
+            assert.equal(
+              readlinkSync(destination),
+              path.join(home, "wrong-target"),
+            );
+          },
+        },
+      ];
+
+      for (const scenario of cases) {
+        await t.test(scenario.name, (t) => {
+          const fixture = new TestFixture(t);
+          const home = fixture.createConvergedHome("home");
+          const destination = path.join(home, ".bashrc");
+          scenario.arrange(destination, home);
+
+          const result = fixture.runDotfiles(home, ["verify", "--skip-brew"]);
+
+          assert.equal(result.status, 1, result.stderr);
+          assert.match(
+            result.stderr,
+            new RegExp(
+              `verify failed: ${scenario.message}: path=${destination.replaceAll(".", "\\.")} expected=${path.join(repositoryRoot, ".bashrc").replaceAll(".", "\\.")}`,
+            ),
+          );
+          if (scenario.name === "wrong target") {
+            assert.match(
+              result.stderr,
+              new RegExp(
+                `actual=${path.join(home, "wrong-target").replaceAll(".", "\\.")}`,
+              ),
+            );
+          }
+          scenario.verify(destination, home);
+        });
+      }
+    });
+
+    it("reports readlink execution errors without misclassifying the target", (t) => {
+      const fixture = new TestFixture(t);
+      const home = fixture.createConvergedHome("home");
+      const destination = path.join(home, ".bashrc");
+      const failureBin = path.join(fixture.root, "failure-bin");
+      const fakeReadlink = path.join(failureBin, "readlink");
+      mkdirSync(failureBin);
+      writeFileSync(
+        fakeReadlink,
+        `#!/usr/bin/env bash
+set -euo pipefail
+if [ "\${FAIL_READLINK_PATH:-}" = "\${1:-}" ]; then
+  printf '%s\\n' 'fake readlink failure' >&2
+  exit 20
+fi
+exec /usr/bin/readlink "$@"
+`,
+      );
+      chmodSync(fakeReadlink, 0o755);
+
+      const result = fixture.runDotfiles(home, ["verify", "--skip-brew"], {
+        TEST_PATH_PREFIX: failureBin,
+        FAIL_READLINK_PATH: destination,
+      });
+
+      assert.equal(result.status, 1, result.stderr);
+      assert.match(
+        result.stderr,
+        new RegExp(
+          `verify error: failed to read managed symlink target: path=${destination.replaceAll(".", "\\.")}`,
+        ),
+      );
+      assert.doesNotMatch(result.stderr, /managed symlink target differs/);
+      assert.equal(
+        readlinkSync(destination),
+        path.join(repositoryRoot, ".bashrc"),
+      );
+    });
+  });
+
   it("reject malformed resource definitions before lifecycle work", () => {
     const cases = [
       {

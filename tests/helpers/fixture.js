@@ -9,7 +9,33 @@ import {
 import os from "node:os";
 import path from "node:path";
 
-import { repositoryRoot, run } from "./process.mjs";
+import { repositoryRoot, run } from "./process.js";
+
+const sanitizedEnvironmentKeys = new Set([
+  "MISE_CONFIG_DIR",
+  "MISE_SYSTEM_CONFIG_DIR",
+  "MISE_ENV",
+  "MISE_GLOBAL_CONFIG_FILE",
+  "MISE_INSTALL_PATH",
+  "DOTFILES_MISE_BOOTSTRAP_TARGET",
+  "HOME",
+  "XDG_CONFIG_HOME",
+  "XDG_STATE_HOME",
+  "MISE_DATA_DIR",
+  "MISE_CACHE_DIR",
+  "MISE_STATE_DIR",
+  "MISE_NODE_VERSION",
+  "DOTFILES_SKIP_BREW",
+  "GITHUB_ACTIONS",
+  "PATH",
+  "DOTFILES",
+  "TEST_PATH_PREFIX",
+  "CREATE_DESTINATION_DURING_PREFLIGHT",
+  "STREAM_MARKER",
+  "STREAM_RELEASE_FILE",
+]);
+
+const sanitizedEnvironmentPrefixes = ["FAIL_", "FAKE_"];
 
 /** テストごとに隔離したHOMEとfake commandを管理する。 */
 export class TestFixture {
@@ -47,8 +73,20 @@ export class TestFixture {
   }
 
   dotfilesEnv(home, env = {}) {
+    const inheritedEnvironment = Object.fromEntries(
+      Object.entries(process.env).filter(
+        ([key]) =>
+          !sanitizedEnvironmentKeys.has(key) &&
+          !sanitizedEnvironmentPrefixes.some((prefix) =>
+            key.startsWith(prefix),
+          ),
+      ),
+    );
+    const caseEnvironment = { ...env };
+    delete caseEnvironment.TEST_PATH_PREFIX;
+
     return {
-      ...process.env,
+      ...inheritedEnvironment,
       HOME: home,
       XDG_CONFIG_HOME: path.join(home, ".config"),
       XDG_STATE_HOME: path.join(home, ".local/state"),
@@ -60,7 +98,7 @@ export class TestFixture {
       GITHUB_ACTIONS: "false",
       PATH: `${env.TEST_PATH_PREFIX ? `${env.TEST_PATH_PREFIX}:` : ""}${this.fakeBin}:/usr/bin:/bin`,
       DOTFILES: repositoryRoot,
-      ...env,
+      ...caseEnvironment,
     };
   }
 

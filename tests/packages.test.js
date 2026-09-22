@@ -1,11 +1,20 @@
 import assert from "node:assert/strict";
 import { spawn } from "node:child_process";
-import { existsSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import {
+  chmodSync,
+  existsSync,
+  mkdirSync,
+  readFileSync,
+  rmSync,
+  writeFileSync,
+} from "node:fs";
+import os from "node:os";
 import path from "node:path";
 import { describe, it } from "node:test";
 
-import { TestFixture } from "./helpers/fixture.mjs";
-import { repositoryRoot, run } from "./helpers/process.mjs";
+import { TestFixture } from "./helpers/fixture.js";
+import { repositoryRoot, run } from "./helpers/process.js";
+import { repositoryConfig } from "./helpers/repository-config.js";
 
 /**
  * Homebrewとmiseの検査・適用境界を検証する。
@@ -196,7 +205,7 @@ describe("package lifecycle", () => {
       );
     });
 
-    it("reports mise preparation failures without check prefixes", () => {
+    it("reports mise preparation failures without verify prefixes", () => {
       const installFailure = run(
         "bash",
         [
@@ -215,7 +224,7 @@ describe("package lifecycle", () => {
         installFailure.stderr,
         /failed to create temporary directory for mise inspection/,
       );
-      assert.doesNotMatch(installFailure.stderr, /check error:/);
+      assert.doesNotMatch(installFailure.stderr, /verify error:/);
     });
 
     it("omits every Homebrew inspection and action with --skip-brew", (t) => {
@@ -234,11 +243,178 @@ describe("package lifecycle", () => {
     });
   });
 
-  describe("check", () => {
+  describe("verify", () => {
+    it("classifies mise preparation and cleanup failures", async (t) => {
+      const cases = [
+        [
+          "mktemp",
+          'mktemp() { printf "%s\\n" "fake mktemp failure" >&2; return 1; }',
+          /failed to create temporary directory for mise inspection/,
+        ],
+        [
+          "mkdir",
+          'mkdir() { printf "%s\\n" "fake mkdir failure" >&2; return 1; }',
+          /failed to create temporary mise system directory/,
+        ],
+        [
+          "config copy",
+          'cp() { [ "$1" != "$MISE_CONFIG_SOURCE" ] || { printf "%s\\n" "fake cp failure" >&2; return 1; }; command cp "$@"; }',
+          /failed to copy mise config into temporary directory/,
+        ],
+        [
+          "lock copy",
+          'cp() { [ "$1" != "$MISE_LOCK_SOURCE" ] || { printf "%s\\n" "fake cp failure" >&2; return 1; }; command cp "$@"; }',
+          /failed to copy mise lockfile into temporary directory/,
+        ],
+        [
+          "cleanup",
+          'rm() { command rm "$@"; printf "%s\\n" "fake cleanup failure" >&2; return 1; }',
+          /failed to remove temporary mise directory/,
+        ],
+      ];
+      for (const [name, fault, diagnostic] of cases) {
+        await t.test(name, (t) => {
+          const script = `
+            . "$LIB_FILE"; . "$PACKAGES_FILE"
+            CHECK_FAILED=false; MISE_CMD=/bin/true
+            MISE_CONFIG_SOURCE="$CONFIG_SOURCE"; MISE_LOCK_SOURCE="$LOCK_SOURCE"
+            ${fault}
+            check_mise_tools
+            [ "$CHECK_FAILED" = true ]
+          `;
+          const result = run("bash", ["-c", script], { env: packageEnv });
+          assert.equal(result.status, 0, result.stderr);
+          assert.match(result.stderr, diagnostic);
+          if (name === "cleanup") {
+            const fixture = new TestFixture(t);
+            const home = fixture.createConvergedHome("home");
+            const failureBin = path.join(fixture.root, "failure-bin");
+            const fakeRm = path.join(failureBin, "rm");
+            mkdirSync(failureBin);
+            writeFileSync(
+              fakeRm,
+              `#!/usr/bin/env bash
+set -euo pipefail
+case " $* " in
+  *dotfiles-mise.*) printf '%s\\n' 'fake cleanup failure' >&2; exit 21 ;;
+esac
+exec /bin/rm "$@"
+`,
+            );
+            chmodSync(fakeRm, 0o755);
+            const cliResult = fixture.runDotfiles(
+              home,
+              ["verify", "--skip-brew"],
+              { TEST_PATH_PREFIX: failureBin },
+            );
+            assert.equal(cliResult.status, 1, cliResult.stderr);
+            assert.match(cliResult.stderr, diagnostic);
+            assert.match(cliResult.stderr, /fake cleanup failure/);
+            assert.doesNotMatch(cliResult.stdout, /verify complete/);
+            const temporaryPath = cliResult.stderr.match(
+              /failed to remove temporary mise directory: path=(.+)/,
+            )?.[1];
+            assert.ok(
+              temporaryPath,
+              "cleanup diagnostic must include its path",
+            );
+            assert.equal(
+              path.resolve(path.dirname(temporaryPath)),
+              path.resolve(os.tmpdir()),
+            );
+            assert.match(path.basename(temporaryPath), /^dotfiles-mise\./);
+            rmSync(temporaryPath, { recursive: true, force: true });
+          }
+        });
+      }
+    });
+
+    it("preserves primary mise failures and also reports cleanup failures", async (t) => {
+      for (const primary of ["prepare", "mise"]) {
+        await t.test(`${primary} + cleanup`, () => {
+          const prepareFault =
+            primary === "prepare"
+              ? 'mkdir() { printf "%s\\n" "fake combined mkdir failure" >&2; return 1; }'
+              : "";
+          const script = `
+            . "$LIB_FILE"; . "$PACKAGES_FILE"
+            CHECK_FAILED=false
+            fake_combined_mise() { return 37; }; MISE_CMD=fake_combined_mise
+            MISE_CONFIG_SOURCE="$CONFIG_SOURCE"; MISE_LOCK_SOURCE="$LOCK_SOURCE"
+            ${prepareFault}
+            rm() { command rm "$@"; printf "%s\\n" "fake combined cleanup failure" >&2; return 1; }
+            set +e; run_repository_mise_capture config --json; primary_status=$?; set -e
+            report_repository_mise_check_error "mise could not load the isolated repository config"
+            [ "$primary_status" -eq ${primary === "prepare" ? 1 : 37} ]
+            [ "$REPOSITORY_MISE_RESULT_CLEANUP_STATUS" -ne 0 ]
+            [ "$CHECK_FAILED" = true ]
+          `;
+          const result = run("bash", ["-c", script], { env: packageEnv });
+          assert.equal(result.status, 0, result.stderr);
+          assert.match(
+            result.stderr,
+            /failed to remove temporary mise directory/,
+          );
+          assert.match(result.stderr, /fake combined cleanup failure/);
+          assert.match(
+            result.stderr,
+            primary === "prepare"
+              ? /failed to create temporary mise system directory/
+              : /mise could not load the isolated repository config/,
+          );
+        });
+      }
+    });
+
+    it("reports mise operation failures with original stderr", async (t) => {
+      const cases = [
+        [
+          "config",
+          { FAIL_MISE_CONFIG: "1" },
+          /mise could not load the isolated repository config/,
+          /fake mise config failure/,
+        ],
+        [
+          "lock",
+          { FAIL_MISE_LOCK: "1" },
+          /mise could not validate the repository lockfile/,
+          /fake mise lock failure/,
+        ],
+        [
+          "ls",
+          { FAIL_MISE_LS: "1" },
+          /mise could not inspect tools/,
+          /fake mise ls failure/,
+        ],
+        ...[90, 91, 92, 93, 94, 95].map((status) => [
+          `status ${status}`,
+          { FAIL_MISE_LS_STATUS: String(status) },
+          /mise could not inspect tools/,
+          new RegExp(`fake mise ls status ${status}`),
+        ]),
+      ];
+      for (const [name, env, diagnostic, originalError] of cases) {
+        await t.test(name, (t) => {
+          const fixture = new TestFixture(t);
+          const home = fixture.createConvergedHome("home");
+          const result = fixture.runDotfiles(
+            home,
+            ["verify", "--skip-brew"],
+            env,
+          );
+          assert.equal(result.status, 1, result.stderr);
+          assert.match(result.stderr, diagnostic);
+          assert.match(result.stderr, originalError);
+          assert.doesNotMatch(result.stderr, /mise tools are missing/);
+          assert.doesNotMatch(result.stderr, /failed to (create|copy|remove)/);
+        });
+      }
+    });
+
     it("delegates package state to Homebrew and mise", (t) => {
       const fixture = new TestFixture(t);
       const home = fixture.createConvergedHome("home");
-      const result = fixture.runDotfiles(home, ["check"]);
+      const result = fixture.runDotfiles(home, ["verify"]);
       assert.equal(result.status, 0, result.stderr);
       const calls = readFileSync(path.join(home, "calls"), "utf8");
       assert.match(
@@ -254,10 +430,12 @@ describe("package lifecycle", () => {
       const fixture = new TestFixture(t);
       const home = fixture.createConvergedHome("home");
       rmSync(path.join(home, "mise-data/tools-installed"));
-      const result = fixture.runDotfiles(home, ["check", "--skip-brew"]);
+      const result = fixture.runDotfiles(home, ["verify", "--skip-brew"]);
       assert.equal(result.status, 1);
-      assert.match(result.stderr, /check failed: mise tools are missing:/);
-      assert.match(result.stderr, /node 24\.19\.0 missing/);
+      assert.match(result.stderr, /verify failed: mise tools are missing:/);
+      assert.ok(
+        result.stderr.includes(`node ${repositoryConfig.tools.node} missing`),
+      );
       assert.equal(
         existsSync(path.join(home, "mise-data/tools-installed")),
         false,
@@ -268,12 +446,12 @@ describe("package lifecycle", () => {
       const fixture = new TestFixture(t);
       const home = fixture.createConvergedHome("home");
       writeFileSync(path.join(home, "mise-data/tools-installed"), "");
-      const result = fixture.runDotfiles(home, ["check", "--skip-brew"], {
+      const result = fixture.runDotfiles(home, ["verify", "--skip-brew"], {
         FAKE_MISE_LS_WARNING: "1",
       });
       assert.equal(result.status, 0, result.stderr);
       assert.match(result.stderr, /fake mise ls warning/);
-      assert.match(result.stdout, /check complete/);
+      assert.match(result.stdout, /verify complete/);
       assert.doesNotMatch(result.stderr, /mise tools are missing/);
     });
   });

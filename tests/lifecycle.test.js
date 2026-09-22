@@ -15,8 +15,8 @@ import {
 import path from "node:path";
 import { describe, it } from "node:test";
 
-import { TestFixture } from "./helpers/fixture.mjs";
-import { assertBefore, repositoryRoot, run } from "./helpers/process.mjs";
+import { TestFixture } from "./helpers/fixture.js";
+import { assertBefore, repositoryRoot, run } from "./helpers/process.js";
 
 /**
  * install / uninstall lifecycle の利用者向け契約を検証する。
@@ -31,6 +31,23 @@ const backups = (home, name) =>
 const mode = (target) => statSync(target).mode & 0o777;
 
 describe("dotfiles lifecycle", () => {
+  describe("verify", () => {
+    it("aggregates missing state without repairing resources", (t) => {
+      const fixture = new TestFixture(t);
+      const home = fixture.createConvergedHome("check-home");
+      const link = path.join(home, ".bashrc");
+      const toolMarker = path.join(home, "mise-data/tools-installed");
+      rmSync(link);
+      rmSync(toolMarker);
+
+      const result = fixture.runDotfiles(home, ["verify"]);
+
+      assert.equal(result.status, 1, result.stderr);
+      assert.equal(existsSync(link), false);
+      assert.equal(existsSync(toolMarker), false);
+    });
+  });
+
   describe("install", () => {
     it("keeps dry-run and apply plans equal and converges idempotently", (t) => {
       const fixture = new TestFixture(t);
