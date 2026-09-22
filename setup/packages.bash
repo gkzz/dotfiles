@@ -195,7 +195,7 @@ run_isolated_mise() {
   "$mise_command" --cd "$mise_project_root" "$@"
 }
 
-report_repository_mise_check_error() {
+report_repository_mise_verify_error() {
   local operation_message="$1"
 
   case "$REPOSITORY_MISE_RESULT_REASON" in
@@ -274,12 +274,12 @@ check_mise_compatibility() {
   if validate_repository_mise_config; then
     print_repository_mise_success_stderr
   else
-    report_repository_mise_check_error "mise could not load the isolated repository config"
+    report_repository_mise_verify_error "mise could not load the isolated repository config"
   fi
   if validate_repository_mise_lock; then
     print_repository_mise_success_stderr
   else
-    report_repository_mise_check_error "mise could not validate the repository lockfile"
+    report_repository_mise_verify_error "mise could not validate the repository lockfile"
   fi
 }
 
@@ -389,7 +389,7 @@ check_mise_tools() {
     status=$?
   fi
   if [ "$status" -ne 0 ]; then
-    report_repository_mise_check_error "mise could not inspect tools"
+    report_repository_mise_verify_error "mise could not inspect tools"
     return
   fi
   [ -z "$REPOSITORY_MISE_RESULT_STDERR" ] || printf '%s\n' "$REPOSITORY_MISE_RESULT_STDERR" >&2

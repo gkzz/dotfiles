@@ -76,7 +76,7 @@ validate_install_commands() {
   done
 }
 
-validate_check_commands() {
+validate_verify_commands() {
   # Most flags are consumed by lifecycle.bash to skip dependent checks.
   # shellcheck disable=SC2034
   CHECK_HAVE_BASH=true

@@ -344,7 +344,7 @@ exec /bin/rm "$@"
             ${prepareFault}
             rm() { command rm "$@"; printf "%s\\n" "fake combined cleanup failure" >&2; return 1; }
             set +e; run_repository_mise_capture config --json; primary_status=$?; set -e
-            report_repository_mise_check_error "mise could not load the isolated repository config"
+            report_repository_mise_verify_error "mise could not load the isolated repository config"
             [ "$primary_status" -eq ${primary === "prepare" ? 1 : 37} ]
             [ "$REPOSITORY_MISE_RESULT_CLEANUP_STATUS" -ne 0 ]
             [ "$CHECK_FAILED" = true ]

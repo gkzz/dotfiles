@@ -89,6 +89,6 @@ initialize_setup_context
 
 case "$operation" in
   install) install_lifecycle ;;
-  verify) check_lifecycle ;;
+  verify) verify_lifecycle ;;
   uninstall) uninstall_lifecycle ;;
 esac

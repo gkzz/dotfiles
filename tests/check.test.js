@@ -59,7 +59,7 @@ describe("verify prerequisites", () => {
       MISE_LOCK_SOURCE="$REPOSITORY/.config/mise/mise.lock"
       have_cmd() { [ "$1" != git ]; }
       git() { printf "%s\\n" "git validator unexpectedly ran"; return 1; }
-      validate_check_commands; validate_repository
+      validate_verify_commands; validate_repository
       [ "$CHECK_FAILED" = true ]
     `;
     const result = run("bash", ["-c", script], {

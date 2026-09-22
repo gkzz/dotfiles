@@ -174,9 +174,9 @@ install_lifecycle() {
   plan_execute
 }
 
-check_lifecycle() {
+verify_lifecycle() {
   CHECK_FAILED=false
-  preflight_common validate_check_commands verify_error verify_failure
+  preflight_common validate_verify_commands verify_error verify_failure
   if [ "$PREFLIGHT_FAILED" = "true" ]; then
     CHECK_FAILED=true
   fi
