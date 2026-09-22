@@ -103,6 +103,9 @@ runs:
     - name: Install caller repository tools
       if: inputs.install == 'true'
       shell: bash
+      env:
+        # Let mise use the caller workflow's token for private GitHub tools.
+        MISE_GITHUB_TOKEN: ${{ github.token }}
       working-directory: ${{ inputs.working-directory }}
       run: |
         set -euo pipefail

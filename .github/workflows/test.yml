@@ -66,8 +66,6 @@ jobs:
 
       - name: Install caller repository toolchain
         uses: ./.github/actions/setup-mise
-        env:
-          MISE_GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           install: "true"
           working-directory: tests/fixtures/setup-mise-caller

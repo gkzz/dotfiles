@@ -1,0 +1,96 @@
+name: Release setup-mise action
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: Version tag to publish (for example, v0.1.0)
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+concurrency:
+  group: release-${{ inputs.version }}
+  cancel-in-progress: false
+
+jobs:
+  verify:
+    name: Verify release candidate
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Require main branch
+        if: github.ref != 'refs/heads/main'
+        run: |
+          echo 'error: releases must be dispatched from main' >&2
+          exit 1
+
+      - name: Validate version
+        env:
+          VERSION: ${{ inputs.version }}
+        run: |
+          set -euo pipefail
+          if [[ ! "$VERSION" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            echo "error: version must match vMAJOR.MINOR.PATCH: $VERSION" >&2
+            exit 1
+          fi
+
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+
+      - name: Check tag and release availability
+        env:
+          GH_TOKEN: ${{ github.token }}
+          VERSION: ${{ inputs.version }}
+        run: |
+          set -euo pipefail
+          if git show-ref --verify --quiet "refs/tags/$VERSION" ||
+            git ls-remote --exit-code --tags origin "refs/tags/$VERSION" >/dev/null 2>&1; then
+            echo "error: tag already exists: $VERSION" >&2
+            exit 1
+          fi
+          if gh release view "$VERSION" >/dev/null 2>&1; then
+            echo "error: release already exists: $VERSION" >&2
+            exit 1
+          fi
+
+      - name: Install repository toolchain
+        uses: ./.github/actions/setup-mise
+        with:
+          install-node: "true"
+
+      - name: Run CI
+        run: make ci
+
+  release:
+    name: Publish release
+    needs: verify
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout main
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: main
+          fetch-depth: 1
+
+      - name: Publish tag and GitHub Release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          VERSION: ${{ inputs.version }}
+          TARGET: ${{ github.sha }}
+        run: |
+          set -euo pipefail
+          if gh release view "$VERSION" >/dev/null 2>&1 ||
+            git ls-remote --exit-code --tags origin "refs/tags/$VERSION" >/dev/null 2>&1; then
+            echo "error: tag or release already exists: $VERSION" >&2
+            exit 1
+          fi
+          gh release create "$VERSION" \
+            --target "$TARGET" \
+            --generate-notes \
+            --title "$VERSION"

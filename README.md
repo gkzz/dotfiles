@@ -94,3 +94,16 @@ mise --cd .config/mise install
 Node.js のテスト一式だけを実行する場合は `tests/run.sh`、mise の境界テストだけを実行する場合は `tests/integration/mise-isolation.sh` を使います。Node.js のテストファイルは機能別に分かれており、必要なファイルだけを `mise exec -- node --test tests/check.test.js` のように単独実行できます。JavaScript は、リポジトリ直下の `package.json` にある `"type": "module"` によりES Modulesとして扱います。
 
 テストのレイヤーと品質保証の範囲は [テスト戦略](docs/TEST-STRATEGY.md)、その他の詳細は [docs/](./docs/) を参照してください。
+
+## setup-mise action のリリース
+
+`.github/actions/setup-mise` は、`Release setup-mise action` workflow を `main` から手動実行してリリースします。入力する version は `vMAJOR.MINOR.PATCH` 形式です。workflow は `make ci` を通過したコミットにタグを付け、前回のタグから Release notes を生成して GitHub Release を作成します。
+
+公開済みのタグは移動しません。修正が必要な場合は既存の version を再利用せず、新しい version を発行してください。利用側ではタグ名をコメントに残しつつ、参照を完全なコミット SHA に固定します。
+
+```yaml
+- name: Setup mise
+  uses: gkzz/dotfiles/.github/actions/setup-mise@<full-commit-sha> # v0.1.0
+```
+
+action は caller workflow の GitHub Actions token を mise に渡すため、mise の設定に private repository の tool が含まれていても利用側で `MISE_GITHUB_TOKEN` を個別設定する必要はありません。利用側 workflow には通常どおり `contents: read` を付与してください。
