@@ -10,7 +10,7 @@ macOS も対応できるように目指しているところです。
 
 ## 操作
 
-通常の操作は `install`、`verify`、`uninstall` の3つです。Makefileでも、現在の環境を確認する `verify` 操作を `make verify` で実行します。`make check` はリポジトリのlintとテストに使います。dry-run が既定で、変更には `--apply` が必要です。
+通常の操作は `install`、`verify`、`uninstall` の3つです。Makefileでも、現在の環境を確認する `verify` 操作を `make verify` で実行します。`make ci` はリポジトリのlintとテストに使います。dry-run が既定で、変更には `--apply` が必要です。
 
 ```bash
 make install
@@ -77,12 +77,12 @@ Git Credential Manager は lifecycle 外の補助操作です。
 ```bash
 make gcm
 make gcm-apply
-make check
+make ci
 make lint
 make test
 ```
 
-`make verify` は、package、tool、設定、シンボリックリンクが現在の環境で期待どおりか確認します。`make check` は開発中の変更を検査するコマンドで、`make lint`、`make test` の順に実行します。
+`make verify` は、package、tool、設定、シンボリックリンクが現在の環境で期待どおりか確認します。`make ci` は開発中の変更を検査するコマンドで、`make lint`、`make test` の順に実行します。
 
 `make lint` はシェルスクリプトの構文チェックとBiomeによるJavaScriptの検査、`make test` はNode.jsのテスト一式とmiseの環境分離を検証するシェルの境界テストを実行します。境界テストは実際のmiseを使うため、環境やcacheの状態によって時間がかかることがあります。実行には `mise` と、repositoryのmise設定で固定されたNode.js / Biomeが必要です。必要なツールは次で導入・確認できます。
 

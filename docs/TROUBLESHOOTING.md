@@ -5,7 +5,7 @@
 ```bash
 make install
 make verify
-make check
+make ci
 ```
 
 install の dry-run でエラーを解消してから [make install-apply](../Makefile) を実行してください。

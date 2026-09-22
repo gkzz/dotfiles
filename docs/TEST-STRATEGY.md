@@ -65,13 +65,13 @@ flowchart BT
 | miseの設定探索や実CLIへの渡し方を変える | Node.jsテストに加えて [tests/integration/mise-isolation.sh](../tests/integration/mise-isolation.sh) |
 | workflowや対応OSを変える | workflowのjob、OS別の実行条件、actionlintの対象 |
 
-ローカルでは、変更箇所に近いテストを先に実行し、最後に [make check](../Makefile) で静的検査と全テストを通します。CI固有の [Workflow syntax lint](../.github/workflows/lint.yml)、[Shell script lint](../.github/workflows/lint.yml)、[Bash lifecycle portability (${{ matrix.os }})](../.github/workflows/test.yml) の結果はプルリクエストで確認します。
+ローカルでは、変更箇所に近いテストを先に実行し、最後に [make ci](../Makefile) で静的検査と全テストを通します。CI固有の [Workflow syntax lint](../.github/workflows/lint.yml)、[Shell script lint](../.github/workflows/lint.yml)、[Bash lifecycle portability (${{ matrix.os }})](../.github/workflows/test.yml) の結果はプルリクエストで確認します。
 
 ## 実環境でしか確認できない範囲は残る
 
 現在の自動テストは、実際の利用者HOMEに対する変更、Homebrewの実インストール、外部インストールスクリプトの配布状態、WSL固有の差分を直接検証しません。これらをテスト用コマンドで通過させても、実環境での成功を保証したことにはなりません。
 
-外部ツールのversion、checksum、bootstrap処理を変えた場合は、[make check](../Makefile) に加えて対象環境でdry-runを確認します。実HOMEへ適用する場合は、表示された計画と競合を確認してから `--apply` を実行してください。
+外部ツールのversion、checksum、bootstrap処理を変えた場合は、[make ci](../Makefile) に加えて対象環境でdry-runを確認します。実HOMEへ適用する場合は、表示された計画と競合を確認してから `--apply` を実行してください。
 
 ## 用語
 

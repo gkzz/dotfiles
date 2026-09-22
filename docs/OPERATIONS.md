@@ -45,7 +45,7 @@ bin/dotfiles install --skip-brew --apply
 
 ## verify
 
-[make verify](../Makefile) は Bash、Git、Homebrew、mise、管理対象のシンボリックリンクを確認します。修復や lifecycle lock の作成は行いません。[make check](../Makefile) はリポジトリのlintとテストを実行する開発用コマンドです。
+[make verify](../Makefile) は Bash、Git、Homebrew、mise、管理対象のシンボリックリンクを確認します。修復や lifecycle lock の作成は行いません。[make ci](../Makefile) はリポジトリのlintとテストを実行する開発用コマンドです。
 
 mise の config、lock file、tool を確認するときは、一時ディレクトリに repository の設定をコピーして検査します。このディレクトリは検査の終了時に削除されます。削除できなかった場合は `verify error:` を表示し、verify は失敗します。
 

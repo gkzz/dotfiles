@@ -108,7 +108,7 @@ repository の mise config と lock file を検査するときは、一時ディ
 
 テストケース、テスト用環境の準備と後片付け、検証は原則として `node:test` で記述します。外部CLIのテスト用コマンド、実shell・実miseとの境界テスト、テスト起動処理にはshellを使います。shellテストで独自の分岐やassertionが増え、境界確認より処理の組み立てが中心になった場合は、`node:test`への移行を検討します。各レイヤーの役割と品質保証の範囲は [テスト戦略](TEST-STRATEGY.md) を参照してください。
 
-Node.js は mise config と lock file で固定し、[tests/run.sh](../tests/run.sh) が管理版を選択します。全Node.jsテストは [tests/run.sh](../tests/run.sh)、mise環境分離の境界だけは [tests/integration/mise-isolation.sh](../tests/integration/mise-isolation.sh) で単独実行できます。[make lint](../Makefile) は構文検査とBiome、[make test](../Makefile) は両方のテストを実行します。[make check](../Makefile) はlintとtestをこの順に実行します。
+Node.js は mise config と lock file で固定し、[tests/run.sh](../tests/run.sh) が管理版を選択します。全Node.jsテストは [tests/run.sh](../tests/run.sh)、mise環境分離の境界だけは [tests/integration/mise-isolation.sh](../tests/integration/mise-isolation.sh) で単独実行できます。[make lint](../Makefile) は構文検査とBiome、[make test](../Makefile) は両方のテストを実行します。[make ci](../Makefile) はlintとtestをこの順に実行します。
 
 ## 管理対象
 

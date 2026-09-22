@@ -38,7 +38,7 @@ description = "Remove managed symlinks"
 run = 'cd "$DOTFILES" && make uninstall-apply'
 
 [tasks."dotfiles:verify"]
-description = "Check the installed lifecycle state"
+description = "Verify the installed lifecycle state"
 run = 'cd "$DOTFILES" && make verify'
 
 [tasks."dotfiles:gcm"]
@@ -51,4 +51,4 @@ run = 'cd "$DOTFILES" && ./setup/gcm.sh --apply'
 
 [tasks."dotfiles:ci"]
 description = "Run lint and test sequentially"
-run = 'cd "$DOTFILES" && make check'
+run = 'cd "$DOTFILES" && make ci'
