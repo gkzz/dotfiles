@@ -34,7 +34,7 @@ jobs:
           ./setup/mise-install.sh --help
 
       - name: Run lifecycle tests
-        run: make test
+        run: ./tests/run.sh
 
       - name: Dry-run mise bootstrap
         run: ./setup/mise-install.sh --dry-run
