@@ -10,12 +10,12 @@ macOS も対応できるように目指しているところです。
 
 ## 操作
 
-通常の操作は `install`、`check`、`uninstall` の3つです。dry-run が既定で、変更には `--apply` が必要です。
+通常の操作は `install`、`verify`、`uninstall` の3つです。Makefileでも、現在の環境を確認する `verify` 操作を `make verify` で実行します。`make check` はリポジトリのlintとテストに使います。dry-run が既定で、変更には `--apply` が必要です。
 
 ```bash
 make install
 make install-apply
-make check
+make verify
 make uninstall
 make uninstall-apply
 ```
@@ -24,7 +24,7 @@ make uninstall-apply
 
 ```bash
 bin/dotfiles install [--dry-run|--apply] [--force] [--skip-brew]
-bin/dotfiles check [--skip-brew]
+bin/dotfiles verify [--skip-brew]
 bin/dotfiles uninstall [--dry-run|--apply]
 ```
 
@@ -43,15 +43,15 @@ sudo apt upgrade
 
 | 操作 | 役割 | dry-run | `--apply` |
 | --- | --- | --- | --- |
-| `install` | package、tool、managed symlink を揃える | デフォルト。確認結果と実行内容を表示する | 確認の後に変更する |
-| `uninstall` | dotfiles が作成した managed symlink を削除する | デフォルト。削除対象を表示する | 確認の後に削除する |
-| `check` | package、tool、設定、symlink が期待どおりか確認する | — | — |
+| `install` | package、tool、管理対象のシンボリックリンクを揃える | デフォルト。確認結果と実行内容を表示する | 確認の後に変更する |
+| `uninstall` | dotfiles が作成した管理対象のシンボリックリンクを削除する | デフォルト。削除対象を表示する | 確認の後に削除する |
+| `verify` | package、tool、設定、symlink が期待どおりか確認する | — | — |
 
-`install` と `uninstall` は、変更する前に対象と競合を確認します。dry-run では確認結果と実行内容を表示し、`--apply` では同じ確認の後に変更を実行します。`check` は install や uninstall とは別に、現在の状態だけを確認します。
+`install` と `uninstall` は、変更する前に対象と競合を確認します。dry-run では確認結果と実行内容を表示し、`--apply` では同じ確認の後に変更を実行します。`verify` は install や uninstall とは別に、現在の状態だけを確認します。
 
 `install --apply` と `uninstall --apply` は対象 HOME ごとの lifecycle lock を取得して直列化します。競合する既存ファイルは通常停止し、`--force` 指定時だけ regular file または symlink を日時付き backup へ移して置き換えます。directory と特殊ファイルは置き換えません。
 
-install は Homebrew Bundle、mise、managed symlink をまとめて適用します。各ツールの設定確認やバージョン確認は、それぞれのコマンドを使います。
+install は Homebrew Bundle、mise、管理対象のシンボリックリンクをまとめて適用します。各ツールの設定確認やバージョン確認は、それぞれのコマンドを使います。
 
 ## 管理対象
 
@@ -77,16 +77,20 @@ Git Credential Manager は lifecycle 外の補助操作です。
 ```bash
 make gcm
 make gcm-apply
-make validate
+make check
+make lint
+make test
 ```
 
-`make validate` は、シェルスクリプトの構文チェック、BiomeによるJavaScriptの検査、`node:test` によるlifecycleテストを実行します。実行には `mise` と、repository の mise 設定で固定された Node.js / Biome が必要です。必要なツールは次で導入・確認できます。
+`make verify` は、package、tool、設定、シンボリックリンクが現在の環境で期待どおりか確認します。`make check` は開発中の変更を検査するコマンドで、`make lint`、`make test` の順に実行します。
+
+`make lint` はシェルスクリプトの構文チェックとBiomeによるJavaScriptの検査、`make test` はNode.jsのテスト一式とmiseの環境分離を検証するシェルの境界テストを実行します。境界テストは実際のmiseを使うため、環境やcacheの状態によって時間がかかることがあります。実行には `mise` と、repositoryのmise設定で固定されたNode.js / Biomeが必要です。必要なツールは次で導入・確認できます。
 
 ```bash
 ./setup/mise-install.sh --apply
 mise --cd .config/mise install
 ```
 
-テストの一括実行入口は `tests/run.sh` です。テストファイルは機能別に分かれており、必要なファイルだけを `mise exec -- node --test ...` で単独実行できます。
+Node.js のテスト一式だけを実行する場合は `tests/run.sh`、mise の境界テストだけを実行する場合は `tests/integration/mise-isolation.sh` を使います。Node.js のテストファイルは機能別に分かれており、必要なファイルだけを `mise exec -- node --test tests/check.test.js` のように単独実行できます。JavaScript は、リポジトリ直下の `package.json` にある `"type": "module"` によりES Modulesとして扱います。
 
-詳細は [docs/](./docs/) を参照してください。
+テストのレイヤーと品質保証の範囲は [テスト戦略](docs/TEST-STRATEGY.md)、その他の詳細は [docs/](./docs/) を参照してください。
