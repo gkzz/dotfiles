@@ -46,4 +46,6 @@ lint:
 
 test:
 	./tests/run.sh
-	./tests/integration/mise-isolation.sh
+	@if [ "$(SKIP_MISE_ISOLATION)" != "1" ]; then \
+		./tests/integration/mise-isolation.sh; \
+	fi
