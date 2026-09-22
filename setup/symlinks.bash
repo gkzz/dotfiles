@@ -229,15 +229,15 @@ check_managed_links() {
       continue
     fi
     if [ ! -e "$dst" ] && [ ! -L "$dst" ]; then
-      check_failure "managed symlink is missing: path=$dst expected=$src"
+      verify_failure "managed symlink is missing: path=$dst expected=$src"
     elif [ ! -L "$dst" ]; then
-      check_failure "managed destination is not a symlink: path=$dst expected=$src"
+      verify_failure "managed destination is not a symlink: path=$dst expected=$src"
     else
       local actual
       if ! actual="$(readlink "$dst")"; then
-        check_error "failed to read managed symlink target: path=$dst"
+        verify_error "failed to read managed symlink target: path=$dst"
       elif [ "$actual" != "$src" ]; then
-        check_failure "managed symlink target differs: path=$dst expected=$src actual=$actual"
+        verify_failure "managed symlink target differs: path=$dst expected=$src actual=$actual"
       fi
     fi
   done

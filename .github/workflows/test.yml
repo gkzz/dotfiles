@@ -34,7 +34,7 @@ jobs:
           ./setup/mise-install.sh --help
 
       - name: Run lifecycle tests
-        run: ./tests/run.sh
+        run: make test SKIP_MISE_ISOLATION=1
 
       - name: Dry-run mise bootstrap
         run: ./setup/mise-install.sh --dry-run
@@ -54,7 +54,7 @@ jobs:
         run: mise --version
 
       - name: Reject caller and HOME mise configuration
-        run: ./tests/mise-isolation.sh
+        run: ./tests/integration/mise-isolation.sh
 
   setup-mise-caller:
     name: Setup mise for caller repository
@@ -80,7 +80,7 @@ jobs:
     name: Bash lifecycle portability (${{ matrix.os }})
     strategy:
       matrix:
-        os: [ubuntu-24.04, macos-15]
+        os: [macos-15]
     runs-on: ${{ matrix.os }}
 
     steps:
@@ -95,4 +95,4 @@ jobs:
           install-node: "true"
 
       - name: Run lifecycle tests
-        run: ./tests/run.sh
+        run: make test SKIP_MISE_ISOLATION=1

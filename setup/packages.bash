@@ -195,20 +195,20 @@ run_isolated_mise() {
   "$mise_command" --cd "$mise_project_root" "$@"
 }
 
-report_repository_mise_check_error() {
+report_repository_mise_verify_error() {
   local operation_message="$1"
 
   case "$REPOSITORY_MISE_RESULT_REASON" in
-    mktemp) check_error "failed to create temporary directory for mise inspection" ;;
-    mkdir) check_error "failed to create temporary mise system directory: path=$REPOSITORY_MISE_RESULT_TEMP_PATH/system" ;;
-    config-copy) check_error "failed to copy mise config into temporary directory: source=$MISE_CONFIG_SOURCE" ;;
-    lock-copy) check_error "failed to copy mise lockfile into temporary directory: source=$MISE_LOCK_SOURCE" ;;
-    mise) check_error "$operation_message" ;;
+    mktemp) verify_error "failed to create temporary directory for mise inspection" ;;
+    mkdir) verify_error "failed to create temporary mise system directory: path=$REPOSITORY_MISE_RESULT_TEMP_PATH/system" ;;
+    config-copy) verify_error "failed to copy mise config into temporary directory: source=$MISE_CONFIG_SOURCE" ;;
+    lock-copy) verify_error "failed to copy mise lockfile into temporary directory: source=$MISE_LOCK_SOURCE" ;;
+    mise) verify_error "$operation_message" ;;
   esac
   [ -z "$REPOSITORY_MISE_RESULT_STDOUT" ] || printf '%s\n' "$REPOSITORY_MISE_RESULT_STDOUT" >&2
   [ -z "$REPOSITORY_MISE_RESULT_STDERR" ] || printf '%s\n' "$REPOSITORY_MISE_RESULT_STDERR" >&2
   if [ "$REPOSITORY_MISE_RESULT_CLEANUP_STATUS" -ne 0 ]; then
-    check_error "failed to remove temporary mise directory: path=$REPOSITORY_MISE_RESULT_TEMP_PATH"
+    verify_error "failed to remove temporary mise directory: path=$REPOSITORY_MISE_RESULT_TEMP_PATH"
     [ -z "$REPOSITORY_MISE_RESULT_CLEANUP_STDERR" ] ||
       printf '%s\n' "$REPOSITORY_MISE_RESULT_CLEANUP_STDERR" >&2
   fi
@@ -274,12 +274,12 @@ check_mise_compatibility() {
   if validate_repository_mise_config; then
     print_repository_mise_success_stderr
   else
-    report_repository_mise_check_error "mise could not load the isolated repository config"
+    report_repository_mise_verify_error "mise could not load the isolated repository config"
   fi
   if validate_repository_mise_lock; then
     print_repository_mise_success_stderr
   else
-    report_repository_mise_check_error "mise could not validate the repository lockfile"
+    report_repository_mise_verify_error "mise could not validate the repository lockfile"
   fi
 }
 
@@ -369,18 +369,18 @@ apply_mise_tools() {
 
 check_brew_bundle() {
   if ! find_brew; then
-    check_error "brew is unavailable"
+    verify_error "brew is unavailable"
     return
   fi
   if ! HOMEBREW_NO_AUTO_UPDATE=1 "$BREW_CMD" bundle check --no-upgrade --file "$DOTFILES/Brewfile"; then
-    check_failure "Brewfile dependencies are not satisfied"
+    verify_failure "Brewfile dependencies are not satisfied"
   fi
 }
 
 check_mise_tools() {
   local status
   if [ -z "${MISE_CMD:-}" ] && ! find_mise; then
-    check_error "mise is unavailable"
+    verify_error "mise is unavailable"
     return
   fi
   if run_repository_mise_capture ls --missing --no-header; then
@@ -389,12 +389,12 @@ check_mise_tools() {
     status=$?
   fi
   if [ "$status" -ne 0 ]; then
-    report_repository_mise_check_error "mise could not inspect tools"
+    report_repository_mise_verify_error "mise could not inspect tools"
     return
   fi
   [ -z "$REPOSITORY_MISE_RESULT_STDERR" ] || printf '%s\n' "$REPOSITORY_MISE_RESULT_STDERR" >&2
   if [ -n "$REPOSITORY_MISE_RESULT_STDOUT" ]; then
-    printf 'check failed: mise tools are missing:\n%s\n' "$REPOSITORY_MISE_RESULT_STDOUT" >&2
+    printf 'verify failed: mise tools are missing:\n%s\n' "$REPOSITORY_MISE_RESULT_STDOUT" >&2
     # Consumed by lifecycle.bash after all checks finish.
     # shellcheck disable=SC2034
     CHECK_FAILED=true

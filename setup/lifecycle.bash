@@ -174,9 +174,9 @@ install_lifecycle() {
   plan_execute
 }
 
-check_lifecycle() {
+verify_lifecycle() {
   CHECK_FAILED=false
-  preflight_common validate_check_commands check_error check_failure
+  preflight_common validate_verify_commands verify_error verify_failure
   if [ "$PREFLIGHT_FAILED" = "true" ]; then
     CHECK_FAILED=true
   fi
@@ -195,12 +195,12 @@ check_lifecycle() {
       check_mise_compatibility
       check_mise_tools
     else
-      check_error "mise is unavailable"
+      verify_error "mise is unavailable"
     fi
   fi
 
   [ "$CHECK_FAILED" = "false" ] || return 1
-  log "check complete"
+  log "verify complete"
 }
 
 preflight_uninstall() {

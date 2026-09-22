@@ -9,11 +9,11 @@ mode_explicit=false
 
 usage() {
   cat <<'USAGE'
-usage: bin/dotfiles <install|check|uninstall> [OPTIONS]
+usage: bin/dotfiles <install|verify|uninstall> [OPTIONS]
 
 Operations:
   install        Converge packages, tools, and managed symlinks
-  check          Validate managed configuration without repairing it
+  verify         Validate managed configuration without repairing it
   uninstall      Remove symlinks that still point to this repository
 
 Options:
@@ -38,7 +38,7 @@ if [ "$#" -eq 0 ]; then
 fi
 
 case "$1" in
-  install|check|uninstall) operation="$1"; shift ;;
+  install|verify|uninstall) operation="$1"; shift ;;
   -h|--help) usage; exit 0 ;;
   *) usage >&2; exit 2 ;;
 esac
@@ -70,9 +70,9 @@ while [ "$#" -gt 0 ]; do
 done
 
 case "$operation" in
-  check)
-    "$mode_explicit" && { printf 'error: check does not accept --dry-run or --apply\n' >&2; exit 2; }
-    "$force" && { printf 'error: check does not accept --force\n' >&2; exit 2; }
+  verify)
+    "$mode_explicit" && { printf 'error: verify does not accept --dry-run or --apply\n' >&2; exit 2; }
+    "$force" && { printf 'error: verify does not accept --force\n' >&2; exit 2; }
     ;;
   uninstall)
     "$force" && { printf 'error: uninstall does not accept --force\n' >&2; exit 2; }
@@ -89,6 +89,6 @@ initialize_setup_context
 
 case "$operation" in
   install) install_lifecycle ;;
-  check) check_lifecycle ;;
+  verify) verify_lifecycle ;;
   uninstall) uninstall_lifecycle ;;
 esac

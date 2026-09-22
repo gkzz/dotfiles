@@ -4,11 +4,11 @@
 
 ```bash
 make install
-make check
-make validate
+make verify
+make ci
 ```
 
-install の dry-run でエラーを解消してから `make install-apply` を実行してください。
+install の dry-run でエラーを解消してから [make install-apply](../Makefile) を実行してください。
 
 ## lifecycle lock を取得できない
 
@@ -28,7 +28,7 @@ bin/dotfiles install --force --dry-run
 bin/dotfiles install --force --apply
 ```
 
-`--force` は regular file と symlink を日時付き backup へ移してから置き換えます。directory と特殊ファイルは置き換えません。backup は自動復元・削除しません。
+[--force](../bin/dotfiles) は通常ファイルとシンボリックリンクを日時付きbackupへ移してから置き換えます。ディレクトリと特殊ファイルは置き換えません。backupは自動復元・削除しません。
 
 ## mise が見つからない、または古い
 
@@ -37,22 +37,22 @@ bin/dotfiles install --dry-run
 mise version
 ```
 
-mise がなければ、install は repository に固定した mise release asset の SHA-256 checksumを照合してインストールします。既存 mise は自動更新しません。`curl`、SHA-256 checksumの照合、ネットワーク、version、config、lock に関する mise のエラーを確認し、必要なら対応版をインストールしてください。
+mise がなければ、install は [リポジトリで指定したバージョンのmise実行ファイル](../setup/mise-install.sh) をダウンロードし、SHA-256 checksumを照合してインストールします。既存 mise は自動更新しません。`curl`、SHA-256 checksumの照合、ネットワーク、version、config、lock に関する mise のエラーを確認し、必要なら対応版をインストールしてください。
 
 ## Homebrew が利用できない
 
-Homebrew がなければ、install は公式 installer の実行を予定します。OS、Command Line Tools、compiler、権限に関するエラーは installer の出力を確認してください。
+Homebrew がなければ、install は [公式インストールスクリプトを呼び出す処理](../setup/homebrew-install.sh) の実行を予定します。OS、Command Line Tools、compiler、権限に関するエラーは [インストールスクリプト](../setup/homebrew-install.sh) の出力を確認してください。
 
-Homebrew を使わない場合は `--skip-brew` を指定します。
+Homebrew を使わない場合は [--skip-brew](../bin/dotfiles) を指定します。
 
-## check が失敗する
+## verify が失敗する
 
 出力の先頭で、状態の不一致と検査処理のエラーを区別できます。
 
-- `check failed:`: 検査は完了したものの、設定やインストール状態が期待と異なります。
-- `check error:`: 必須コマンドの不足やコマンドの異常終了により、検査を完了できませんでした。続けて表示される元のエラーも確認してください。
+- `verify failed:`: 検査は完了したものの、設定やインストール状態が期待と異なります。
+- `verify error:`: 必須コマンドの不足やコマンドの異常終了により、検査を完了できませんでした。続けて表示される元のエラーも確認してください。
 
-managed symlink のエラーに表示される `expected` は期待する参照先、`actual` は現在の参照先です。`actual` が異なる場合も、check は symlink を張り替えません。
+管理対象のシンボリックリンクのエラーに表示される `expected` は期待する参照先、`actual` は現在の参照先です。`actual` が異なる場合も、verify はシンボリックリンクを張り替えません。
 
 各項目を個別に確認します。
 
@@ -60,18 +60,18 @@ managed symlink のエラーに表示される `expected` は期待する参照�
 bash -n .bashrc .bash_profile
 git config --no-includes --file .gitconfig --list
 brew bundle check --no-upgrade --file Brewfile
-bin/dotfiles check --skip-brew
+bin/dotfiles verify --skip-brew
 ```
 
 ## repository を移動した
 
-既存 symlink は新しい repository を自動参照しません。新しい repository で install の dry-run を実行し、競合する symlink を確認してください。旧 backup や state file は自動で探索・削除しません。
+既存 symlink は新しい repository を自動参照しません。新しい repository で install の dry-run を実行し、競合する symlink を確認してください。以前のbackupや、以前のバージョンが作成した状態管理ファイルは自動で探索・削除しません。
 
 ## 調査情報を保存する
 
 ```bash
 bin/dotfiles install --dry-run
-bin/dotfiles check --skip-brew
+bin/dotfiles verify --skip-brew
 uname -a
 bash --version | head -n 1
 ```

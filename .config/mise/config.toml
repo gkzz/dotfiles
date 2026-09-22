@@ -37,9 +37,9 @@ run = 'cd "$DOTFILES" && make uninstall'
 description = "Remove managed symlinks"
 run = 'cd "$DOTFILES" && make uninstall-apply'
 
-[tasks."dotfiles:check"]
-description = "Check the installed lifecycle state"
-run = 'cd "$DOTFILES" && make check'
+[tasks."dotfiles:verify"]
+description = "Verify the installed lifecycle state"
+run = 'cd "$DOTFILES" && make verify'
 
 [tasks."dotfiles:gcm"]
 description = "dry-run Git Credential Manager setup"
@@ -49,6 +49,6 @@ run = 'cd "$DOTFILES" && ./setup/gcm.sh --dry-run'
 description = "Configure Git Credential Manager"
 run = 'cd "$DOTFILES" && ./setup/gcm.sh --apply'
 
-[tasks."dotfiles:validate"]
-description = "Run local syntax and dry-run validation"
-run = 'cd "$DOTFILES" && make validate'
+[tasks."dotfiles:ci"]
+description = "Run lint and test sequentially"
+run = 'cd "$DOTFILES" && make ci'

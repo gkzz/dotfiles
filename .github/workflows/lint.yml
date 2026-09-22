@@ -50,9 +50,9 @@ jobs:
             setup/homebrew-install.sh \
             setup/gcm.sh \
             setup/mise-install.sh \
-            tests/*.bash \
             tests/*.sh \
             tests/fixtures/*.bash \
+            tests/integration/*.sh \
             bash/*.bash \
             .bashrc \
             .bash_profile
@@ -72,8 +72,5 @@ jobs:
         with:
           install-node: "true"
 
-      - name: Run Bash syntax checks
-        run: bash -n bin/dotfiles setup/*.bash setup/*.sh tests/*.bash tests/*.sh tests/fixtures/*.bash bash/*.bash .bashrc .bash_profile
-
-      - name: Run Biome
-        run: mise --cd .config/mise exec -- biome check --config-path "$(pwd)/biome.jsonc" "$(pwd)/tests"
+      - name: Run lint
+        run: make lint
