@@ -35,7 +35,7 @@ jobs:
           ./bin/dotfiles install --skip-brew
           ./bin/dotfiles install --skip-brew --apply
 
-          ./bin/dotfiles check --skip-brew
+          ./bin/dotfiles verify --skip-brew
 
           ./bin/dotfiles uninstall
           ./bin/dotfiles uninstall --apply
@@ -52,4 +52,4 @@ jobs:
 
           ./bin/dotfiles install --skip-brew
           ./bin/dotfiles install --skip-brew --apply
-          ./bin/dotfiles check --skip-brew
+          ./bin/dotfiles verify --skip-brew

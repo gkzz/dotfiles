@@ -32,14 +32,14 @@ preflight_error() {
 }
 
 check_failure() {
-  printf 'check failed: %s\n' "$*" >&2
+  printf 'verify failed: %s\n' "$*" >&2
   # Consumed by lifecycle.bash after all checks finish.
   # shellcheck disable=SC2034
   CHECK_FAILED=true
 }
 
 check_error() {
-  printf 'check error: %s\n' "$*" >&2
+  printf 'verify error: %s\n' "$*" >&2
   # Consumed by lifecycle.bash after all checks finish.
   # shellcheck disable=SC2034
   CHECK_FAILED=true

@@ -200,7 +200,7 @@ check_lifecycle() {
   fi
 
   [ "$CHECK_FAILED" = "false" ] || return 1
-  log "check complete"
+  log "verify complete"
 }
 
 preflight_uninstall() {

@@ -394,7 +394,7 @@ check_mise_tools() {
   fi
   [ -z "$REPOSITORY_MISE_RESULT_STDERR" ] || printf '%s\n' "$REPOSITORY_MISE_RESULT_STDERR" >&2
   if [ -n "$REPOSITORY_MISE_RESULT_STDOUT" ]; then
-    printf 'check failed: mise tools are missing:\n%s\n' "$REPOSITORY_MISE_RESULT_STDOUT" >&2
+    printf 'verify failed: mise tools are missing:\n%s\n' "$REPOSITORY_MISE_RESULT_STDOUT" >&2
     # Consumed by lifecycle.bash after all checks finish.
     # shellcheck disable=SC2034
     CHECK_FAILED=true
