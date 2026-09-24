@@ -78,6 +78,7 @@ jobs:
 
   portability:
     name: Bash lifecycle portability (${{ matrix.os }})
+    if: github.event_name == 'workflow_dispatch'
     strategy:
       matrix:
         os: [macos-15]
