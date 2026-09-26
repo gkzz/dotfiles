@@ -7,6 +7,12 @@ argument-hint: "[write|score] [quick|full|exp] [対象ファイルや依頼内�
 
 # natural-japanese
 
+## Provenance
+
+- Based on: [coji/natural-japanese](https://github.com/coji/natural-japanese/blob/01802de30fffcd6f5dcc74edb298fc3a6df5ca19/skills/natural-japanese/SKILL.md)
+- License: MIT
+- Local modifications: adapted for this global skills collection
+
 仕事の日本語を、読みやすくわかりやすく書くためのスキル。議事録・調査レポート・社内ガイド・リサーチメモ・スライドといった仕事の文書から、note・ブログ・エッセイまで。AI臭さの除去は工程の一部として組み込まれている。
 
 ## 設計思想
@@ -140,4 +146,3 @@ lint と台帳が収束しても、それは既知の表層パターンが消え
 ## 参考例
 
 before/after の具体例は `references/examples.md` を参照。
-

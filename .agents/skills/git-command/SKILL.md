@@ -5,6 +5,10 @@ description: Git の作業ブランチ作成、add、commit、push、rebase、�
 
 # Git Command
 
+## Provenance
+
+- Origin: Original skill authored for this global skills collection
+
 Git の作業ブランチ作成、add、commit、push、rebase、履歴整理を案内するときにこの skill を使う。
 
 ## 前提
@@ -213,4 +217,3 @@ git rebase --abort
 - local `main` が最新だと仮定しない。
 - 最新の GitHub `main` を基準にする場合は、`git fetch origin` 後の `origin/main` を使う。
 - `gup` は `git pull --ff-only` の alias として扱い、`git pull --rebase` として案内しない。
-

@@ -5,6 +5,12 @@ description: 計画・設計・技術的な意思決定を質問で厳しく検�
 
 # Grill Me
 
+## Provenance
+
+- Based on: [mattpocock/skills — grill-me](https://github.com/mattpocock/skills/blob/321658273cb1d20b76026717d027d505790106d4/docs/productivity/grill-me.md)
+- License: MIT
+- Local modifications: adapted for this global skills collection
+
 計画・設計・アイデアを決定木として捉え、共通理解に達するまで質問を続ける。曖昧な回答や楽観的な前提をそのまま受け入れず、矛盾、未定義、失敗条件を具体化する。
 
 ## 進め方

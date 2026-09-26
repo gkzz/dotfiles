@@ -7,6 +7,10 @@ metadata:
 
 # PR Body
 
+## Provenance
+
+- Origin: Original skill authored for this global skills collection
+
 Use this skill when asked to draft, rewrite, or update a pull request body for this repository.
 
 Read `.github/pull_request_template.md` first and preserve its headings and order. Treat template comments as guidance only.
@@ -28,4 +32,3 @@ When grouping changes by commit, use a Markdown link whose label is the short co
 For this dotfiles repository, prefer nearby validation such as `make validate`, targeted `bash -n`, and relevant `--dry-run` commands when those results are available. If validation was not run, label it as `not run` with a short reason.
 
 Do not edit the remote PR body unless the user explicitly asks to apply it. When they do, use `gh pr edit --body-file` or an equivalent `gh` command, then verify the updated body with `gh pr view`.
-
