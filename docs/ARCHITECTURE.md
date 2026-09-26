@@ -112,7 +112,7 @@ Node.js は mise config と lock file で固定し、[tests/run.sh](../tests/run
 
 ## 管理対象
 
-- [.bashrc](../.bashrc)、[.bash_profile](../.bash_profile)、[.gitconfig](../.gitconfig)、mise config の symlink
+- [.bashrc](../.bashrc)、[.bash_profile](../.bash_profile)、[.gitconfig](../.gitconfig)、mise config、Codex skill の symlink
 - [Brewfile](../Brewfile) に記載した package
 - mise lock に記載した tool
 

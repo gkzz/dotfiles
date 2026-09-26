@@ -58,7 +58,9 @@ install は Homebrew Bundle、mise、管理対象のシンボリックリンク�
 - `~/.bashrc`
 - `~/.bash_profile`
 - `~/.gitconfig`
+- `~/.agents/AGENTS.md`
 - `${XDG_CONFIG_HOME:-$HOME/.config}/mise/config.toml`
+- `~/.agents/skills/{git-command,natural-japanese,pr-body}`
 - Brewfile の直接指定項目
 - mise lock file に記載された開発ツール
 
