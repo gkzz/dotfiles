@@ -340,7 +340,7 @@ exec /usr/bin/readlink "$@"
       text(path.join(repositoryRoot, ".bashrc")),
       /github\.com\/gkzz\/dotfiles/,
     );
-    const config = text(path.join(repositoryRoot, ".config/mise/config.toml"));
+    const config = text(path.join(repositoryRoot, "mise.toml"));
     assert.doesNotMatch(config, /github\.com\/gkzz\/dotfiles/);
     assert.match(config, /DOTFILES = "\{\{ config_source \| canonicalize/);
     assert.equal(

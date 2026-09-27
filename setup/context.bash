@@ -2,8 +2,8 @@
 
 initialize_setup_context() {
   CONFIG_HOME="${XDG_CONFIG_HOME:-$HOME/.config}"
-  MISE_CONFIG_SOURCE="$DOTFILES/.config/mise/config.toml"
-  MISE_LOCK_SOURCE="$DOTFILES/.config/mise/mise.lock"
+  MISE_CONFIG_SOURCE="$DOTFILES/mise.toml"
+  MISE_LOCK_SOURCE="$DOTFILES/mise.lock"
   MISE_CONFIG_TARGET="$CONFIG_HOME/mise/config.toml"
   MISE_BOOTSTRAP_TARGET="$HOME/.local/bin/mise"
   # Keep coordination anchored to HOME so differing XDG_STATE_HOME values cannot

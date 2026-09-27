@@ -20,8 +20,8 @@ import { repositoryConfig } from "./helpers/repository-config.js";
  * Homebrewとmiseの検査・適用境界を検証する。
  * miseのresult state、apply時のstreaming、checkの診断、--skip-brewが対象。
  */
-const configSource = path.join(repositoryRoot, ".config/mise/config.toml");
-const lockSource = path.join(repositoryRoot, ".config/mise/mise.lock");
+const configSource = path.join(repositoryRoot, "mise.toml");
+const lockSource = path.join(repositoryRoot, "mise.lock");
 const packageEnv = {
   ...process.env,
   LIB_FILE: path.join(repositoryRoot, "setup/lib.bash"),

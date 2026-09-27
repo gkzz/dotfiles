@@ -2,7 +2,7 @@
 set -euo pipefail
 
 repository_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-exec mise --cd "$repository_root/.config/mise" exec -- \
+exec mise --cd "$repository_root" exec -- \
   node --test --test-isolation=none --test-concurrency=1 \
   "$repository_root/tests/bootstrap.test.js" \
   "$repository_root/tests/check.test.js" \

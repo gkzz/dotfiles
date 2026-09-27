@@ -2,7 +2,7 @@
 set -euo pipefail
 
 repository_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-config_file="$repository_root/.config/mise/config.toml"
+config_file="$repository_root/mise.toml"
 version="$(sed -n 's/^min_version = "\([^"]*\)"$/\1/p' "$config_file")"
 
 if [ -z "$version" ] || [[ "$version" == *$'\n'* ]]; then

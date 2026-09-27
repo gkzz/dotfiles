@@ -66,9 +66,9 @@ machine-local な Git 設定は `~/.gitconfig.local`、shell 設定は `~/.bashr
 
 ### mise本体のバージョン
 
-`.config/mise/config.toml` の `min_version` は、設定を読み込める最低バージョンと、dotfilesがbootstrapする固定バージョンを兼ねます。ローカルとCIが参照するmise本体のバージョンを1か所で管理するため、この2つは意図的に同じ値とします。
+`mise.toml` の `min_version` は、設定を読み込める最低バージョンと、dotfilesがbootstrapする固定バージョンを兼ねます。ローカルとCIが参照するmise本体のバージョンを1か所で管理するため、この2つは意図的に同じ値とします。
 
-mise本体を更新するときは、`min_version` と `.config/mise/mise.env` のプラットフォーム別SHA-256を、同じリリースの値へまとめて更新してください。互換性の下限とbootstrapするバージョンを別々に管理する運用は、このリポジトリでは行いません。
+mise本体を更新するときは、`min_version` と `mise.env` のプラットフォーム別SHA-256を、同じリリースの値へまとめて更新してください。互換性の下限とbootstrapするバージョンを別々に管理する運用は、このリポジトリでは行いません。
 
 ## 補助操作とテスト
 
@@ -88,7 +88,7 @@ make test
 
 ```bash
 ./setup/mise-install.sh --apply
-mise --cd .config/mise install
+mise install
 ```
 
 Node.js のテスト一式だけを実行する場合は `tests/run.sh`、mise の境界テストだけを実行する場合は `tests/integration/mise-isolation.sh` を使います。Node.js のテストファイルは機能別に分かれており、必要なファイルだけを `mise exec -- node --test tests/check.test.js` のように単独実行できます。JavaScript は、リポジトリ直下の `package.json` にある `"type": "module"` によりES Modulesとして扱います。

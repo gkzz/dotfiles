@@ -3,7 +3,7 @@ import path from "node:path";
 
 import { repositoryRoot } from "./process.js";
 
-const miseConfigPath = path.join(repositoryRoot, ".config/mise/config.toml");
+const miseConfigPath = path.join(repositoryRoot, "mise.toml");
 const miseConfig = readFileSync(miseConfigPath, "utf8");
 
 export function readQuotedValue(config, section, key, configPath = "config") {

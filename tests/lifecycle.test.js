@@ -60,9 +60,7 @@ describe("dotfiles lifecycle", () => {
       );
       assert.match(
         dry.stdout,
-        new RegExp(
-          `plan: mise_install ${repositoryRoot}/.config/mise/config.toml`,
-        ),
+        new RegExp(`plan: mise_install ${repositoryRoot}/mise.toml`),
       );
       assert.match(
         dry.stdout,

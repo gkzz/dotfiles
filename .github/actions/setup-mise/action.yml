@@ -113,6 +113,6 @@ runs:
       shell: bash
       run: |
         set -euo pipefail
-        mise --cd "$GITHUB_WORKSPACE/.config/mise" install node biome
-        mise --cd "$GITHUB_WORKSPACE/.config/mise" exec -- node --version
-        mise --cd "$GITHUB_WORKSPACE/.config/mise" exec -- biome --version
+        mise --cd "$GITHUB_WORKSPACE" install node biome
+        mise --cd "$GITHUB_WORKSPACE" exec -- node --version
+        mise --cd "$GITHUB_WORKSPACE" exec -- biome --version

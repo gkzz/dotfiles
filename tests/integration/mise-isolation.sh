@@ -46,9 +46,9 @@ MISE_CMD="$(command -v mise)"
 
 cd "$caller_dir"
 config_json="$(run_repository_mise_apply config --json)"
-source_checksum_before="$(cksum "$DOTFILES/.config/mise/mise.lock")"
+source_checksum_before="$(cksum "$DOTFILES/mise.lock")"
 run_repository_mise_apply install --locked --yes --dry-run >/dev/null
-source_checksum_after="$(cksum "$DOTFILES/.config/mise/mise.lock")"
+source_checksum_after="$(cksum "$DOTFILES/mise.lock")"
 test "$source_checksum_after" = "$source_checksum_before"
 
 if printf '%s\n' "$config_json" | grep -E 'ruby|rust|config\.hostile\.toml|miserc\.toml|conf\.d|config\.local' >/dev/null; then
@@ -60,8 +60,8 @@ fi
 # Repository-local discovery files are excluded by copying only the canonical pair.
 isolated_repo="$test_root/repository"
 mkdir -p "$isolated_repo/.config/mise/conf.d"
-cp "$DOTFILES/.config/mise/config.toml" "$isolated_repo/.config/mise/config.toml"
-cp "$DOTFILES/.config/mise/mise.lock" "$isolated_repo/.config/mise/mise.lock"
+cp "$DOTFILES/mise.toml" "$isolated_repo/mise.toml"
+cp "$DOTFILES/mise.lock" "$isolated_repo/mise.lock"
 cat > "$isolated_repo/.config/mise/conf.d/local.toml" <<'EOF'
 [tools]
 ruby = "3.3.0"

@@ -42,7 +42,7 @@ ci:
 
 lint:
 	bash -n bin/dotfiles setup/*.bash setup/*.sh tests/*.sh tests/fixtures/*.bash tests/integration/*.sh bash/*.bash .bashrc .bash_profile
-	mise --cd .config/mise exec -- biome check --config-path "$$(pwd)/biome.jsonc" "$$(pwd)/tests"
+	mise exec -- biome check --config-path "$$(pwd)/biome.jsonc" "$$(pwd)/tests"
 
 test:
 	./tests/run.sh
