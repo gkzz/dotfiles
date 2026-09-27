@@ -1,6 +1,6 @@
 # シンボリックリンクの管理をmiseへ移管する
 
-独自の`setup/symlinks.bash`を廃止し、5本のsymlinkをmise Dotfilesへ移管する。`bin/dotfiles`は利用者向けの入口として残すが、symlinkの状態判定、作成、解除は行わない。wrapperの責務は、固定版miseのbootstrap、Homebrewとtool install、mise Dotfilesの実行順、lifecycle lockに限定する。
+独自の`setup/symlinks.bash`を廃止し、5本のsymlinkをmise Dotfilesへ移管する。`bin/dotfiles`は利用者向けの入口として残すが、symlinkの状態判定、作成、解除は行わない。wrapperの責務は、固定版miseのbootstrap、Homebrewとtool install、mise Dotfilesの実行順、lifecycle lock、安全なtarget pathの事前検証、mise設定の隔離に限定する。
 
 既存利用者との挙動の互換性は非ゴールとする。現在の利用者はリポジトリ所有者だけなので、独自実装を段階的に残さず、miseの状態モデルと診断へ寄せる。
 
@@ -15,6 +15,8 @@
 ```
 
 root `mise.toml`は、project config、global configのsource、tool設定、task、通常のdotfiles宣言を兼ねる。`min_version`は引き続き、設定を読み込める最低バージョンとbootstrapするmise本体の固定バージョンを兼ねる。`mise.env`のSHA-256と同時に更新する運用も維持する。
+
+root配置により、`DOTFILES`の算出は`mise.toml`の実体をcanonicalizeした後、その親ディレクトリをrepository rootとして扱う式へ変更する。従来の`.config/mise/config.toml`を前提にした3階層上への移動は残さない。直接root configを読んだ場合と、global configのsymlink経由で読んだ場合の両方で、`DOTFILES`が実際のcheckoutを指すことを受け入れ条件にする。
 
 配置変更に伴い、次をrootの`mise.toml`と`mise.lock`へ追従させる。
 
@@ -76,7 +78,9 @@ mise 2026.8.15では、`[dotfiles]`のtargetやsourceへ`XDG_CONFIG_HOME`、conf
 - `HOME`、checkout、`XDG_CONFIG_HOME`は絶対パスであること。
 - tabと改行を含まないこと。
 - checkoutとroot `mise.toml`が存在すること。
-- targetの親にあるsymlinkをmiseが追跡して外部を変更しないことを境界テストで確認すること。
+- 各targetのparentを絶対パスとして字句的に正規化し、`/`直下からparentまでの既存componentを順に`lstat`相当で検査すること。`HOME`と`XDG_CONFIG_HOME`自身も検査対象に含める。symlink componentがある場合はapply/unapplyを実行せず拒否し、存在しないcomponentへ到達した時点で検査を終える。miseがsymlink parentを安全に扱うことを前提にしない。
+
+この検査はdry-runにも適用する。拒否した場合は外部側を変更せず、どのparent componentが安全境界に違反したかを表示する。symlink parentを通るtargetを用意したE2Eでは、操作が非ゼロで終了し、外部側と他のtargetが不変であることを確認する。
 
 ## `bin/dotfiles`はmise Dotfilesを順序制御する
 
@@ -108,9 +112,9 @@ dry-runではfilesystemを変更せず、同じ5本に対するmiseの計画を�
 
 ### verify
 
-verifyは、一時configとroot `mise.toml`のそれぞれに対して`mise bootstrap dotfiles status --missing`を実行する。miseの標準出力、標準エラー、終了コードを加工せず利用する。独自のmissing、wrong source、source missing診断は廃止する。
+verifyは、現行の公開契約を維持し、Homebrew、mise tool、dotfilesの状態を検証する。`--skip-brew`指定時はHomebrewの検証だけを省略する。dotfiles部分は、一時configとroot `mise.toml`のそれぞれに対して`mise bootstrap dotfiles status --missing`を実行する。miseの標準出力、標準エラー、終了コードを加工せず利用する。独自のmissing、wrong source、source missing診断は廃止する。
 
-2回のstatusのどちらかが非ゼロなら、dotfilesのverifyを失敗とする。verifyはtarget、state、configを変更しない。
+Homebrew、tool、dotfilesのいずれかが非ゼロならverifyを失敗とする。verifyはtarget、state、configを変更しない。dotfiles操作だけのためにverify全体をdotfiles-onlyへ縮退させない。
 
 ### uninstall
 
@@ -124,7 +128,7 @@ anchorを最後に解除し、他のsourceが途中で参照不能にならな�
 
 uninstallのためにmiseをbootstrapしない。miseがPATHにも固定のbootstrap先にも見つからない場合は、何も変更せずエラー終了し、miseを導入してから再実行するよう案内する。
 
-## mise標準のstateと親ディレクトリ管理を使う
+## mise標準のstateを使い、親ディレクトリ削除は保証しない
 
 dotfiles操作では、通常のmiseと同じstate directoryを使う。
 
@@ -132,9 +136,11 @@ dotfiles操作では、通常のmiseと同じstate directoryを使う。
 ${MISE_STATE_DIR:-${XDG_STATE_HOME:-$HOME/.local/state}/mise}
 ```
 
-実行ごとの一時state directoryは使わない。miseが作成した親ディレクトリの所有情報を後日のuninstallでも参照できるようにする。
+実行ごとの一時state directoryは使わず、mise標準の状態管理を維持する。install、verify、uninstallは、同じ規則で解決したstate directoryを使う。
 
-`unapply`が、mise自身の作成した空の親ディレクトリを削除する標準挙動を受け入れる。既存ディレクトリと管理外ファイルを含むディレクトリは残ることをE2Eで確認する。`HOME`、`XDG_CONFIG_HOME`、checkout外を指すsymlinked parentを削除してはならない。
+固定するmise 2026.8.15では、symlinkの`unapply`が空の親ディレクトリを削除することを保証しない。したがって、uninstall後に親ディレクトリまで削除することは要件にしない。既存ディレクトリ、管理外ファイルを含むディレクトリ、miseが作成した空の親ディレクトリのいずれも、symlink解除後の扱いはmise標準に委ねる。wrapperは親ディレクトリを独自に削除しない。
+
+将来miseを更新する場合も、親ディレクトリcleanupの挙動をこの計画の契約にはしない。cleanupを要件にする場合は、miseの対応範囲（特にHOME外のXDG_CONFIG_HOME）を確認したうえで、wrapperが作成したdirectoryを明示的に記録・検証して安全にcleanupする別設計とする。
 
 ## `--force`と独自の復旧機能を廃止する
 
@@ -160,6 +166,14 @@ checkoutを移動し、既存の`~/.dotfiles`が旧checkoutを指している場
 
 lockは同じHOMEに対する`bin/dotfiles`同士の同時実行を防ぐ。CLI外からのfilesystem変更や、直接実行されたmiseコマンドまでは防がない。miseのdotfilesコマンドを直接使う操作を正式サポートしない理由の一つとして文書化する。
 
+## dotfiles操作にもmiseの設定隔離を適用する
+
+miseの呼び出しは`run_dotfiles_mise <config> ...`相当の一箇所へ集約する。install、status、apply、unapplyのすべてがこのrunnerを通り、呼び出し元のsystem/global config、config ceiling、config filename、env、hooksがdotfiles操作へ混入しないようにする。root `mise.toml`を明示することは、他の設定をcomposeさせないことの代替にはならない。
+
+runnerへ入る前に、`MISE_DATA_DIR`、`MISE_CACHE_DIR`、`MISE_STATE_DIR`を呼び出し元の値とXDG/HOMEの既定値から解決する。その後、設定探索や実行内容へ影響する`MISE_*`を除去し、解決済みのdata、cache、state directoryと、隔離に必要な変数だけをallowlistとして明示的に設定する。これにより、呼び出し元の保存先は維持しつつ、設定の合成は許可しない。install、status、unapplyが同じstate directoryを使用することもテストする。
+
+tool install時に既存の設定隔離テストを維持するだけでなく、dotfiles操作についてもhostileなHOMEとcaller/global/system configを用意したE2Eを追加する。意図したroot configと一時config以外の設定が読まれないこと、install、status、unapplyの結果が隔離環境の外部設定に左右されないことを確認する。
+
 ## E2Eは配線と受け入れ条件へ絞る
 
 `.github/workflows/e2e_smoke.yml`では固定版の実miseを使い、`HOME`、`XDG_CONFIG_HOME`、`XDG_STATE_HOME`を隔離する。`XDG_CONFIG_HOME`には標準値と異なるパスを設定する。
@@ -174,8 +188,10 @@ lockは同じHOMEに対する`bin/dotfiles`同士の同時実行を防ぐ。CLI�
 6. installを再実行しても同じ状態へ収束する。
 7. uninstallのdry-runでは5本が残る。
 8. uninstall apply後に5本が消える。
-9. miseが作成した空の親ディレクトリだけが削除され、管理外ファイルを含むディレクトリは残る。
-10. uninstall後もpackage、tool、mise stateの管理外データは残る。
+9. uninstall後もpackage、tool、mise stateの管理外データは残る。親ディレクトリの削除有無は受け入れ条件にしない。
+10. targetのparent componentにsymlinkがある場合、install/uninstallのdry-runとapplyが拒否され、外部側と他のtargetが不変である。
+11. hostileなmise設定を置いても、dotfilesのinstall、status、unapplyが意図したconfigだけで実行され、同じ規則で解決したstate directoryを使う。
+12. root `mise.toml`を直接読んだ場合とglobal configのsymlink経由で読んだ場合の両方で、`DOTFILES`が実際のcheckoutを指す。
 
 代表的な競合として、既存の通常ファイルを`~/.bashrc`へ置いたケースを検査する。
 
@@ -204,11 +220,12 @@ Node.jsテストには、CLI option、mise呼び出し、実行順、mise不在�
 
 1. `config.toml`、`mise.lock`、`mise.env`をrootへ移し、参照元とテストを追従させる。
 2. root `mise.toml`へ3本の`[dotfiles]`宣言を追加する。
-3. 環境依存の2本を宣言する一時config runnerを追加する。
-4. install、verify、uninstallをmise Dotfiles呼び出しへ置き換える。
-5. `--force`、backup、rollback、独自診断を削除する。
-6. E2Eへ5本の正常系、通常ファイル競合、親ディレクトリ、XDG対応を追加する。
-7. 旧symlink実装と重複テストを削除する。
-8. Makefile、README、Architecture、Operations、Test Strategy、Troubleshootingを更新する。
+3. 環境依存の2本を宣言する一時configと、設定を隔離する`run_dotfiles_mise` runnerを追加する。
+4. target parentの既存componentを検査し、symlinkがあればmiseを呼ばずに拒否するpreconditionを追加する。
+5. install、verify、uninstallをmise Dotfiles呼び出しへ置き換える。
+6. `--force`、backup、rollback、独自診断を削除する。
+7. E2Eへ5本の正常系、通常ファイル競合、symlink parent拒否、XDG対応、設定隔離、state directoryの一致、root config経路別の`DOTFILES`検証を追加する。
+8. 旧symlink実装と重複テストを削除する。
+9. Makefile、README、Architecture、Operations、Test Strategy、Troubleshootingを更新する。
 
-実装完了後、symlinkの状態遷移は5本ともmise Dotfilesが担当する。このリポジトリに残すのは、環境依存パスの宣言生成、処理順、lifecycle lock、miseの実環境を使った受け入れ確認だけである。
+実装完了後、symlinkの状態遷移は5本ともmise Dotfilesが担当する。このリポジトリには、環境依存パスの宣言生成、安全なtarget pathの事前検証、mise設定の隔離、処理順、lifecycle lock、miseの実環境を使った受け入れ確認だけを残す。
