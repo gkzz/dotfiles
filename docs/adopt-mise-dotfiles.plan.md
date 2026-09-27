@@ -1,0 +1,214 @@
+# シンボリックリンクの管理をmiseへ移管する
+
+独自の`setup/symlinks.bash`を廃止し、5本のsymlinkをmise Dotfilesへ移管する。`bin/dotfiles`は利用者向けの入口として残すが、symlinkの状態判定、作成、解除は行わない。wrapperの責務は、固定版miseのbootstrap、Homebrewとtool install、mise Dotfilesの実行順、lifecycle lockに限定する。
+
+既存利用者との挙動の互換性は非ゴールとする。現在の利用者はリポジトリ所有者だけなので、独自実装を段階的に残さず、miseの状態モデルと診断へ寄せる。
+
+## miseの設定一式をリポジトリルートへ移す
+
+現在の`.config/mise`配下にある3ファイルをリポジトリルートへ移す。
+
+```text
+.config/mise/config.toml -> mise.toml
+.config/mise/mise.lock  -> mise.lock
+.config/mise/mise.env   -> mise.env
+```
+
+root `mise.toml`は、project config、global configのsource、tool設定、task、通常のdotfiles宣言を兼ねる。`min_version`は引き続き、設定を読み込める最低バージョンとbootstrapするmise本体の固定バージョンを兼ねる。`mise.env`のSHA-256と同時に更新する運用も維持する。
+
+配置変更に伴い、次をrootの`mise.toml`と`mise.lock`へ追従させる。
+
+- `setup/mise-install.sh`と`setup/mise-version.sh`
+- tool install用の一時configとlock file
+- Makefileのlintとtest
+- `.github/actions/setup-mise`とE2E workflow
+- Node.jsテストとmise isolationテスト
+- README、Architecture、Operations、Test Strategy、Troubleshooting
+
+## 5本のsymlinkをmise Dotfilesで管理する
+
+管理対象は次の5本とする。
+
+```text
+~/.dotfiles
+~/.bashrc
+~/.bash_profile
+~/.gitconfig
+${XDG_CONFIG_HOME:-$HOME/.config}/mise/config.toml
+```
+
+`~/.dotfiles`は、実際のcheckoutを指す安定したanchorである。global configはXDG Base Directoryに従い、anchor経由でroot `mise.toml`を指す。
+
+```text
+~/.dotfiles
+  -> <実際のcheckout>
+
+${XDG_CONFIG_HOME:-$HOME/.config}/mise/config.toml
+  -> ~/.dotfiles/mise.toml
+```
+
+root `mise.toml`には、環境に依存しない3本を宣言する。
+
+```toml
+[dotfiles]
+"~/.bashrc" = "~/.dotfiles/.bashrc"
+"~/.bash_profile" = "~/.dotfiles/.bash_profile"
+"~/.gitconfig" = "~/.dotfiles/.gitconfig"
+```
+
+sourceにcheckoutからの相対パスは使わない。root `mise.toml`はglobal configのsymlink経由でも読み込まれるため、相対sourceは`${XDG_CONFIG_HOME}/mise`基準に変わる可能性がある。`~/.dotfiles`から始まるsourceへ統一し、読み込み経路に依存しないようにする。
+
+## 環境依存の2本は一時configで宣言する
+
+mise 2026.8.15では、`[dotfiles]`のtargetやsourceへ`XDG_CONFIG_HOME`、config実体パスなどのテンプレートを展開できない。任意のcheckout先と非標準の`XDG_CONFIG_HOME`へ対応するため、wrapperは実行ごとに一時mise configを生成する。
+
+一時configには、解決済みの絶対sourceと絶対targetで次の2本だけを宣言する。
+
+```text
+~/.dotfiles -> <実際のcheckout>
+<解決済みXDG_CONFIG_HOME>/mise/config.toml -> ~/.dotfiles/mise.toml
+```
+
+一時configは`mktemp -d`で作成したディレクトリに置き、処理後に削除する。HOMEやXDG config directoryには、補助的な`conf.d`ファイルを残さない。一時config自身や一時ディレクトリをsymlinkのsourceにしてはならない。
+
+パスには既存の検証を適用する。
+
+- `HOME`、checkout、`XDG_CONFIG_HOME`は絶対パスであること。
+- tabと改行を含まないこと。
+- checkoutとroot `mise.toml`が存在すること。
+- targetの親にあるsymlinkをmiseが追跡して外部を変更しないことを境界テストで確認すること。
+
+## `bin/dotfiles`はmise Dotfilesを順序制御する
+
+利用者向けの正式な入口は、引き続き次の3操作とする。miseのdotfilesコマンドを直接使う操作は利用者向け契約に含めない。
+
+```text
+bin/dotfiles install [--dry-run|--apply] [--skip-brew]
+bin/dotfiles verify [--skip-brew]
+bin/dotfiles uninstall [--dry-run|--apply]
+```
+
+固定版mise 2026.8.15には`mise dot` aliasがないため、内部コマンドは実測済みの`mise bootstrap dotfiles`へ統一する。
+
+### install
+
+applyでは、依存順を守って次を実行する。
+
+1. 既存のpreflightを実行する。
+2. 必要なら固定版miseをbootstrapする。
+3. 5本すべてを絶対パスで宣言した一時configに対して`mise bootstrap dotfiles apply --dry-run`を実行し、競合がないことを確認する。
+4. Homebrewとtool installを処理する。
+5. 一時configで`~/.dotfiles`を`mise bootstrap dotfiles apply --yes`する。
+6. 一時configでXDG配下のglobal configを`mise bootstrap dotfiles apply --yes`する。
+7. root `mise.toml`で`.bashrc`、`.bash_profile`、`.gitconfig`を`mise bootstrap dotfiles apply --yes`する。
+
+anchorを先に作るのは、残り4本のsourceが`~/.dotfiles`配下にあるためである。global configを作成した後も、root `mise.toml`を明示して処理を続け、実行途中で設定探索の基準を変えない。
+
+dry-runではfilesystemを変更せず、同じ5本に対するmiseの計画を表示する。anchorが未作成でも残りのsourceを検査できるよう、dry-run用の一時configでは5本すべてに解決済みのsourceとtargetを指定する。applyでも変更前に同じpreflightを通すため、既知の競合がある状態でanchorや他targetを部分適用しない。dry-runとapplyで対象となる5本が一致することをテストする。
+
+### verify
+
+verifyは、一時configとroot `mise.toml`のそれぞれに対して`mise bootstrap dotfiles status --missing`を実行する。miseの標準出力、標準エラー、終了コードを加工せず利用する。独自のmissing、wrong source、source missing診断は廃止する。
+
+2回のstatusのどちらかが非ゼロなら、dotfilesのverifyを失敗とする。verifyはtarget、state、configを変更しない。
+
+### uninstall
+
+applyではinstallと逆の順序で解除する。
+
+1. root `mise.toml`で`.bashrc`、`.bash_profile`、`.gitconfig`を`mise bootstrap dotfiles unapply --yes`する。
+2. 一時configでXDG配下のglobal configを`mise bootstrap dotfiles unapply --yes`する。
+3. 一時configで`~/.dotfiles`を`mise bootstrap dotfiles unapply --yes`する。
+
+anchorを最後に解除し、他のsourceが途中で参照不能にならないようにする。dry-runも同じ順序で`mise bootstrap dotfiles unapply --dry-run`を実行する。
+
+uninstallのためにmiseをbootstrapしない。miseがPATHにも固定のbootstrap先にも見つからない場合は、何も変更せずエラー終了し、miseを導入してから再実行するよう案内する。
+
+## mise標準のstateと親ディレクトリ管理を使う
+
+dotfiles操作では、通常のmiseと同じstate directoryを使う。
+
+```text
+${MISE_STATE_DIR:-${XDG_STATE_HOME:-$HOME/.local/state}/mise}
+```
+
+実行ごとの一時state directoryは使わない。miseが作成した親ディレクトリの所有情報を後日のuninstallでも参照できるようにする。
+
+`unapply`が、mise自身の作成した空の親ディレクトリを削除する標準挙動を受け入れる。既存ディレクトリと管理外ファイルを含むディレクトリは残ることをE2Eで確認する。`HOME`、`XDG_CONFIG_HOME`、checkout外を指すsymlinked parentを削除してはならない。
+
+## `--force`と独自の復旧機能を廃止する
+
+publicな`install --force`を廃止し、CLIへ渡された場合はusage errorとして終了コード2を返す。miseへ`bootstrap dotfiles apply --force`を渡さない。
+
+既存targetが通常ファイル、別sourceを指すsymlink、ディレクトリの場合は、mise標準の競合エラーで停止する。wrapperは既存targetを移動、削除、置換しない。利用者が内容を確認し、競合を手動で解消してからinstallを再実行する。
+
+次の独自保証と実装を廃止する。
+
+- 日時付きbackup
+- 失敗時のrollback
+- directoryと特殊ファイルの独自分類
+- preflightとapply間の競合レースに対する独自処理
+- 旧実装の状態ファイルとの互換性
+
+checkoutを移動し、既存の`~/.dotfiles`が旧checkoutを指している場合も自動更新しない。利用者がlink先を確認して`~/.dotfiles`を手動で削除した後、新しいcheckoutからinstallを再実行する。
+
+安全な`--force`を再導入する場合は別issueで扱う。そのissueでは、置換対象、directory保護、backup、rollback、TOCTOU対策をまとめて決める。本計画ではGitHub issueの作成自体は行わない。
+
+## lifecycle lockは維持する
+
+`install --apply`と`uninstall --apply`は、既存の`$HOME/.dotfiles-lifecycle.lock`を使って直列化する。dry-runとverifyはlockを取得しない。
+
+lockは同じHOMEに対する`bin/dotfiles`同士の同時実行を防ぐ。CLI外からのfilesystem変更や、直接実行されたmiseコマンドまでは防がない。miseのdotfilesコマンドを直接使う操作を正式サポートしない理由の一つとして文書化する。
+
+## E2Eは配線と受け入れ条件へ絞る
+
+`.github/workflows/e2e_smoke.yml`では固定版の実miseを使い、`HOME`、`XDG_CONFIG_HOME`、`XDG_STATE_HOME`を隔離する。`XDG_CONFIG_HOME`には標準値と異なるパスを設定する。
+
+正常系では次を確認する。
+
+1. dry-runが5本を表示し、HOME、XDG config、mise stateを変更しない。
+2. install後に5本すべてが`test -L`を満たす。
+3. `readlink`が期待するanchorまたはsourceを指す。
+4. root `mise.toml`がglobal configとしてmiseに認識される。
+5. verifyが成功する。
+6. installを再実行しても同じ状態へ収束する。
+7. uninstallのdry-runでは5本が残る。
+8. uninstall apply後に5本が消える。
+9. miseが作成した空の親ディレクトリだけが削除され、管理外ファイルを含むディレクトリは残る。
+10. uninstall後もpackage、tool、mise stateの管理外データは残る。
+
+代表的な競合として、既存の通常ファイルを`~/.bashrc`へ置いたケースを検査する。
+
+- install applyが非ゼロで終了する。
+- 既存ファイルの内容が変わらない。
+- `.bash_profile`、`.gitconfig`を含む他targetも部分適用されない。
+- `--force`がmiseへ渡されない。
+
+mise内部の全競合種別、競合レース、rollbackは再検証しない。今回のE2Eは、wrapperの配線、実行順、公開契約に対象を絞る。
+
+## 削除する独自実装
+
+受け入れ条件を満たした後、次を削除する。
+
+- `setup/symlinks.bash`
+- `MANAGED_RESOURCES`
+- planの`ensure_symlink`、`replace_symlink`、`remove_symlink`
+- symlink用の独自backupとrollback
+- `tests/symlinks.test.js`のmise内部処理と重複するケース
+- `tests/fixtures/inputs/symlinks.json`の不要部分
+- lifecycleテスト内の独自競合分類と競合レースのケース
+
+Node.jsテストには、CLI option、mise呼び出し、実行順、mise不在時のuninstall、`--force`拒否を残す。実miseとの接続はE2Eで確認する。tool install時の設定隔離を検査する`tests/integration/mise-isolation.sh`は、root配置へ追従させたうえで維持する。
+
+## 実装順
+
+1. `config.toml`、`mise.lock`、`mise.env`をrootへ移し、参照元とテストを追従させる。
+2. root `mise.toml`へ3本の`[dotfiles]`宣言を追加する。
+3. 環境依存の2本を宣言する一時config runnerを追加する。
+4. install、verify、uninstallをmise Dotfiles呼び出しへ置き換える。
+5. `--force`、backup、rollback、独自診断を削除する。
+6. E2Eへ5本の正常系、通常ファイル競合、親ディレクトリ、XDG対応を追加する。
+7. 旧symlink実装と重複テストを削除する。
+8. Makefile、README、Architecture、Operations、Test Strategy、Troubleshootingを更新する。
+
+実装完了後、symlinkの状態遷移は5本ともmise Dotfilesが担当する。このリポジトリに残すのは、環境依存パスの宣言生成、処理順、lifecycle lock、miseの実環境を使った受け入れ確認だけである。
