@@ -25,6 +25,7 @@ root配置により、`DOTFILES`の算出は`mise.toml`の実体をcanonicalize�
 - Makefileのlintとtest
 - `.github/actions/setup-mise`とE2E workflow
 - Node.jsテストとmise isolationテスト
+- `renovate.json5`のmise manager対象
 - README、Architecture、Operations、Test Strategy、Troubleshooting
 
 ## 5本のsymlinkをmise Dotfilesで管理する
@@ -53,10 +54,12 @@ root `mise.toml`には、環境に依存しない3本を宣言する。
 
 ```toml
 [dotfiles]
-"~/.bashrc" = "~/.dotfiles/.bashrc"
-"~/.bash_profile" = "~/.dotfiles/.bash_profile"
-"~/.gitconfig" = "~/.dotfiles/.gitconfig"
+"~/.bashrc" = { source = "~/.dotfiles/.bashrc" }
+"~/.bash_profile" = { source = "~/.dotfiles/.bash_profile" }
+"~/.gitconfig" = { source = "~/.dotfiles/.gitconfig" }
 ```
+
+固定版mise 2026.8.15のschemaに合わせ、各targetの値は`source`を持つinline tableとする。`mode`は既定のsymlinkを使うため省略する。一時configの宣言も同じschemaで生成する。
 
 sourceにcheckoutからの相対パスは使わない。root `mise.toml`はglobal configのsymlink経由でも読み込まれるため、相対sourceは`${XDG_CONFIG_HOME}/mise`基準に変わる可能性がある。`~/.dotfiles`から始まるsourceへ統一し、読み込み経路に依存しないようにする。
 
@@ -73,14 +76,16 @@ mise 2026.8.15では、`[dotfiles]`のtargetやsourceへ`XDG_CONFIG_HOME`、conf
 
 一時configは`mktemp -d`で作成したディレクトリに置き、処理後に削除する。HOMEやXDG config directoryには、補助的な`conf.d`ファイルを残さない。一時config自身や一時ディレクトリをsymlinkのsourceにしてはならない。
 
+一時configへパスを埋め込むときは、TOML basic stringとしてencodeする。`"`、`\`、制御文字をTOMLのescape sequenceへ変換し、生成後のconfigを固定版miseでparseできることをテストする。shellで値を引用するだけの文字列連結は使わない。
+
 パスには既存の検証を適用する。
 
 - `HOME`、checkout、`XDG_CONFIG_HOME`は絶対パスであること。
 - tabと改行を含まないこと。
 - checkoutとroot `mise.toml`が存在すること。
-- 各targetのparentを絶対パスとして字句的に正規化し、`/`直下からparentまでの既存componentを順に`lstat`相当で検査すること。`HOME`と`XDG_CONFIG_HOME`自身も検査対象に含める。symlink componentがある場合はapply/unapplyを実行せず拒否し、存在しないcomponentへ到達した時点で検査を終える。miseがsymlink parentを安全に扱うことを前提にしない。
+- 各targetのparentを絶対パスとして字句的に正規化し、`/`直下からparentまでの既存componentを順に`lstat`相当で検査すること。`HOME`と`XDG_CONFIG_HOME`自身も検査対象に含める。symlink componentがある場合はapply/unapplyを実行せず拒否し、存在しないcomponentへ到達した時点で検査を終える。miseがsymlink parentを安全に扱うことを前提にしない。apply/unapplyを呼ぶ直前にも同じ検査を行い、検査後に作られたsymlinkを見つける時間幅を狭める。
 
-この検査はdry-runにも適用する。拒否した場合は外部側を変更せず、どのparent componentが安全境界に違反したかを表示する。symlink parentを通るtargetを用意したE2Eでは、操作が非ゼロで終了し、外部側と他のtargetが不変であることを確認する。
+この検査はdry-runにも適用する。拒否した場合は外部側を変更せず、どのparent componentがpreconditionに違反したかを表示する。symlink parentを通るtargetを用意したE2Eでは、操作が非ゼロで終了し、外部側と他のtargetが不変であることを確認する。ただし、検査とmiseによるfilesystem操作はatomicではない。外部processがその間にcomponentをsymlinkへ置き換えるTOCTOU raceまで安全性を保証しない。この制約は運用上の注意として文書化し、完全な対策が必要になった場合はdescriptor基準のfilesystem操作を含む別設計で扱う。
 
 ## `bin/dotfiles`はmise Dotfilesを順序制御する
 
@@ -100,7 +105,7 @@ applyでは、依存順を守って次を実行する。
 
 1. 既存のpreflightを実行する。
 2. 必要なら固定版miseをbootstrapする。
-3. 5本すべてを絶対パスで宣言した一時configに対して`mise bootstrap dotfiles apply --dry-run`を実行し、競合がないことを確認する。
+3. 5本すべてを絶対パスで宣言したpreflight用の一時configに対して`mise bootstrap dotfiles apply --dry-run`を実行し、競合がないことを確認する。このconfigでは、anchorがまだ存在しない初回installでもsourceを解決できるよう、残り4本のsourceを`~/.dotfiles`経由ではなくcheckout実体の絶対パスで指定する。
 4. Homebrewとtool installを処理する。
 5. 一時configで`~/.dotfiles`を`mise bootstrap dotfiles apply --yes`する。
 6. 一時configでXDG配下のglobal configを`mise bootstrap dotfiles apply --yes`する。
@@ -108,7 +113,7 @@ applyでは、依存順を守って次を実行する。
 
 anchorを先に作るのは、残り4本のsourceが`~/.dotfiles`配下にあるためである。global configを作成した後も、root `mise.toml`を明示して処理を続け、実行途中で設定探索の基準を変えない。
 
-dry-runではfilesystemを変更せず、同じ5本に対するmiseの計画を表示する。anchorが未作成でも残りのsourceを検査できるよう、dry-run用の一時configでは5本すべてに解決済みのsourceとtargetを指定する。applyでも変更前に同じpreflightを通すため、既知の競合がある状態でanchorや他targetを部分適用しない。dry-runとapplyで対象となる5本が一致することをテストする。
+dry-runではfilesystemを変更せず、同じ5本に対するmiseの計画を表示する。anchorが未作成でも残りのsourceを検査できるよう、dry-run用の一時configでは5本すべてに解決済みのsourceとtargetを指定し、global configのsourceにもcheckout実体の`mise.toml`を使う。applyでも変更前に同じpreflightを通すため、既知の競合がある状態でanchorや他targetを部分適用しない。anchorがないクリーンなHOMEでdry-runとinstallが成功すること、およびdry-runとapplyで対象となる5本が一致することをテストする。
 
 ### verify
 
@@ -218,10 +223,10 @@ Node.jsテストには、CLI option、mise呼び出し、実行順、mise不在�
 
 ## 実装順
 
-1. `config.toml`、`mise.lock`、`mise.env`をrootへ移し、参照元とテストを追従させる。
+1. `config.toml`、`mise.lock`、`mise.env`をrootへ移し、参照元、`renovate.json5`、テストを追従させる。
 2. root `mise.toml`へ3本の`[dotfiles]`宣言を追加する。
-3. 環境依存の2本を宣言する一時configと、設定を隔離する`run_dotfiles_mise` runnerを追加する。
-4. target parentの既存componentを検査し、symlinkがあればmiseを呼ばずに拒否するpreconditionを追加する。
+3. 環境依存の2本を宣言する一時config、TOML string encoder、設定を隔離する`run_dotfiles_mise` runnerを追加する。
+4. target parentの既存componentをpreflight時とmise呼び出し直前に検査し、symlinkがあればmiseを呼ばずに拒否するpreconditionを追加する。TOCTOU raceは保証範囲外であることも文書化する。
 5. install、verify、uninstallをmise Dotfiles呼び出しへ置き換える。
 6. `--force`、backup、rollback、独自診断を削除する。
 7. E2Eへ5本の正常系、通常ファイル競合、symlink parent拒否、XDG対応、設定隔離、state directoryの一致、root config経路別の`DOTFILES`検証を追加する。
