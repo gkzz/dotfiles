@@ -2,7 +2,23 @@
 
 独自の`setup/symlinks.bash`を廃止し、5本のsymlinkをmise Dotfilesへ移管する。`bin/dotfiles`は利用者向けの入口として残すが、symlinkの状態判定、作成、解除は行わない。wrapperの責務は、固定版miseのbootstrap、Homebrewとtool install、mise Dotfilesの実行順、lifecycle lock、安全なtarget pathの事前検証、mise設定の隔離に限定する。
 
-既存利用者との挙動の互換性は非ゴールとする。現在の利用者はリポジトリ所有者だけなので、独自実装を段階的に残さず、miseの状態モデルと診断へ寄せる。
+## スコープ外
+
+このリファクタは、現在独自実装で管理している5本のsymlinkについて、状態判定、作成、解除をmise Dotfilesへ移管する変更である。rootへのmise設定の移動、一時config、設定隔離、target pathの事前検証、実行順の制御は、この移管に必要な範囲で変更する。
+
+次は今回の対象外とする。
+
+- Homebrew、mise tool install、Git Credential Managerの責務や動作の変更
+- `bin/dotfiles`の廃止と、miseのdotfilesコマンドを直接使う運用の正式サポート
+- lifecycle全体の`mise bootstrap`への移管
+- mise 2026.8.15から別バージョンへの更新
+- 旧symlink実装のstate、backup、競合ファイルの自動移行
+- backup、rollback、`--force`に代わる復旧機能
+- macOS対応範囲の拡張
+- TOCTOU raceを完全に防ぐfilesystem操作の実装
+- 任意のdotfileを扱う汎用的な管理基盤
+
+既存利用者との挙動の互換性も保証しない。現在の利用者はリポジトリ所有者だけなので、独自実装を段階的に残さず、miseの状態モデルと診断へ寄せる。
 
 ## miseの設定一式をリポジトリルートへ移す
 
