@@ -27,19 +27,17 @@ plan_execute() {
   local index
   local type
   local target
-  local detail
 
   for ((index = 0; index < ${#PLAN_TYPES[@]}; index++)); do
     type="${PLAN_TYPES[$index]}"
     target="${PLAN_TARGETS[$index]}"
-    detail="${PLAN_DETAILS[$index]}"
     case "$type" in
       bootstrap_homebrew) bootstrap_homebrew_action ;;
       bootstrap_mise) bootstrap_mise_action "$target" ;;
       brew_bundle) apply_brew_bundle ;;
       mise_install) apply_mise_tools ;;
-      ensure_symlink|replace_symlink) ensure_symlink "$detail" "$target" "$type" ;;
-      remove_symlink) remove_symlink "$detail" "$target" ;;
+      dotfiles_apply) apply_dotfiles_install ;;
+      dotfiles_unapply) apply_dotfiles_uninstall ;;
       *) die "unknown action type: $type" ;;
     esac
     log "applied: $type $target"

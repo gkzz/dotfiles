@@ -16,6 +16,7 @@ describe("CLI parser", () => {
     { name: "removed target option", args: ["install", "--target", "/tmp"] },
     { name: "apply option on verify", args: ["verify", "--apply"] },
     { name: "force option on uninstall", args: ["uninstall", "--force"] },
+    { name: "force option on install", args: ["install", "--force"] },
     {
       name: "conflicting apply then dry-run",
       args: ["install", "--apply", "--dry-run"],

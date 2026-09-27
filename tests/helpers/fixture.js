@@ -4,6 +4,7 @@ import {
   copyFileSync,
   mkdirSync,
   mkdtempSync,
+  realpathSync,
   rmSync,
 } from "node:fs";
 import os from "node:os";
@@ -37,10 +38,12 @@ const sanitizedEnvironmentKeys = new Set([
 
 const sanitizedEnvironmentPrefixes = ["FAIL_", "FAKE_"];
 
-/** テストごとに隔離したHOMEとfake commandを管理する。 */
+/** テストごとに隔離したHOMEとテスト用コマンドを管理する。 */
 export class TestFixture {
   constructor(t) {
-    this.root = mkdtempSync(path.join(os.tmpdir(), "dotfiles-test."));
+    this.root = realpathSync(
+      mkdtempSync(path.join(os.tmpdir(), "dotfiles-test.")),
+    );
     this.fakeBin = path.join(this.root, "bin");
     mkdirSync(this.fakeBin);
     for (const command of ["mise", "brew"]) {

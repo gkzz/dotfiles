@@ -1,6 +1,7 @@
 name: E2E smoke
 
 on:
+  pull_request:
   workflow_dispatch:
 
 permissions:
@@ -28,12 +29,25 @@ jobs:
       - name: Verify lifecycle
         run: |
           test ! -e "$HOME/.bashrc"
+          test ! -e "$HOME/.dotfiles"
           test ! -e "$HOME/.bash_profile"
           test ! -e "$HOME/.gitconfig"
           test ! -e "$XDG_CONFIG_HOME/mise/config.toml"
 
           ./bin/dotfiles install --skip-brew
+          test ! -e "$HOME/.dotfiles"
+          test ! -e "$HOME/.bashrc"
+          test ! -e "$HOME/.bash_profile"
+          test ! -e "$HOME/.gitconfig"
+          test ! -e "$XDG_CONFIG_HOME/mise/config.toml"
+
           ./bin/dotfiles install --skip-brew --apply
+
+          test -L "$HOME/.dotfiles"
+          test -L "$HOME/.bashrc"
+          test -L "$HOME/.bash_profile"
+          test -L "$HOME/.gitconfig"
+          test -L "$XDG_CONFIG_HOME/mise/config.toml"
 
           ./bin/dotfiles verify --skip-brew
 
@@ -41,6 +55,7 @@ jobs:
           ./bin/dotfiles uninstall --apply
 
           test ! -e "$HOME/.bashrc"
+          test ! -e "$HOME/.dotfiles"
           test ! -e "$HOME/.bash_profile"
           test ! -e "$HOME/.gitconfig"
           test ! -e "$XDG_CONFIG_HOME/mise/config.toml"

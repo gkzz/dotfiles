@@ -199,7 +199,9 @@ tool install時に既存の設定隔離テストを維持するだけでなく�
 
 ## E2Eは配線と受け入れ条件へ絞る
 
-`.github/workflows/e2e_smoke.yml`では固定版の実miseを使い、`HOME`、`XDG_CONFIG_HOME`、`XDG_STATE_HOME`を隔離する。`XDG_CONFIG_HOME`には標準値と異なるパスを設定する。
+`.github/workflows/e2e_smoke.yml`では固定版の実miseを使い、`HOME`、`XDG_CONFIG_HOME`、`XDG_STATE_HOME`を隔離する。`XDG_CONFIG_HOME`には標準値と異なるパスを設定する。このworkflowは手動実行だけでなく、`pull_request`でも実行する。これにより、mise Dotfilesの正常系をNode.jsテストへ重複して持たせず、E2EをPR時の受け入れ確認として扱える。
+
+mise Dotfilesの正常系、symlink parentの拒否、`..`を含むtargetの拒否、anchor経由のglobal configは、E2Eまたは実miseを使うintegration testで検証する。このため、`tests/dotfiles.test.js`からこれらと重複する実mise lifecycleテストを削除し、TOML encoderのparse確認や`dirname`のような単体性のある前提検査だけを残すことを許容する。テストコードの行数を維持することは目的にせず、各検査を一つの実行層へ集約し、テストの責務を追跡可能にすることを優先する。
 
 正常系では次を確認する。
 

@@ -71,7 +71,7 @@ validate_platform() {
 
 validate_install_commands() {
   local command_name
-  for command_name in bash cp date dirname env git ln mkdir mktemp mv readlink rm uname; do
+  for command_name in bash cp dirname env git mkdir mktemp rm uname; do
     have_cmd "$command_name" || preflight_error "required command is missing: $command_name"
   done
 }
@@ -81,16 +81,19 @@ validate_verify_commands() {
   # shellcheck disable=SC2034
   CHECK_HAVE_BASH=true
   CHECK_HAVE_CP=true
+  # shellcheck disable=SC2034
+  CHECK_HAVE_DIRNAME=true
   CHECK_HAVE_GIT=true
   CHECK_HAVE_MKDIR=true
   CHECK_HAVE_MKTEMP=true
-  CHECK_HAVE_READLINK=true
   CHECK_HAVE_RM=true
   CHECK_HAVE_UNAME=true
   have_cmd bash || { verify_error "required command is missing: bash"; CHECK_HAVE_BASH=false; }
   # Flags below are consumed by lifecycle.bash to skip dependent checks.
   # shellcheck disable=SC2034
   have_cmd cp || { verify_error "required command is missing: cp"; CHECK_HAVE_CP=false; }
+  # shellcheck disable=SC2034
+  have_cmd dirname || { verify_error "required command is missing: dirname"; CHECK_HAVE_DIRNAME=false; }
   have_cmd env || verify_error "required command is missing: env"
   have_cmd git || { verify_error "required command is missing: git"; CHECK_HAVE_GIT=false; }
   # shellcheck disable=SC2034
@@ -98,14 +101,16 @@ validate_verify_commands() {
   # shellcheck disable=SC2034
   have_cmd mktemp || { verify_error "required command is missing: mktemp"; CHECK_HAVE_MKTEMP=false; }
   # shellcheck disable=SC2034
-  have_cmd readlink || { verify_error "required command is missing: readlink"; CHECK_HAVE_READLINK=false; }
   # shellcheck disable=SC2034
   have_cmd rm || { verify_error "required command is missing: rm"; CHECK_HAVE_RM=false; }
   have_cmd uname || { verify_error "required command is missing: uname"; CHECK_HAVE_UNAME=false; }
 }
 
 validate_uninstall_commands() {
-  have_cmd readlink || preflight_error "required command is missing: readlink"
+  local command_name
+  for command_name in dirname env mktemp rm; do
+    have_cmd "$command_name" || preflight_error "required command is missing: $command_name"
+  done
 }
 
 validate_repository() {

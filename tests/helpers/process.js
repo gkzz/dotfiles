@@ -8,7 +8,7 @@ export const repositoryRoot = path.resolve(
   "../..",
 );
 
-/** CLIをrepository rootから実行し、終了状態と標準出力を返す。 */
+/** CLIをリポジトリのルートから実行し、終了状態と標準出力を返す。 */
 export function run(command, args = [], options = {}) {
   return spawnSync(command, args, {
     cwd: repositoryRoot,

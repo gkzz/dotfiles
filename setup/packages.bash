@@ -310,6 +310,13 @@ validate_mise_with_temporary_bootstrap() {
     "$DOTFILES/setup/mise-install.sh" --apply >/dev/null 2>&1; then
     MISE_CMD="$bootstrap_root/mise"
     validate_mise_compatibility
+    if [ "$PREFLIGHT_FAILED" = "false" ] && [ "$(type -t preflight_dotfiles_install)" = function ]; then
+      preflight_dotfiles_install
+      if [ "$PREFLIGHT_FAILED" = "false" ] && "${dry_run:-false}" &&
+        [ "$(type -t dry_run_dotfiles_install)" = function ]; then
+        dry_run_dotfiles_install
+      fi
+    fi
   else
     preflight_error "failed to bootstrap temporary mise for lockfile validation"
   fi

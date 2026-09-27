@@ -7,8 +7,8 @@ exec mise --cd "$repository_root" exec -- \
   "$repository_root/tests/bootstrap.test.js" \
   "$repository_root/tests/check.test.js" \
   "$repository_root/tests/cli.test.js" \
+  "$repository_root/tests/dotfiles.test.js" \
   "$repository_root/tests/helpers/fixture.test.js" \
   "$repository_root/tests/helpers/repository-config.test.js" \
   "$repository_root/tests/lifecycle.test.js" \
-  "$repository_root/tests/packages.test.js" \
-  "$repository_root/tests/symlinks.test.js"
+  "$repository_root/tests/packages.test.js"

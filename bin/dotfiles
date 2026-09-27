@@ -2,7 +2,6 @@
 set -euo pipefail
 
 dry_run=true
-force=false
 skip_brew=false
 operation=""
 mode_explicit=false
@@ -19,7 +18,6 @@ Operations:
 Options:
   --dry-run       dry-run install/uninstall (default)
   --apply         Apply install/uninstall
-  --force         Back up replaceable symlink conflicts during install
   --skip-brew     Skip Homebrew inspection and actions
   -h, --help      Show this help
 USAGE
@@ -61,7 +59,7 @@ while [ "$#" -gt 0 ]; do
       dry_run=false
       mode_explicit=true
       ;;
-    --force) force=true ;;
+    --force) printf 'error: --force is no longer supported\n' >&2; exit 2 ;;
     --skip-brew) skip_brew=true ;;
     -h|--help) usage; exit 0 ;;
     *) usage >&2; exit 2 ;;
@@ -72,10 +70,8 @@ done
 case "$operation" in
   verify)
     "$mode_explicit" && { printf 'error: verify does not accept --dry-run or --apply\n' >&2; exit 2; }
-    "$force" && { printf 'error: verify does not accept --force\n' >&2; exit 2; }
     ;;
   uninstall)
-    "$force" && { printf 'error: uninstall does not accept --force\n' >&2; exit 2; }
     "$skip_brew" && { printf 'error: uninstall does not accept --skip-brew\n' >&2; exit 2; }
     ;;
 esac
