@@ -11,6 +11,7 @@ license: MIT
 - Version: v1.5.0
 - Source commit: [coji/natural-japanese@21e632661a910bf97289c501089ad11eb8b4d85f](https://github.com/coji/natural-japanese/tree/21e632661a910bf97289c501089ad11eb8b4d85f/skills/natural-japanese)
 - License: MIT
+- Copyright: Copyright (c) 2026 coji
 
 仕事の文書からブログやエッセイまで、日本語を読みやすく自然に仕上げる。目的は文章を均一に整えることではない。読者が迷わず要点をつかめて、書き手の判断や温度が残る文章を作る。
 
