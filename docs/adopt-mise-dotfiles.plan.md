@@ -1,10 +1,10 @@
 # シンボリックリンクの管理をmiseへ移管する
 
-独自の`setup/symlinks.bash`を廃止し、5本のsymlinkをmise Dotfilesへ移管する。`bin/dotfiles`は利用者向けの入口として残すが、symlinkの状態判定、作成、解除は行わない。wrapperの責務は、固定版miseのbootstrap、Homebrewとtool install、mise Dotfilesの実行順、lifecycle lock、安全なtarget pathの事前検証、mise設定の隔離に限定する。
+独自の`setup/symlinks.bash`が管理する4本のsymlinkをmise Dotfilesへ移管し、新しいanchor `~/.dotfiles`を加えた5本を管理対象とする。`bin/dotfiles`は利用者向けの入口として残すが、symlinkの状態判定、作成、解除は行わない。wrapperの責務は、固定版miseのbootstrap、Homebrewとtool install、mise Dotfilesの実行順、lifecycle lock、安全なtarget pathの事前検証、mise設定の隔離に限定する。
 
 ## スコープ外
 
-このリファクタは、現在独自実装で管理している5本のsymlinkについて、状態判定、作成、解除をmise Dotfilesへ移管する変更である。rootへのmise設定の移動、一時config、設定隔離、target pathの事前検証、実行順の制御は、この移管に必要な範囲で変更する。
+このリファクタでは、現在独自実装で管理している4本のsymlinkについて、状態判定、作成、解除をmise Dotfilesへ移管する。加えて、残り4本のsourceを安定して参照するためのanchor `~/.dotfiles`を新設し、管理対象を計5本とする。rootへのmise設定の移動、一時config、設定隔離、target pathの事前検証、実行順の制御は、この移管に必要な範囲で変更する。
 
 次は今回の対象外とする。
 
@@ -123,13 +123,15 @@ applyでは、依存順を守って次を実行する。
 2. 必要なら固定版miseをbootstrapする。
 3. 5本すべてを絶対パスで宣言したpreflight用の一時configに対して`mise bootstrap dotfiles apply --dry-run`を実行し、競合がないことを確認する。このconfigでは、anchorがまだ存在しない初回installでもsourceを解決できるよう、残り4本のsourceを`~/.dotfiles`経由ではなくcheckout実体の絶対パスで指定する。
 4. Homebrewとtool installを処理する。
-5. 一時configで`~/.dotfiles`を`mise bootstrap dotfiles apply --yes`する。
-6. 一時configでXDG配下のglobal configを`mise bootstrap dotfiles apply --yes`する。
+5. 一時configで`~/.dotfiles`をtargetに指定し、`mise bootstrap dotfiles apply --yes`する。
+6. 一時configでXDG配下のglobal configをtargetに指定し、`mise bootstrap dotfiles apply --yes`する。
 7. root `mise.toml`で`.bashrc`、`.bash_profile`、`.gitconfig`を`mise bootstrap dotfiles apply --yes`する。
 
 anchorを先に作るのは、残り4本のsourceが`~/.dotfiles`配下にあるためである。global configを作成した後も、root `mise.toml`を明示して処理を続け、実行途中で設定探索の基準を変えない。
 
-dry-runではfilesystemを変更せず、同じ5本に対するmiseの計画を表示する。anchorが未作成でも残りのsourceを検査できるよう、dry-run用の一時configでは5本すべてに解決済みのsourceとtargetを指定し、global configのsourceにもcheckout実体の`mise.toml`を使う。applyでも変更前に同じpreflightを通すため、既知の競合がある状態でanchorや他targetを部分適用しない。anchorがないクリーンなHOMEでdry-runとinstallが成功すること、およびdry-runとapplyで対象となる5本が一致することをテストする。
+一時configにはanchorとglobal configの2エントリがあるため、手順5と6の各コマンドには該当するtargetの絶対パスを渡す。これにより、1回の呼び出しで両方が適用されることを防ぎ、依存順を保つ。
+
+dry-runではfilesystemを変更せず、同じ5本に対するmiseの計画を表示する。anchorが未作成でも残りのsourceを検査できるよう、dry-run用の一時configでは5本すべてに解決済みのsourceとtargetを指定し、global configのsourceにもcheckout実体の`mise.toml`を使う。順序を確認するdry-runでは、applyと同じtargetを各呼び出しに明示する。applyでも変更前に同じpreflightを通すため、既知の競合がある状態でanchorや他targetを部分適用しない。anchorがないクリーンなHOMEでdry-runとinstallが成功すること、およびdry-runとapplyで対象となる5本が一致することをテストする。
 
 ### verify
 
@@ -142,10 +144,10 @@ Homebrew、tool、dotfilesのいずれかが非ゼロならverifyを失敗とす
 applyではinstallと逆の順序で解除する。
 
 1. root `mise.toml`で`.bashrc`、`.bash_profile`、`.gitconfig`を`mise bootstrap dotfiles unapply --yes`する。
-2. 一時configでXDG配下のglobal configを`mise bootstrap dotfiles unapply --yes`する。
-3. 一時configで`~/.dotfiles`を`mise bootstrap dotfiles unapply --yes`する。
+2. 一時configでXDG配下のglobal configをtargetに指定し、`mise bootstrap dotfiles unapply --yes`する。
+3. 一時configで`~/.dotfiles`をtargetに指定し、`mise bootstrap dotfiles unapply --yes`する。
 
-anchorを最後に解除し、他のsourceが途中で参照不能にならないようにする。dry-runも同じ順序で`mise bootstrap dotfiles unapply --dry-run`を実行する。
+anchorを最後に解除し、他のsourceが途中で参照不能にならないようにする。一時configを使う手順2と3では、各コマンドに該当するtargetの絶対パスを渡し、1回の呼び出しで両方が解除されないようにする。dry-runも同じtargetを明示し、同じ順序で`mise bootstrap dotfiles unapply --dry-run`を実行する。
 
 uninstallのためにmiseをbootstrapしない。miseがPATHにも固定のbootstrap先にも見つからない場合は、何も変更せずエラー終了し、miseを導入してから再実行するよう案内する。
 
