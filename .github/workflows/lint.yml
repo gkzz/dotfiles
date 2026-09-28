@@ -41,6 +41,7 @@ jobs:
             --shell=bash \
             --exclude=SC1090,SC1091 \
             bin/dotfiles \
+            git/hooks/pre-commit \
             setup/lib.bash \
             setup/context.bash \
             setup/lifecycle.bash \
