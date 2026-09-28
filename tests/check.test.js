@@ -28,7 +28,7 @@ describe("verify prerequisites", () => {
       },
     });
     assert.equal(existsSync(path.join(repository, ".git")), false);
-    const config = path.join(repository, ".config/mise/config.toml");
+    const config = path.join(repository, "mise.toml");
     rmSync(config);
     const home = fixture.newHome("home");
     const destination = path.join(home, ".config/mise/config.toml");
@@ -55,8 +55,8 @@ describe("verify prerequisites", () => {
     const script = `
       . "$LIB_FILE"
       CHECK_FAILED=false; DOTFILES="$REPOSITORY"
-      MISE_CONFIG_SOURCE="$REPOSITORY/.config/mise/config.toml"
-      MISE_LOCK_SOURCE="$REPOSITORY/.config/mise/mise.lock"
+      MISE_CONFIG_SOURCE="$REPOSITORY/mise.toml"
+      MISE_LOCK_SOURCE="$REPOSITORY/mise.lock"
       have_cmd() { [ "$1" != git ]; }
       git() { printf "%s\\n" "git validator unexpectedly ran"; return 1; }
       validate_verify_commands; validate_repository

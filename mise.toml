@@ -5,7 +5,7 @@ min_version = "2026.8.15"
 [env]
 # Resolve the repository from this config file so `mise install` works before
 # the managed global config symlink exists.
-DOTFILES = "{{ config_source | canonicalize | dirname | dirname | dirname }}"
+DOTFILES = "{{ config_source | canonicalize | dirname }}"
 
 [tools]
 biome = "2.5.14"
@@ -17,6 +17,11 @@ pnpm = "11.19.0"
 ghq = "1.10.1"
 peco = "0.6.0"
 direnv = "2.37.1"
+
+[dotfiles]
+"~/.bashrc" = { source = "~/.dotfiles/.bashrc" }
+"~/.bash_profile" = { source = "~/.dotfiles/.bash_profile" }
+"~/.gitconfig" = { source = "~/.dotfiles/.gitconfig" }
 
 [task_config]
 dir = "{{cwd}}"

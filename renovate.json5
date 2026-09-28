@@ -4,6 +4,6 @@
   extends: ["github>gkzz/renovate-config"],
 
   mise: {
-    managerFilePatterns: ["**/.config/mise/config.toml"],
+    managerFilePatterns: ["/mise.toml$/"],
   },
 }

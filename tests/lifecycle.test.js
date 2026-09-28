@@ -7,6 +7,7 @@ import {
   readdirSync,
   readFileSync,
   readlinkSync,
+  realpathSync,
   rmSync,
   statSync,
   symlinkSync,
@@ -19,9 +20,9 @@ import { TestFixture } from "./helpers/fixture.js";
 import { assertBefore, repositoryRoot, run } from "./helpers/process.js";
 
 /**
- * install / uninstall lifecycle の利用者向け契約を検証する。
- * planの一貫性、冪等性、lockの境界、既存データの保持、
- * package managerがない環境でもuninstallできることが対象。
+ * install / uninstallのライフサイクルに関する利用者向け契約を検証する。
+ * 実行計画の一貫性、冪等性、ロックの境界、既存データの保持、
+ * パッケージマネージャーがない環境でもuninstallできることが対象。
  */
 const text = (file) => readFileSync(file, "utf8");
 const plans = (output) =>
@@ -31,6 +32,13 @@ const backups = (home, name) =>
 const mode = (target) => statSync(target).mode & 0o777;
 
 describe("dotfiles lifecycle", () => {
+  it("uses a physical temporary root for target paths", (t) => {
+    const fixture = new TestFixture(t);
+
+    // macOSの/tmpや/varを使っても、配置先のパスがシステムのシンボリックリンクを経由しないようにする。
+    assert.equal(fixture.root, realpathSync(fixture.root));
+  });
+
   describe("verify", () => {
     it("aggregates missing state without repairing resources", (t) => {
       const fixture = new TestFixture(t);
@@ -43,6 +51,10 @@ describe("dotfiles lifecycle", () => {
       const result = fixture.runDotfiles(home, ["verify"]);
 
       assert.equal(result.status, 1, result.stderr);
+      assert.doesNotMatch(
+        result.stderr,
+        /mise reports dotfiles that are not in the desired state/,
+      );
       assert.equal(existsSync(link), false);
       assert.equal(existsSync(toolMarker), false);
     });
@@ -60,13 +72,11 @@ describe("dotfiles lifecycle", () => {
       );
       assert.match(
         dry.stdout,
-        new RegExp(
-          `plan: mise_install ${repositoryRoot}/.config/mise/config.toml`,
-        ),
+        new RegExp(`plan: mise_install ${repositoryRoot}/mise.toml`),
       );
       assert.match(
         dry.stdout,
-        new RegExp(`plan: ensure_symlink ${home}/.bashrc`),
+        new RegExp(`plan: dotfiles_apply ${home}/.dotfiles`),
       );
       assert.equal(existsSync(path.join(home, ".bashrc")), false);
       assert.equal(existsSync(path.join(home, ".local/state/dotfiles")), false);
@@ -76,10 +86,11 @@ describe("dotfiles lifecycle", () => {
       assert.match(calls, /mise-env=unset/);
 
       const apply = fixture.runDotfiles(home, ["install", "--apply"]);
-      // dry-runとapplyは同じplanを示し、applyだけがHOMEを変更する。
+      // dry-runとapplyは同じ実行計画を示し、applyだけがHOMEを変更する。
       assert.equal(apply.status, 0, apply.stderr);
       assert.deepEqual(plans(apply.stdout), plans(dry.stdout));
       for (const name of [
+        ".dotfiles",
         ".bashrc",
         ".bash_profile",
         ".gitconfig",
@@ -93,7 +104,7 @@ describe("dotfiles lifecycle", () => {
       }
       assert.equal(
         readlinkSync(path.join(home, ".bashrc")),
-        path.join(repositoryRoot, ".bashrc"),
+        path.join(home, ".dotfiles/.bashrc"),
       );
       assert.equal(
         existsSync(path.join(home, ".local/state/dotfiles/resources.tsv")),
@@ -111,12 +122,12 @@ describe("dotfiles lifecycle", () => {
       assertBefore(
         dry.stdout,
         "plan: mise_install",
-        "plan: ensure_symlink",
+        "plan: dotfiles_apply",
         "install plan order",
       );
 
       const repeated = fixture.runDotfiles(home, ["install", "--apply"]);
-      // 収束後の再実行ではbackupを増やさない。
+      // 収束後の再実行ではバックアップを増やさない。
       assert.equal(repeated.status, 0, repeated.stderr);
       assert.deepEqual(backups(home, ".bashrc"), []);
     });
@@ -134,7 +145,7 @@ describe("dotfiles lifecycle", () => {
       let result = fixture.runDotfiles(lockHome, ["install", "--apply"], {
         XDG_STATE_HOME: path.join(lockHome, "alternate-state"),
       });
-      // lockはXDG_STATE_HOMEではなく、操作対象のHOMEごとに排他する。
+      // ロックはXDG_STATE_HOMEではなく、操作対象のHOMEごとに排他する。
       assert.equal(result.status, 1);
       assert.equal(existsSync(path.join(lockHome, ".bashrc")), false);
       assert.equal(existsSync(path.join(lockHome, "calls")), false);
@@ -169,7 +180,7 @@ describe("dotfiles lifecycle", () => {
         "99999999\n",
       );
       result = fixture.runDotfiles(staleHome, ["uninstall", "--apply"]);
-      // 所有者がいない既知の形式のlockだけを自動回収する。
+      // 所有者がいない既知の形式のロックだけを自動回収する。
       assert.equal(result.status, 0, result.stderr);
       assert.match(result.stdout, /recovered stale lifecycle lock/);
       assert.equal(
@@ -190,7 +201,7 @@ describe("dotfiles lifecycle", () => {
         "unexpected\n",
       );
       result = fixture.runDotfiles(blockedHome, ["uninstall", "--apply"]);
-      // 未知のentryがあるlockは、調査に必要なmetadataを残して停止する。
+      // 未知の項目があるロックは、調査に必要なメタデータを残して停止する。
       assert.equal(result.status, 1);
       assert.equal(
         text(path.join(blockedHome, ".dotfiles-lifecycle.lock/extra")),
@@ -214,7 +225,7 @@ describe("dotfiles lifecycle", () => {
       symlinkSync(lockTarget, path.join(lockHome, ".dotfiles-lifecycle.lock"));
       const before = mode(lockTarget);
       let result = fixture.runDotfiles(lockHome, ["uninstall", "--apply"]);
-      // HOME内のsymlinkをlock処理がたどって外部を書き換えない。
+      // HOME内のシンボリックリンクをロック処理がたどって外部を書き換えない。
       assert.equal(result.status, 1);
       assert.equal(mode(lockTarget), before);
       assert.equal(existsSync(path.join(lockTarget, "lifecycle.lock")), false);
@@ -277,10 +288,6 @@ describe("dotfiles lifecycle", () => {
       const fixture = new TestFixture(t);
       const home = fixture.createConvergedHome("home");
       const gitconfig = path.join(home, ".gitconfig");
-      rmSync(gitconfig);
-      writeFileSync(gitconfig, "original local git config\n");
-      let result = fixture.runDotfiles(home, ["install", "--force", "--apply"]);
-      assert.equal(result.status, 0, result.stderr);
       const oldState = path.join(home, ".local/state/dotfiles/resources.tsv");
       mkdirSync(path.dirname(oldState), { recursive: true });
       writeFileSync(oldState, "legacy state remains untouched\n");
@@ -288,7 +295,7 @@ describe("dotfiles lifecycle", () => {
       writeFileSync(gitconfig, "user replacement\n");
       const dry = fixture.runDotfiles(home, ["uninstall", "--dry-run"]);
       const apply = fixture.runDotfiles(home, ["uninstall", "--apply"]);
-      // driftしたファイル、backup、package、旧stateはuninstallの対象外。
+      // 期待する状態から外れたファイル、バックアップ、パッケージ、旧状態はuninstallの対象外。
       assert.equal(dry.status, 0, dry.stderr);
       assert.equal(apply.status, 0, apply.stderr);
       assert.deepEqual(plans(apply.stdout), plans(dry.stdout));
@@ -306,11 +313,20 @@ describe("dotfiles lifecycle", () => {
         existsSync(path.join(home, "mise-data/tools-installed")),
         true,
       );
-      assert.equal(backups(home, ".gitconfig").length, 1);
+      assert.deepEqual(backups(home, ".gitconfig"), []);
 
       const minimalBin = path.join(fixture.root, "minimal-bin");
       mkdirSync(minimalBin);
-      for (const command of ["bash", "mkdir", "readlink", "rm", "rmdir"]) {
+      for (const command of [
+        "bash",
+        "dirname",
+        "env",
+        "mkdir",
+        "mktemp",
+        "readlink",
+        "rm",
+        "rmdir",
+      ]) {
         const resolved = run("bash", [
           "-c",
           `command -v ${command}`,
@@ -323,7 +339,7 @@ describe("dotfiles lifecycle", () => {
         path.join(repositoryRoot, ".bashrc"),
         path.join(minimalHome, ".bashrc"),
       );
-      result = run(
+      const result = run(
         path.join(repositoryRoot, "bin/dotfiles"),
         ["uninstall", "--apply"],
         {
@@ -337,9 +353,10 @@ describe("dotfiles lifecycle", () => {
           },
         },
       );
-      // 復旧用途を想定し、Git・mise・HomebrewがないPATHでも削除できる。
-      assert.equal(result.status, 0, result.stderr);
-      assert.equal(existsSync(path.join(minimalHome, ".bashrc")), false);
+      // miseがない場合は何も変更せず、導入後の再実行を求める。
+      assert.equal(result.status, 1);
+      assert.match(result.stderr, /mise is unavailable/);
+      assert.equal(existsSync(path.join(minimalHome, ".bashrc")), true);
     });
   });
 });

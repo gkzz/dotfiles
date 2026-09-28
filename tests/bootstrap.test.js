@@ -154,6 +154,35 @@ chmod +x "$DOTFILES_MISE_BOOTSTRAP_TARGET"
     await t.test("invalid lockfile", () =>
       assert.notEqual(execute({ FAIL_LOCK_VALIDATION: "1" }).status, 0),
     );
+    await t.test(
+      "completes the dotfiles dry-run before removing temporary mise",
+      () => {
+        const dryRunScript = `
+        . "$LIB_FILE"
+        . "$PACKAGES_FILE"
+        PREFLIGHT_FAILED=false
+        MISE_CMD=
+        dry_run=true
+        preflight_dotfiles_install() { printf '%s\\n' dotfiles-preflight; }
+        dry_run_dotfiles_install() { printf '%s\\n' dotfiles-ordered-dry-run; }
+        validate_mise_with_temporary_bootstrap
+        [ "$PREFLIGHT_FAILED" = false ] && [ -z "$MISE_CMD" ]
+      `;
+        const result = run("bash", ["-c", dryRunScript], {
+          env: {
+            ...process.env,
+            DOTFILES: repository,
+            MISE_CONFIG_SOURCE: path.join(repository, "config.toml"),
+            MISE_LOCK_SOURCE: path.join(repository, "mise.lock"),
+            LIB_FILE: path.join(repositoryRoot, "setup/lib.bash"),
+            PACKAGES_FILE: path.join(repositoryRoot, "setup/packages.bash"),
+          },
+        });
+        assert.equal(result.status, 0, result.stderr);
+        assert.match(result.stdout, /dotfiles-preflight/);
+        assert.match(result.stdout, /dotfiles-ordered-dry-run/);
+      },
+    );
   });
 
   it("passes the composite action install path through the explicit bootstrap boundary", (t) => {

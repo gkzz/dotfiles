@@ -6,8 +6,8 @@
 . "$DOTFILES/setup/context.bash"
 # shellcheck source=setup/plan.bash
 . "$DOTFILES/setup/plan.bash"
-# shellcheck source=setup/symlinks.bash
-. "$DOTFILES/setup/symlinks.bash"
+# shellcheck source=setup/dotfiles.bash
+. "$DOTFILES/setup/dotfiles.bash"
 # shellcheck source=setup/packages.bash
 . "$DOTFILES/setup/packages.bash"
 
@@ -107,7 +107,6 @@ preflight_common() {
   local execution_reporter="$2"
   local state_reporter="$3"
   PREFLIGHT_FAILED=false
-  validate_managed_resources_definition
   validate_context "$execution_reporter"
   "$command_validator"
   validate_platform "$execution_reporter"
@@ -119,10 +118,6 @@ preflight_install() {
   HOMEBREW_BOOTSTRAP_NEEDED=false
   MISE_BOOTSTRAP_NEEDED=false
   preflight_common validate_install_commands preflight_error preflight_error
-  preflight_managed_links
-
-  # A known filesystem conflict must stop package-manager inspection and apply.
-  [ "$PREFLIGHT_FAILED" = "false" ] || return 1
 
   if "${skip_brew:-false}" || [ "${DOTFILES_SKIP_BREW:-}" = "1" ]; then
     log "skip: Homebrew inspection and actions disabled"
@@ -137,6 +132,7 @@ preflight_install() {
 
   if find_mise; then
     validate_mise_compatibility
+    [ "$PREFLIGHT_FAILED" = "true" ] || preflight_dotfiles_install
   else
     validate_mise_bootstrap
     [ "$PREFLIGHT_FAILED" = "true" ] || validate_mise_with_temporary_bootstrap
@@ -159,7 +155,7 @@ build_install_plan() {
     plan_add brew_bundle "$DOTFILES/Brewfile"
   fi
   plan_add mise_install "$MISE_CONFIG_SOURCE"
-  plan_managed_links
+  plan_add dotfiles_apply "$DOTFILES_ANCHOR_TARGET"
 }
 
 install_lifecycle() {
@@ -170,7 +166,11 @@ install_lifecycle() {
     die "install preflight failed"
   fi
   plan_print
-  "${dry_run:-true}" && return 0
+  if "${dry_run:-true}"; then
+    [ "${MISE_BOOTSTRAP_NEEDED:-false}" = true ] && return 0
+    dry_run_dotfiles_install
+    return 0
+  fi
   plan_execute
 }
 
@@ -181,19 +181,18 @@ verify_lifecycle() {
     CHECK_FAILED=true
   fi
 
-  if [ "${CHECK_HAVE_READLINK:-true}" = true ]; then
-    check_managed_links
-  fi
   if ! "${skip_brew:-false}" && [ "${DOTFILES_SKIP_BREW:-}" != "1" ] &&
     [ -r "$DOTFILES/Brewfile" ]; then
     check_brew_bundle
   fi
   if [ -r "$MISE_CONFIG_SOURCE" ] && [ -r "$MISE_LOCK_SOURCE" ] &&
     [ "${CHECK_HAVE_CP:-true}" = true ] && [ "${CHECK_HAVE_MKDIR:-true}" = true ] &&
-    [ "${CHECK_HAVE_MKTEMP:-true}" = true ] && [ "${CHECK_HAVE_RM:-true}" = true ]; then
+    [ "${CHECK_HAVE_MKTEMP:-true}" = true ] && [ "${CHECK_HAVE_RM:-true}" = true ] &&
+    [ "${CHECK_HAVE_DIRNAME:-true}" = true ]; then
     if find_mise; then
       check_mise_compatibility
       check_mise_tools
+      check_dotfiles
     else
       verify_error "mise is unavailable"
     fi
@@ -206,10 +205,14 @@ verify_lifecycle() {
 preflight_uninstall() {
   plan_reset
   PREFLIGHT_FAILED=false
-  validate_managed_resources_definition
   validate_context preflight_error
   validate_uninstall_commands
-  preflight_uninstall_links
+  if find_mise; then
+    validate_dotfile_target_parents preflight_error
+  else
+    preflight_error "mise is unavailable; install mise before uninstalling dotfiles"
+  fi
+  [ "$PREFLIGHT_FAILED" = true ] || plan_add dotfiles_unapply "$DOTFILES_ANCHOR_TARGET"
   [ "$PREFLIGHT_FAILED" = "false" ]
 }
 
@@ -221,6 +224,9 @@ uninstall_lifecycle() {
     die "uninstall preflight failed"
   fi
   plan_print
-  "${dry_run:-true}" && return 0
+  if "${dry_run:-true}"; then
+    dry_run_dotfiles_uninstall
+    return 0
+  fi
   plan_execute
 }

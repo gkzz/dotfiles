@@ -18,10 +18,10 @@ import { repositoryConfig } from "./helpers/repository-config.js";
 
 /**
  * Homebrewとmiseの検査・適用境界を検証する。
- * miseのresult state、apply時のstreaming、checkの診断、--skip-brewが対象。
+ * miseの実行結果、適用時の逐次出力、検査の診断、--skip-brewが対象。
  */
-const configSource = path.join(repositoryRoot, ".config/mise/config.toml");
-const lockSource = path.join(repositoryRoot, ".config/mise/mise.lock");
+const configSource = path.join(repositoryRoot, "mise.toml");
+const lockSource = path.join(repositoryRoot, "mise.lock");
 const packageEnv = {
   ...process.env,
   LIB_FILE: path.join(repositoryRoot, "setup/lib.bash"),
@@ -195,7 +195,7 @@ describe("package lifecycle", () => {
       while (!output.includes(marker) && Date.now() < deadline) {
         await new Promise((resolve) => setTimeout(resolve, 50));
       }
-      // release前にmarkerが見えれば、applyの出力は完了までbufferされていない。
+      // 解放前にマーカーが見えれば、適用時の出力は完了までバッファーされていない。
       assert.match(output, new RegExp(marker));
       writeFileSync(release, "");
       assert.equal(

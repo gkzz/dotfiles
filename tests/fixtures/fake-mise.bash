@@ -1,6 +1,74 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+dotfiles_entries() {
+  sed -n 's/^"\([^"]*\)" = { source = "\([^"]*\)" }$/\1\t\2/p' "$MISE_GLOBAL_CONFIG_FILE"
+}
+
+expand_home() {
+  case "$1" in
+    '~') printf '%s\n' "$HOME" ;;
+    \~/*) printf '%s/%s\n' "$HOME" "${1#\~/}" ;;
+    *) printf '%s\n' "$1" ;;
+  esac
+}
+
+fake_dotfiles() {
+  local action="$1"
+  shift
+  local dry_run=false
+  local selected=''
+  local target source actual_target actual_source
+  while [ "$#" -gt 0 ]; do
+    case "$1" in
+      --dry-run|--missing) dry_run=true ;;
+      --yes) ;;
+      *) selected="$selected|$1" ;;
+    esac
+    shift
+  done
+  local failed=false
+  while IFS=$'\t' read -r target source; do
+    actual_target="$(expand_home "$target")"
+    actual_source="$(expand_home "$source")"
+    if [ -n "$selected" ] && ! case "$selected" in *"|$actual_target"*) true ;; *) false ;; esac; then
+      continue
+    fi
+    case "$action" in
+      apply)
+        printf 'dotfiles apply %s -> %s%s\n' "$actual_target" "$actual_source" "$([ "$dry_run" = true ] && printf ' (dry-run)')"
+        if [ "$dry_run" = false ]; then
+          if [ -e "$actual_target" ] || [ -L "$actual_target" ]; then
+            if [ ! -L "$actual_target" ] || { [ "$(readlink "$actual_target")" != "$actual_source" ] && ! [ "$actual_target" -ef "$actual_source" ]; }; then
+              printf 'dotfile conflict: %s\n' "$actual_target" >&2
+              return 1
+            fi
+          else
+            mkdir -p "${actual_target%/*}"
+            ln -s "$actual_source" "$actual_target"
+          fi
+        elif [ -e "$actual_target" ] && { [ ! -L "$actual_target" ] || { [ "$(readlink "$actual_target")" != "$actual_source" ] && ! [ "$actual_target" -ef "$actual_source" ]; }; }; then
+          printf 'dotfile conflict: %s\n' "$actual_target" >&2
+          return 1
+        fi
+        ;;
+      status)
+        if [ ! -L "$actual_target" ] || [ "$(readlink "$actual_target" 2>/dev/null || true)" != "$actual_source" ]; then
+          printf 'missing %s\n' "$actual_target"
+          failed=true
+        fi
+        ;;
+      unapply)
+        printf 'dotfiles unapply %s%s\n' "$actual_target" "$([ "$dry_run" = true ] && printf ' (dry-run)')"
+        if [ "$dry_run" = false ] && [ -L "$actual_target" ] && [ "$(readlink "$actual_target")" = "$actual_source" ]; then
+          rm "$actual_target"
+        fi
+        ;;
+    esac
+  done < <(dotfiles_entries)
+  [ "$failed" = false ]
+}
+
 if [ "${1:-}" = "--cd" ]; then
   printf 'mise-cwd=%s\n' "$2" >> "$HOME/calls"
   shift 2
@@ -8,6 +76,10 @@ fi
 printf 'mise %s node-version=%s config=%s mise-env=%s\n' \
   "$*" "${MISE_NODE_VERSION-unset}" "${MISE_GLOBAL_CONFIG_FILE-unset}" "${MISE_ENV-unset}" >> "$HOME/calls"
 case "${1:-}" in
+  bootstrap)
+    [ "${2:-}" = dotfiles ] || exit 1
+    fake_dotfiles "${3:-}" "${@:4}"
+    ;;
   config)
     if [ "${FAIL_MISE_CONFIG:-0}" = "1" ]; then
       printf '%s\n' 'fake mise config failure' >&2

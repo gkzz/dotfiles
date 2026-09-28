@@ -10,7 +10,7 @@ make ci
 
 install の dry-run でエラーを解消してから [make install-apply](../Makefile) を実行してください。
 
-## lifecycle lock を取得できない
+## ライフサイクルロックを取得できない
 
 同じ HOME に対する install / uninstall が実行中です。PID は次のコマンドで確認できます。
 
@@ -18,17 +18,15 @@ install の dry-run でエラーを解消してから [make install-apply](../Ma
 cat "$HOME/.dotfiles-lifecycle.lock/pid"
 ```
 
-実行中の処理が終わってから再実行してください。記録された PID が終了済みなら、次回の apply が lock を回収します。不正な PID の lock は自動で削除しません。dotfiles が動いていないことを確認してから、lock directory を別名へ退避してください。
+実行中の処理が終わってから再実行してください。記録された PID が終了済みなら、次回の apply がロックを回収します。不正な PID のロックは自動で削除しません。dotfiles が動いていないことを確認してから、ロック用ディレクトリを別名へ退避してください。
 
-## symlink が競合する
+## シンボリックリンクが競合する
 
 ```bash
 bin/dotfiles install --dry-run
-bin/dotfiles install --force --dry-run
-bin/dotfiles install --force --apply
 ```
 
-[--force](../bin/dotfiles) は通常ファイルとシンボリックリンクを日時付きbackupへ移してから置き換えます。ディレクトリと特殊ファイルは置き換えません。backupは自動復元・削除しません。
+競合する配置先の内容と参照先を確認し、必要なデータを手動で退避してから競合を解消してください。`--force`はサポートしていません。
 
 ## mise が見つからない、または古い
 
@@ -37,11 +35,11 @@ bin/dotfiles install --dry-run
 mise version
 ```
 
-mise がなければ、install は [リポジトリで指定したバージョンのmise実行ファイル](../setup/mise-install.sh) をダウンロードし、SHA-256 checksumを照合してインストールします。既存 mise は自動更新しません。`curl`、SHA-256 checksumの照合、ネットワーク、version、config、lock に関する mise のエラーを確認し、必要なら対応版をインストールしてください。
+mise がなければ、install は [リポジトリで指定したバージョンのmise実行ファイル](../setup/mise-install.sh) をダウンロードし、SHA-256チェックサムを照合してインストールします。既存 mise は自動更新しません。`curl`、SHA-256チェックサムの照合、ネットワーク、バージョン、設定、ロックに関する mise のエラーを確認し、必要なら対応版をインストールしてください。
 
 ## Homebrew が利用できない
 
-Homebrew がなければ、install は [公式インストールスクリプトを呼び出す処理](../setup/homebrew-install.sh) の実行を予定します。OS、Command Line Tools、compiler、権限に関するエラーは [インストールスクリプト](../setup/homebrew-install.sh) の出力を確認してください。
+Homebrew がなければ、install は [公式インストールスクリプトを呼び出す処理](../setup/homebrew-install.sh) の実行を予定します。OS、Command Line Tools、コンパイラー、権限に関するエラーは [インストールスクリプト](../setup/homebrew-install.sh) の出力を確認してください。
 
 Homebrew を使わない場合は [--skip-brew](../bin/dotfiles) を指定します。
 
@@ -52,7 +50,7 @@ Homebrew を使わない場合は [--skip-brew](../bin/dotfiles) を指定しま
 - `verify failed:`: 検査は完了したものの、設定やインストール状態が期待と異なります。
 - `verify error:`: 必須コマンドの不足やコマンドの異常終了により、検査を完了できませんでした。続けて表示される元のエラーも確認してください。
 
-管理対象のシンボリックリンクのエラーに表示される `expected` は期待する参照先、`actual` は現在の参照先です。`actual` が異なる場合も、verify はシンボリックリンクを張り替えません。
+dotfilesの状態はmiseの`bootstrap dotfiles status --missing`で確認します。verifyは不一致を報告するだけで、シンボリックリンクを張り替えません。
 
 各項目を個別に確認します。
 
@@ -63,9 +61,9 @@ brew bundle check --no-upgrade --file Brewfile
 bin/dotfiles verify --skip-brew
 ```
 
-## repository を移動した
+## リポジトリを移動した
 
-既存 symlink は新しい repository を自動参照しません。新しい repository で install の dry-run を実行し、競合する symlink を確認してください。以前のbackupや、以前のバージョンが作成した状態管理ファイルは自動で探索・削除しません。
+`~/.dotfiles`は新しいリポジトリを自動参照しません。参照先を確認して手動で削除した後、新しいリポジトリからinstallを再実行してください。以前のバージョンが作成したバックアップや状態管理ファイルは自動で探索・削除しません。
 
 ## 調査情報を保存する
 
@@ -76,4 +74,4 @@ uname -a
 bash --version | head -n 1
 ```
 
-credential、email、署名鍵、token、`~/.gitconfig.local` の内容は共有しないでください。
+認証情報、メールアドレス、署名鍵、トークン、`~/.gitconfig.local` の内容は共有しないでください。
