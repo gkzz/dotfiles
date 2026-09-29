@@ -13,8 +13,8 @@ import { describe, it } from "node:test";
 import { TestFixture } from "./helpers/fixture.js";
 import { repositoryRoot, run } from "./helpers/process.js";
 
-describe("verify prerequisites", () => {
-  it("reports an unreadable repository input once and skips dependent checks", (t) => {
+describe("verifyの前提条件", () => {
+  it("読めないリポジトリ入力を一度だけ報告し、依存する検査を省略する", (t) => {
     const fixture = new TestFixture(t);
     const repository = path.join(fixture.root, "repository");
     cpSync(repositoryRoot, repository, {
@@ -51,13 +51,13 @@ describe("verify prerequisites", () => {
     assert.equal(readlinkSync(destination), config);
   });
 
-  it("does not run a validator when its required command is missing", () => {
+  it("必須コマンドの不足をまとめて報告し、依存する検査は実行しない", () => {
     const script = `
       . "$LIB_FILE"
       CHECK_FAILED=false; DOTFILES="$REPOSITORY"
       MISE_CONFIG_SOURCE="$REPOSITORY/mise.toml"
       MISE_LOCK_SOURCE="$REPOSITORY/mise.lock"
-      have_cmd() { [ "$1" != git ]; }
+      have_cmd() { [ "$1" != git ] && [ "$1" != dirname ]; }
       git() { printf "%s\\n" "git validator unexpectedly ran"; return 1; }
       validate_verify_commands; validate_repository
       [ "$CHECK_FAILED" = true ]
@@ -73,6 +73,10 @@ describe("verify prerequisites", () => {
     assert.match(
       result.stderr,
       /verify error: required command is missing: git/,
+    );
+    assert.match(
+      result.stderr,
+      /verify error: required command is missing: dirname/,
     );
     assert.doesNotMatch(result.stdout, /git validator unexpectedly ran/);
     assert.doesNotMatch(result.stderr, /Git configuration syntax is invalid/);

@@ -6,11 +6,17 @@ import { describe, it } from "node:test";
 
 import { repositoryRoot, run } from "./helpers/process.js";
 
-describe("mise dotfiles boundary", () => {
-  it("encodes generated TOML strings and produces a parseable config", () => {
+describe("mise Dotfilesとの境界", () => {
+  it("特殊文字を符号化し、実miseで読み込めるTOMLを生成する", () => {
     const root = mkdtempSync(path.join(os.tmpdir(), "dotfiles-config-test."));
     try {
       const config = path.join(root, "generated.toml");
+      const configTarget = path.join(
+        root,
+        'config with "quote"',
+        "backslash\\\\segment",
+        "mise/config.toml",
+      );
       const result = run("bash", [
         "-c",
         `
@@ -19,12 +25,13 @@ describe("mise dotfiles boundary", () => {
           HOME=$2
           . "$DOTFILES/setup/dotfiles.bash"
           write_dotfiles_config "$3" "$DOTFILES" "$HOME/.dotfiles" \
-            "$DOTFILES/mise.toml" "$HOME/config with \\"quote\\"/mise/config.toml" true
+            "$DOTFILES/mise.toml" "$4" true
         `,
         "_",
         repositoryRoot,
         root,
         config,
+        configTarget,
       ]);
       assert.equal(result.status, 0, result.stderr);
       assert.match(readFileSync(config, "utf8"), /\\"quote\\"/);
@@ -42,24 +49,5 @@ describe("mise dotfiles boundary", () => {
     } finally {
       rmSync(root, { recursive: true, force: true });
     }
-  });
-
-  it("gates verify dotfiles checks on dirname availability", () => {
-    const result = run("bash", [
-      "-c",
-      `
-        set -euo pipefail
-        . "$1/setup/lib.bash"
-        have_cmd() { [ "$1" != dirname ]; }
-        CHECK_FAILED=false
-        validate_verify_commands
-        test "$CHECK_HAVE_DIRNAME" = false
-        test "$CHECK_FAILED" = true
-      `,
-      "_",
-      repositoryRoot,
-    ]);
-    assert.equal(result.status, 0, result.stderr);
-    assert.match(result.stderr, /required command is missing: dirname/);
   });
 });

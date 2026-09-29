@@ -5,7 +5,7 @@ import { describe, it } from "node:test";
 import { TestFixture } from "./fixture.js";
 
 describe("TestFixture.dotfilesEnv", () => {
-  it("removes ambient exact and prefixed variables before applying case overrides", (t) => {
+  it("外部の環境変数を除去してからケース固有の値を反映する", (t) => {
     const fixture = new TestFixture(t);
     const home = fixture.newHome("home");
     const originalEnvironment = { ...process.env };

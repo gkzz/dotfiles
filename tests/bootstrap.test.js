@@ -12,8 +12,8 @@ const executable = (file, contents) => {
   chmodSync(file, 0o755);
 };
 
-describe("bootstrap", () => {
-  it("ignores ambient mise overrides and uses the pinned release", (t) => {
+describe("初期導入", () => {
+  it("外部のmise設定を無視して固定バージョンを使う", (t) => {
     const fixture = new TestFixture(t);
     const home = fixture.newHome("home");
     const installer = path.join(repositoryRoot, "setup/mise-install.sh");
@@ -39,7 +39,7 @@ describe("bootstrap", () => {
     assert.match(source, /sha256sum -c -/);
   });
 
-  it("downloads the official Homebrew installer and propagates download and execution failures", async (t) => {
+  it("公式のHomebrew installerを取得し、取得・実行の失敗を伝播する", async (t) => {
     const fixture = new TestFixture(t);
     const home = fixture.newHome("home");
     const bin = path.join(fixture.root, "curl-bin");
@@ -62,7 +62,7 @@ printf '%s\\n' '[ "\${FAIL_INSTALLER:-0}" != 1 ] || exit 1' 'touch "$HOME/homebr
           ...env,
         },
       });
-    await t.test("success", () => {
+    await t.test("正常に導入できる", () => {
       const result = execute();
       assert.equal(result.status, 0, result.stderr);
       assert.match(
@@ -74,15 +74,15 @@ printf '%s\\n' '[ "\${FAIL_INSTALLER:-0}" != 1 ] || exit 1' 'touch "$HOME/homebr
         "",
       );
     });
-    await t.test("download failure", () =>
+    await t.test("取得に失敗する", () =>
       assert.notEqual(execute({ FAIL_CURL: "1" }).status, 0),
     );
-    await t.test("installer failure", () =>
+    await t.test("installerの実行に失敗する", () =>
       assert.notEqual(execute({ FAIL_INSTALLER: "1" }).status, 0),
     );
   });
 
-  it("evaluates shellenv from the brew discovered after bootstrap", (t) => {
+  it("導入後に見つけたbrewのshellenvを反映する", (t) => {
     const fixture = new TestFixture(t);
     const home = fixture.newHome("home");
     const repository = path.join(fixture.root, "repository");
@@ -119,7 +119,7 @@ printf '%s\\n' '[ "\${FAIL_INSTALLER:-0}" != 1 ] || exit 1' 'touch "$HOME/homebr
     assert.match(calls, /brew shellenv/);
   });
 
-  it("uses a temporary mise only for lockfile validation", async (t) => {
+  it("lockfileの検証中だけ一時的なmiseを使う", async (t) => {
     const fixture = new TestFixture(t);
     const repository = path.join(fixture.root, "repository");
     mkdirSync(path.join(repository, "setup"), { recursive: true });
@@ -150,14 +150,14 @@ chmod +x "$DOTFILES_MISE_BOOTSTRAP_TARGET"
           ...env,
         },
       });
-    await t.test("valid lockfile", () => assert.equal(execute().status, 0));
-    await t.test("invalid lockfile", () =>
+    await t.test("有効なlockfileを受け入れる", () =>
+      assert.equal(execute().status, 0),
+    );
+    await t.test("無効なlockfileを拒否する", () =>
       assert.notEqual(execute({ FAIL_LOCK_VALIDATION: "1" }).status, 0),
     );
-    await t.test(
-      "completes the dotfiles dry-run before removing temporary mise",
-      () => {
-        const dryRunScript = `
+    await t.test("一時miseを削除する前にdotfilesのdry-runを終える", () => {
+      const dryRunScript = `
         . "$LIB_FILE"
         . "$PACKAGES_FILE"
         PREFLIGHT_FAILED=false
@@ -168,24 +168,23 @@ chmod +x "$DOTFILES_MISE_BOOTSTRAP_TARGET"
         validate_mise_with_temporary_bootstrap
         [ "$PREFLIGHT_FAILED" = false ] && [ -z "$MISE_CMD" ]
       `;
-        const result = run("bash", ["-c", dryRunScript], {
-          env: {
-            ...process.env,
-            DOTFILES: repository,
-            MISE_CONFIG_SOURCE: path.join(repository, "config.toml"),
-            MISE_LOCK_SOURCE: path.join(repository, "mise.lock"),
-            LIB_FILE: path.join(repositoryRoot, "setup/lib.bash"),
-            PACKAGES_FILE: path.join(repositoryRoot, "setup/packages.bash"),
-          },
-        });
-        assert.equal(result.status, 0, result.stderr);
-        assert.match(result.stdout, /dotfiles-preflight/);
-        assert.match(result.stdout, /dotfiles-ordered-dry-run/);
-      },
-    );
+      const result = run("bash", ["-c", dryRunScript], {
+        env: {
+          ...process.env,
+          DOTFILES: repository,
+          MISE_CONFIG_SOURCE: path.join(repository, "config.toml"),
+          MISE_LOCK_SOURCE: path.join(repository, "mise.lock"),
+          LIB_FILE: path.join(repositoryRoot, "setup/lib.bash"),
+          PACKAGES_FILE: path.join(repositoryRoot, "setup/packages.bash"),
+        },
+      });
+      assert.equal(result.status, 0, result.stderr);
+      assert.match(result.stdout, /dotfiles-preflight/);
+      assert.match(result.stdout, /dotfiles-ordered-dry-run/);
+    });
   });
 
-  it("passes the composite action install path through the explicit bootstrap boundary", (t) => {
+  it("composite actionの導入先を明示的な境界へ渡す", (t) => {
     const fixture = new TestFixture(t);
     const home = fixture.newHome("home");
     const target = path.join(fixture.root, "action-bin/mise");
@@ -214,7 +213,7 @@ chmod +x "$DOTFILES_MISE_BOOTSTRAP_TARGET"
       assert.ok(action.includes(expression), expression);
   });
 
-  it("rejects a non-executable bootstrap target without changing it", (t) => {
+  it("実行できない既存targetを変更せずに拒否する", (t) => {
     const fixture = new TestFixture(t);
     const home = fixture.newHome("home");
     const target = path.join(home, ".local/bin/mise");

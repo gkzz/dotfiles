@@ -140,6 +140,7 @@ run_dotfiles_mise() (
   local data_dir="${MISE_DATA_DIR:-${XDG_DATA_HOME:-$HOME/.local/share}/mise}"
   local cache_dir="${MISE_CACHE_DIR:-${XDG_CACHE_HOME:-$HOME/.cache}/mise}"
   local state_dir="${MISE_STATE_DIR:-${XDG_STATE_HOME:-$HOME/.local/state}/mise}"
+  local temporary_state=''
   shift
 
   config_root="$(dirname "$config")"
@@ -155,6 +156,13 @@ run_dotfiles_mise() (
   export MISE_OVERRIDE_TOOL_VERSIONS_FILENAMES=none
   export MISE_SYSTEM_CONFIG_FILE="$config_root/.dotfiles-system.toml"
   export MISE_NO_ENV=1 MISE_NO_HOOKS=1
+  case " $* " in
+    *' --dry-run '*|*' dotfiles status '*)
+      temporary_state="$(mktemp -d "${TMPDIR:-/tmp}/dotfiles-mise-state.XXXXXX")" || return 1
+      trap 'rm -rf "$temporary_state"' EXIT
+      state_dir="$temporary_state"
+      ;;
+  esac
   export MISE_DATA_DIR="$data_dir" MISE_CACHE_DIR="$cache_dir" MISE_STATE_DIR="$state_dir"
   [ -z "${TMPDIR:-}" ] || export TMPDIR
   "$mise_command" --cd "$config_root" "$@"

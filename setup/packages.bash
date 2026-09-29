@@ -185,6 +185,16 @@ run_isolated_mise() {
   export MISE_OVERRIDE_TOOL_VERSIONS_FILENAMES=none
   export MISE_SYSTEM_CONFIG_FILE="$mise_project_root/config.toml"
   export MISE_NO_ENV=1 MISE_NO_HOOKS=1
+  # 読み取り操作でもmiseは設定の追跡・信頼情報を記録する。
+  # 一時設定の記録を利用者のstateへ残さない。
+  case "${1:-}" in
+    config|ls) mise_state_dir="$mise_project_root/state" ;;
+    install)
+      case " $* " in
+        *' --dry-run '*) mise_state_dir="$mise_project_root/state" ;;
+      esac
+      ;;
+  esac
   MISE_DATA_DIR="$mise_data_dir"
   MISE_CACHE_DIR="$mise_cache_dir"
   MISE_STATE_DIR="$mise_state_dir"

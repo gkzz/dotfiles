@@ -60,6 +60,36 @@ afterEach(() => {
 });
 
 describe("global pre-commit hook", () => {
+  it("repository hookを先に実行し、その失敗時はSecretlintを起動しない", () => {
+    const root = repository();
+    const fakeBin = path.join(root, "fake-bin");
+    const dockerMarker = path.join(root, "docker-ran");
+    mkdirSync(fakeBin);
+    mkdirSync(path.join(root, ".git/hooks"), { recursive: true });
+    executable(
+      path.join(root, ".git/hooks/pre-commit"),
+      "#!/usr/bin/env bash\nprintf '%s\\n' 'repository hook failure' >&2\nexit 29\n",
+    );
+    executable(
+      path.join(fakeBin, "docker"),
+      '#!/usr/bin/env bash\nprintf ran >"$DOCKER_MARKER"\n',
+    );
+    writeFileSync(path.join(root, "content.txt"), "content\n");
+    git(root, "add", "content.txt");
+
+    const result = run(hook, [], {
+      cwd: root,
+      env: hookEnvironment(root, {
+        DOCKER_MARKER: dockerMarker,
+        PATH: `${fakeBin}:${process.env.PATH}`,
+      }),
+    });
+
+    assert.equal(result.status, 29);
+    assert.match(result.stderr, /repository hook failure/);
+    assert.equal(existsSync(dockerMarker), false);
+  });
+
   it("runs the repository hook first and scans only staged contents", () => {
     const root = repository();
     const fakeBin = path.join(root, "fake-bin");
@@ -336,13 +366,17 @@ exec /usr/bin/git "$@"
     writeFileSync(path.join(root, ".secretlintignore"), "unstaged/**\n");
 
     for (const command of ["cat", "mkdir"]) {
+      const resolved = run("bash", [
+        "-c",
+        `command -v ${command}`,
+      ]).stdout.trim();
       executable(
         path.join(fakeBin, command),
         `#!/usr/bin/env bash
 for argument in "$@"; do
   [ "$argument" != -- ] || exit 64
 done
-exec /usr/bin/${command} "$@"
+exec "${resolved}" "$@"
 `,
       );
     }
