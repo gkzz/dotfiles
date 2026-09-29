@@ -58,12 +58,15 @@ install は Homebrew Bundle、mise、管理対象のシンボリックリンク�
 - `~/.bashrc`
 - `~/.bash_profile`
 - `~/.gitconfig`
+- `~/.dotfiles/git/hooks/pre-commit`を参照するグローバルGitフック
 - `~/.dotfiles`
 - `${XDG_CONFIG_HOME:-$HOME/.config}/mise/config.toml`
 - Brewfile の直接指定項目
 - miseのロックファイルに記載された開発ツール
 
 端末固有の Git 設定は `~/.gitconfig.local`、シェル設定は `~/.bashrc.local` に置きます。
+
+Gitの`pre-commit`フックは、ステージ済みファイルをDocker版secretlintで検査します。使用するイメージはフック内でバージョンとdigestを固定しています。`$HOME/.secretlintignore`と、ステージ済みの`.secretlintignore`をこの順に適用します。作業ツリーにしかない`.secretlintignore`の内容は適用しません。リポジトリ固有の実行可能な`.git/hooks/pre-commit`がある場合は、secretlintより先に実行します。Dockerを利用できない場合や検査でsecretを検出した場合、commitは中止されます。意図的にフックを省略する場合は`git commit --no-verify`を使います。端末固有の`~/.gitconfig.local`で`core.hooksPath`を設定するとこのフックを上書きするため、同項目は置かないでください。
 
 ### mise本体のバージョン
 

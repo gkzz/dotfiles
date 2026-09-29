@@ -7,5 +7,7 @@
 [credential]
 	helper = manager
 	credentialStore = cache
+[core]
+	hooksPath = ~/.dotfiles/git/hooks
 [include]
 	path = ~/.gitconfig.local

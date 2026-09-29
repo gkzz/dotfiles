@@ -41,7 +41,7 @@ ci:
 	$(MAKE) test
 
 lint:
-	bash -n bin/dotfiles setup/*.bash setup/*.sh tests/*.sh tests/fixtures/*.bash tests/integration/*.sh bash/*.bash .bashrc .bash_profile
+	bash -n bin/dotfiles git/hooks/pre-commit setup/*.bash setup/*.sh tests/*.sh tests/fixtures/*.bash tests/integration/*.sh bash/*.bash .bashrc .bash_profile
 	mise exec -- biome check --config-path "$$(pwd)/biome.jsonc" "$$(pwd)/tests"
 
 test:
