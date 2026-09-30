@@ -28,146 +28,16 @@ jobs:
           install-node: "true"
           cache-installs: "false"
 
-      - name: Expose Node binary independently of test mise data
-        run: printf '%s/bin\n' "$(mise where node)" >> "$GITHUB_PATH"
-
-      - name: Prepare test HOME directory
-        run: |
-          test_home="$RUNNER_TEMP/home"
-          mkdir -p "$test_home" "$RUNNER_TEMP/snapshots" \
-            "$RUNNER_TEMP/mise-data" "$RUNNER_TEMP/mise-state"
-          {
-            printf 'HOME=%s\n' "$test_home"
-            printf 'XDG_CONFIG_HOME=%s/.config\n' "$test_home"
-            printf 'XDG_STATE_HOME=%s/.local/state\n' "$test_home"
-            printf 'MISE_DATA_DIR=%s/mise-data\n' "$RUNNER_TEMP"
-            printf 'MISE_CACHE_DIR=%s/mise-cache\n' "$RUNNER_TEMP"
-            printf 'MISE_STATE_DIR=%s/mise-state\n' "$RUNNER_TEMP"
-          } >> "$GITHUB_ENV"
-
       - name: Cache mise downloads
         uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
           path: ${{ runner.temp }}/mise-cache
           key: ${{ runner.os }}-mise-${{ hashFiles('mise.lock') }}
 
-      - name: Initialize mise data before snapshots
+      - name: Verify lifecycle in isolated HOME
+        env:
+          MISE_CACHE_DIR: ${{ runner.temp }}/mise-cache
         run: |
-          DOTFILES="$PWD"
-          . setup/lib.bash
-          . setup/context.bash
-          . setup/packages.bash
-          initialize_setup_context
-          MISE_CMD=$(command -v mise)
-          run_repository_mise_apply config --json > /dev/null
-
-      - name: Verify lifecycle
-        run: |
-          snapshot_root() {
-            tests/integration/home-snapshot.sh "$1" "$RUNNER_TEMP/snapshots/$2"
-          }
-          snapshot_mutable_state() {
-            snapshot_root "$HOME" "$1-home"
-            snapshot_root "$MISE_DATA_DIR" "$1-data"
-            snapshot_root "$MISE_STATE_DIR" "$1-state"
-          }
-          compare_snapshot() {
-            if ! cmp -s "$RUNNER_TEMP/snapshots/$1" "$RUNNER_TEMP/snapshots/$2"; then
-              diff -u "$RUNNER_TEMP/snapshots/$1" "$RUNNER_TEMP/snapshots/$2" || true
-              return 1
-            fi
-          }
-          compare_mutable_state() {
-            compare_snapshot "$1-home" "$2-home"
-            compare_snapshot "$1-data" "$2-data"
-            compare_snapshot "$1-state" "$2-state"
-          }
-          assert_link() {
-            test -L "$1"
-            test "$(readlink "$1")" = "$2"
-          }
-          plans() {
-            grep '^plan:' "$RUNNER_TEMP/$1"
-          }
-          compare_plans() {
-            plans "$1" > "$RUNNER_TEMP/$1.plans"
-            plans "$2" > "$RUNNER_TEMP/$2.plans"
-            test -s "$RUNNER_TEMP/$1.plans"
-            cmp "$RUNNER_TEMP/$1.plans" "$RUNNER_TEMP/$2.plans"
-          }
-
-          printf 'unmanaged\n' > "$HOME/sentinel"
-          snapshot_mutable_state before-install-dry-run
-
-          ./bin/dotfiles install --skip-brew > "$RUNNER_TEMP/install-dry-run"
-          cat "$RUNNER_TEMP/install-dry-run"
-          snapshot_mutable_state after-install-dry-run
-          compare_mutable_state before-install-dry-run after-install-dry-run
-
-          ./bin/dotfiles install --skip-brew --apply > "$RUNNER_TEMP/install-apply"
-          cat "$RUNNER_TEMP/install-apply"
-          compare_plans install-dry-run install-apply
-          snapshot_root "$HOME" after-first-apply
-
-          checkout=$(pwd -P)
-          assert_link "$HOME/.dotfiles" "$checkout"
-          assert_link "$HOME/.bashrc" "$HOME/.dotfiles/.bashrc"
-          assert_link "$HOME/.bash_profile" "$HOME/.dotfiles/.bash_profile"
-          assert_link "$HOME/.gitconfig" "$HOME/.dotfiles/.gitconfig"
-          assert_link "$XDG_CONFIG_HOME/mise/config.toml" "$HOME/.dotfiles/mise.toml"
-
-          ./bin/dotfiles install --skip-brew --apply
-          snapshot_root "$HOME" after-second-apply
-          compare_snapshot after-first-apply after-second-apply
-
-          snapshot_mutable_state before-verify
-          ./bin/dotfiles verify --skip-brew
-          snapshot_mutable_state after-verify
-          compare_mutable_state before-verify after-verify
-
-          rm "$HOME/.bashrc"
-          snapshot_mutable_state before-missing-link-verify
-          if ./bin/dotfiles verify --skip-brew > "$RUNNER_TEMP/missing-link-verify" 2>&1; then
-            echo 'verify unexpectedly succeeded with a missing .bashrc' >&2
-            exit 1
-          fi
-          cat "$RUNNER_TEMP/missing-link-verify"
-          grep -F '.bashrc' "$RUNNER_TEMP/missing-link-verify"
-          snapshot_mutable_state after-missing-link-verify
-          compare_mutable_state before-missing-link-verify after-missing-link-verify
-          test ! -e "$HOME/.bashrc" && test ! -L "$HOME/.bashrc"
-          ./bin/dotfiles install --skip-brew --apply
-
-          snapshot_mutable_state before-uninstall-dry-run
-          ./bin/dotfiles uninstall > "$RUNNER_TEMP/uninstall-dry-run"
-          cat "$RUNNER_TEMP/uninstall-dry-run"
-          snapshot_mutable_state after-uninstall-dry-run
-          compare_mutable_state before-uninstall-dry-run after-uninstall-dry-run
-
-          ./bin/dotfiles uninstall --apply > "$RUNNER_TEMP/uninstall-apply"
-          cat "$RUNNER_TEMP/uninstall-apply"
-          compare_plans uninstall-dry-run uninstall-apply
-
-          for target in \
-            "$HOME/.dotfiles" \
-            "$HOME/.bashrc" \
-            "$HOME/.bash_profile" \
-            "$HOME/.gitconfig" \
-            "$XDG_CONFIG_HOME/mise/config.toml"; do
-            test ! -e "$target" && test ! -L "$target"
-          done
-          test -f "$HOME/sentinel"
-
-          tools="$(awk '/^\[tools\]/{in_tools=1;next} /^\[/{in_tools=0} in_tools && /^[[:space:]]*[A-Za-z0-9_.-]+[[:space:]]*=/ {key=$1; gsub(/[[:space:]]/, "", key); print key}' mise.toml)"
-          for tool in $tools; do
-            test -n "$(find "$RUNNER_TEMP/mise-data/installs/$tool" -mindepth 1 -maxdepth 1 -type d -print -quit)"
-          done
-
-          ./bin/dotfiles install --skip-brew
-          ./bin/dotfiles install --skip-brew --apply
-          ./bin/dotfiles verify --skip-brew
-
-          tools="$(awk '/^\[tools\]/{in_tools=1;next} /^\[/{in_tools=0} in_tools && /^[[:space:]]*[A-Za-z0-9_.-]+[[:space:]]*=/ {key=$1; gsub(/[[:space:]]/, "", key); print key}' mise.toml)"
-          for tool in $tools; do
-            test -n "$(find "$RUNNER_TEMP/mise-data/installs/$tool" -mindepth 1 -maxdepth 1 -type d -print -quit)"
-          done
+          node_directory="$(mise where node)/bin"
+          export PATH="$node_directory:$PATH"
+          ./tests/integration/lifecycle-e2e.sh
