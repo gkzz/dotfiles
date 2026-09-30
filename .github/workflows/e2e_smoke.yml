@@ -158,6 +158,11 @@ jobs:
           done
           test -f "$HOME/sentinel"
 
+          tools="$(awk '/^\[tools\]/{in_tools=1;next} /^\[/{in_tools=0} in_tools && /^[[:space:]]*[A-Za-z0-9_.-]+[[:space:]]*=/ {key=$1; gsub(/[[:space:]]/, "", key); print key}' mise.toml)"
+          for tool in $tools; do
+            test -n "$(find "$RUNNER_TEMP/mise-data/installs/$tool" -mindepth 1 -maxdepth 1 -type d -print -quit)"
+          done
+
           ./bin/dotfiles install --skip-brew
           ./bin/dotfiles install --skip-brew --apply
           ./bin/dotfiles verify --skip-brew

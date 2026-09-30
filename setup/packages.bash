@@ -188,12 +188,7 @@ run_isolated_mise() {
   # 読み取り操作でもmiseは設定の追跡・信頼情報を記録する。
   # 一時設定の記録を利用者のstateへ残さない。
   case "${1:-}" in
-    config|ls) mise_state_dir="$mise_project_root/state" ;;
-    install)
-      case " $* " in
-        *' --dry-run '*) mise_state_dir="$mise_project_root/state" ;;
-      esac
-      ;;
+    config|ls|install) mise_state_dir="$mise_project_root/state" ;;
   esac
   MISE_DATA_DIR="$mise_data_dir"
   MISE_CACHE_DIR="$mise_cache_dir"

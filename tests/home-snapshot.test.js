@@ -36,6 +36,7 @@ function fixture(t) {
   );
   const home = path.join(root, "home");
   mkdirSync(home);
+  chmodSync(home, 0o700);
   t.after(() => rmSync(root, { recursive: true, force: true }));
   return { root, home, output: path.join(root, "snapshot") };
 }
@@ -59,7 +60,7 @@ describe("HOME snapshot", () => {
       throw error;
     }
     assert.equal(snapshot(home, output).status, 0);
-    assert.equal(readFileSync(output, "utf8"), "ff0a09\tl\tfe0a\n");
+    assert.equal(readFileSync(output, "utf8"), "\td\t700\nff0a09\tl\tfe0a\n");
   });
 
   it("ファイルとディレクトリの権限だけの変更も検出する", (t) => {
@@ -79,6 +80,15 @@ describe("HOME snapshot", () => {
     chmodSync(directory, 0o755);
     assert.equal(snapshot(home, output).status, 0);
     assert.notEqual(readFileSync(output, "utf8"), changedFile);
+  });
+
+  it("ルートディレクトリだけの権限変更も検出する", (t) => {
+    const { home, output } = fixture(t);
+    assert.equal(snapshot(home, output).status, 0);
+    assert.equal(readFileSync(output, "utf8"), "\td\t700\n");
+    chmodSync(home, 0o755);
+    assert.equal(snapshot(home, output).status, 0);
+    assert.equal(readFileSync(output, "utf8"), "\td\t755\n");
   });
 
   it("読み取れないファイルでは失敗し、既存snapshotを置き換えない", (t) => {
@@ -136,6 +146,7 @@ printf '%s\\0' "$1/missing"
     const result = snapshot(home, output);
     assert.equal(result.status, 0, result.stderr);
     const expected = [
+      "\td\t700",
       `${encode("directory")}\td\t755`,
       `${encode("same-a")}\tf\t644\t${sha256(same)}`,
       `${encode("same-b")}\tf\t644\t${sha256(same)}`,

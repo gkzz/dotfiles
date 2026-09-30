@@ -17,6 +17,8 @@ const records = [];
 const chunk = Buffer.alloc(1024 * 1024);
 
 try {
+  const rootMode = (lstatSync(home).mode & 0o7777).toString(8);
+  records.push(`\td\t${rootMode}`);
   let start = 0;
   for (let end = 0; end < entries.length; end++) {
     if (entries[end] !== 0) continue;

@@ -58,6 +58,48 @@ describe("パッケージのライフサイクル", () => {
       );
     });
 
+    it("通常installでも一時設定のstateを隔離し、dataとcacheは維持する", (t) => {
+      const fixture = new TestFixture(t);
+      const home = fixture.newHome("state-home");
+      const result = run(
+        "bash",
+        [
+          "-c",
+          `
+        . "$LIB_FILE"; . "$PACKAGES_FILE"
+        MISE_CONFIG_SOURCE="$CONFIG_SOURCE"; MISE_LOCK_SOURCE="$LOCK_SOURCE"
+        fake_mise() {
+          mkdir -p "$MISE_STATE_DIR" "$MISE_DATA_DIR" "$MISE_CACHE_DIR"
+          printf tracked > "$MISE_STATE_DIR/tracked-config"
+          printf installed > "$MISE_DATA_DIR/installed"
+          printf cached > "$MISE_CACHE_DIR/download"
+        }
+        MISE_CMD=fake_mise
+        run_repository_mise_apply install --locked --yes
+      `,
+        ],
+        {
+          env: {
+            ...packageEnv,
+            HOME: home,
+            MISE_DATA_DIR: path.join(home, "data"),
+            MISE_CACHE_DIR: path.join(home, "cache"),
+            MISE_STATE_DIR: path.join(home, "state"),
+          },
+        },
+      );
+      assert.equal(result.status, 0, result.stderr);
+      assert.equal(existsSync(path.join(home, "state")), false);
+      assert.equal(
+        readFileSync(path.join(home, "data/installed"), "utf8"),
+        "installed",
+      );
+      assert.equal(
+        readFileSync(path.join(home, "cache/download"), "utf8"),
+        "cached",
+      );
+    });
+
     it("miseが失敗したときは終了状態とstderrを維持する", (t) => {
       const fixture = new TestFixture(t);
       const home = fixture.newHome("failure-home");
