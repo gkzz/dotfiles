@@ -1,7 +1,6 @@
 ---
 name: natural-japanese-lite
 description: 日本語の文書を、読みやすく自然な文章へ書き起こす・推敲する・診断する。議事録、レポート、ガイド、企画書、メール、ブログなどの作成やリライト、AI臭さや翻訳調の除去、論旨・語順・読点・文の長さの改善を求められたときに使う。Markdownの書式整形だけが目的の場合は使わない。
-license: MIT
 ---
 
 # natural-japanese-lite
