@@ -4,7 +4,7 @@ import { describe, it } from "node:test";
 import { readQuotedValue } from "./repository-config.js";
 
 describe("readQuotedValue", () => {
-  it("accepts TOML whitespace and trailing comments", () => {
+  it("TOMLの空白と行末コメントを受け入れる", () => {
     const config = `
       min_version="2026.8.15" # bootstrap version
 
@@ -16,7 +16,7 @@ describe("readQuotedValue", () => {
     assert.equal(readQuotedValue(config, "tools", "node"), "24.19.0");
   });
 
-  it("rejects duplicate values", () => {
+  it("値の重複を拒否する", () => {
     const config = `
       [tools]
       node = "24.19.0"

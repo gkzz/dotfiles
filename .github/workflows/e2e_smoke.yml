@@ -1,4 +1,4 @@
-name: E2E smoke
+name: Dotfiles lifecycle E2E
 
 on:
   pull_request:
@@ -9,62 +9,35 @@ permissions:
 
 jobs:
   smoke:
-    name: Lifecycle smoke (Homebrew disabled)
-    runs-on: ubuntu-24.04
+    name: Lifecycle E2E (${{ matrix.os }}, --skip-brew)
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-24.04, macos-15]
+    runs-on: ${{ matrix.os }}
 
     steps:
       - name: Checkout
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
-      - name: Prepare test HOME directory
+      - name: Install snapshot toolchain
+        uses: ./.github/actions/setup-mise
+        env:
+          MISE_GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          install-node: "true"
+          cache-installs: "false"
+
+      - name: Cache mise downloads
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: ${{ runner.temp }}/mise-cache
+          key: ${{ runner.os }}-mise-${{ hashFiles('mise.lock') }}
+
+      - name: Verify lifecycle in isolated HOME
+        env:
+          MISE_CACHE_DIR: ${{ runner.temp }}/mise-cache
         run: |
-          test_home="$RUNNER_TEMP/home"
-          mkdir -p "$test_home"
-          {
-            printf 'HOME=%s\n' "$test_home"
-            printf 'XDG_CONFIG_HOME=%s/.config\n' "$test_home"
-            printf 'XDG_STATE_HOME=%s/.local/state\n' "$test_home"
-          } >> "$GITHUB_ENV"
-
-      - name: Verify lifecycle
-        run: |
-          test ! -e "$HOME/.bashrc"
-          test ! -e "$HOME/.dotfiles"
-          test ! -e "$HOME/.bash_profile"
-          test ! -e "$HOME/.gitconfig"
-          test ! -e "$XDG_CONFIG_HOME/mise/config.toml"
-
-          ./bin/dotfiles install --skip-brew
-          test ! -e "$HOME/.dotfiles"
-          test ! -e "$HOME/.bashrc"
-          test ! -e "$HOME/.bash_profile"
-          test ! -e "$HOME/.gitconfig"
-          test ! -e "$XDG_CONFIG_HOME/mise/config.toml"
-
-          ./bin/dotfiles install --skip-brew --apply
-
-          test -L "$HOME/.dotfiles"
-          test -L "$HOME/.bashrc"
-          test -L "$HOME/.bash_profile"
-          test -L "$HOME/.gitconfig"
-          test -L "$XDG_CONFIG_HOME/mise/config.toml"
-
-          ./bin/dotfiles verify --skip-brew
-
-          ./bin/dotfiles uninstall
-          ./bin/dotfiles uninstall --apply
-
-          test ! -e "$HOME/.bashrc"
-          test ! -e "$HOME/.dotfiles"
-          test ! -e "$HOME/.bash_profile"
-          test ! -e "$HOME/.gitconfig"
-          test ! -e "$XDG_CONFIG_HOME/mise/config.toml"
-
-          tools="$(awk '/^\[tools\]/{in_tools=1;next} /^\[/{in_tools=0} in_tools && /^[[:space:]]*[A-Za-z0-9_.-]+[[:space:]]*=/ {key=$1; gsub(/[[:space:]]/, "", key); print key}' mise.toml)"
-          for tool in $tools; do
-            test -n "$(find "$RUNNER_TEMP/mise-data/installs/$tool" -mindepth 1 -maxdepth 1 -type d -print -quit)"
-          done
-
-          ./bin/dotfiles install --skip-brew
-          ./bin/dotfiles install --skip-brew --apply
-          ./bin/dotfiles verify --skip-brew
+          node_directory="$(mise where node)/bin"
+          export PATH="$node_directory:$PATH"
+          ./tests/integration/lifecycle-e2e.sh

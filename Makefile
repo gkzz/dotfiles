@@ -13,7 +13,7 @@ help:
 	@printf '  %-24s %s\n' 'make gcm-apply' 'Configure Git Credential Manager'
 	@printf '  %-24s %s\n' 'make ci' 'Run lint and test sequentially'
 	@printf '  %-24s %s\n' 'make lint' 'Run Bash syntax checks and Biome'
-	@printf '  %-24s %s\n' 'make test' 'Run Node.js tests and mise boundary tests'
+	@printf '  %-24s %s\n' 'make test' 'Run safety and mise isolation tests'
 
 install:
 	./bin/dotfiles install
@@ -46,7 +46,5 @@ lint:
 
 test:
 	./tests/run.sh
-	@if [ "$(SKIP_MISE_ISOLATION)" != "1" ]; then \
-		./tests/integration/mise-isolation.sh; \
-	fi
 	./tests/integration/dotfiles-lifecycle.sh
+	./tests/integration/mise-isolation.sh

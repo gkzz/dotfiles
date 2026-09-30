@@ -9,7 +9,7 @@ import { assertExit, repositoryRoot, run } from "./helpers/process.js";
  */
 const dotfiles = path.join(repositoryRoot, "bin/dotfiles");
 
-describe("CLI parser", () => {
+describe("CLIの引数解析", () => {
   const invalidInvocations = [
     { name: "empty invocation", args: [] },
     { name: "removed prepare phase", args: ["--prepare"] },

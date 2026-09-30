@@ -9,6 +9,7 @@ exec mise --cd "$repository_root" exec -- \
   "$repository_root/tests/cli.test.js" \
   "$repository_root/tests/dotfiles.test.js" \
   "$repository_root/tests/git-hooks.test.js" \
+  "$repository_root/tests/home-snapshot.test.js" \
   "$repository_root/tests/helpers/fixture.test.js" \
   "$repository_root/tests/helpers/repository-config.test.js" \
   "$repository_root/tests/lifecycle.test.js" \

@@ -4,8 +4,11 @@ import {
   copyFileSync,
   mkdirSync,
   mkdtempSync,
+  readFileSync,
   realpathSync,
   rmSync,
+  symlinkSync,
+  writeFileSync,
 } from "node:fs";
 import os from "node:os";
 import path from "node:path";
@@ -34,6 +37,7 @@ const sanitizedEnvironmentKeys = new Set([
   "CREATE_DESTINATION_DURING_PREFLIGHT",
   "STREAM_MARKER",
   "STREAM_RELEASE_FILE",
+  "FAKE_MISE_MISSING_OUTPUT",
 ]);
 
 const sanitizedEnvironmentPrefixes = ["FAIL_", "FAKE_"];
@@ -109,6 +113,56 @@ export class TestFixture {
     const home = this.newHome(name);
     const result = this.runDotfiles(home, ["install", "--apply"]);
     assert.equal(result.status, 0, result.stderr);
+    this.createManagedLinks(home);
     return home;
+  }
+
+  createManagedLinks(home) {
+    // fake-miseはmise Dotfilesを再実装しない。verifyの前提状態はfixtureが明示して作る。
+    const configDirectory = path.join(home, ".config/mise");
+    mkdirSync(configDirectory, { recursive: true });
+    const links = [
+      [path.join(home, ".dotfiles"), repositoryRoot],
+      [path.join(home, ".bashrc"), path.join(home, ".dotfiles/.bashrc")],
+      [
+        path.join(home, ".bash_profile"),
+        path.join(home, ".dotfiles/.bash_profile"),
+      ],
+      [path.join(home, ".gitconfig"), path.join(home, ".dotfiles/.gitconfig")],
+      [
+        path.join(configDirectory, "config.toml"),
+        path.join(home, ".dotfiles/mise.toml"),
+      ],
+    ];
+    for (const [target, source] of links) symlinkSync(source, target);
+  }
+
+  readCalls(home, offset = 0) {
+    return readFileSync(path.join(home, "calls"), "utf8").slice(offset);
+  }
+
+  markCalls(home) {
+    return this.readCalls(home).length;
+  }
+
+  createFailingMiseCleanupCommand() {
+    const directory = path.join(this.root, "failing-cleanup-bin");
+    mkdirSync(directory);
+    const command = path.join(directory, "rm");
+    writeFileSync(
+      command,
+      `#!/usr/bin/env bash
+case " $* " in
+  *dotfiles-mise.*)
+    /bin/rm "$@"
+    printf '%s\\n' 'fake cleanup failure' >&2
+    exit 21
+    ;;
+  *) exec /bin/rm "$@" ;;
+esac
+`,
+    );
+    chmodSync(command, 0o755);
+    return directory;
   }
 }

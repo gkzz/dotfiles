@@ -205,7 +205,7 @@ main() {
     secretlint \
     --no-gitignore \
     --secretlintignore /scan/.secretlintignore.effective \
-    "${config_arguments[@]}" \
+    ${config_arguments[@]+"${config_arguments[@]}"} \
     "${staged_files[@]}"
   status=$?
   return "$status"

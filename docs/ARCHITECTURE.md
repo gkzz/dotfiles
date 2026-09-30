@@ -93,11 +93,8 @@ sequenceDiagram
 | [setup/dotfiles.bash](../setup/dotfiles.bash) | 一時設定、設定隔離、配置先の親コンポーネントの検証、mise Dotfilesの実行 |
 | [setup/context.bash](../setup/context.bash) | HOME / XDG と管理対象パスの決定 |
 | [setup/lib.bash](../setup/lib.bash) | 共通の検証とログ出力 |
-| [package.json](../package.json) | リポジトリ内のJavaScriptをES Modulesとして扱うための設定 |
-| [tests/helpers/](../tests/helpers/) | `node:test` から使うプロセス実行、共通アサーション、[TestFixture](../tests/helpers/fixture.js) |
-| [tests/fixtures/](../tests/fixtures/) | 外部CLIとして実行するテスト用コマンドと入力フィクスチャ |
-| [tests/integration/](../tests/integration/) | 実シェル・実miseとの境界テスト |
-| [tests/run.sh](../tests/run.sh) | mise 管理の Node.js で `node:test` を実行する入口 |
+| [tests/integration/](../tests/integration/) | 隔離HOMEでのライフサイクルE2Eと事故防止の境界確認 |
+| [tests/](../tests/) | 自作ラッパー、Gitフック、テスト基盤のNode.jsテスト |
 
 設定の解析、パッケージとツール、シンボリックリンクの状態管理には公式コマンドを使います。ラッパーはmise Dotfilesの実行順と安全な呼び出し境界を管理します。
 
@@ -107,9 +104,9 @@ mise が PATH にない場合は、[setup/mise-install.sh](../setup/mise-install
 
 リポジトリのmise設定とロックファイルを検査するときは、一時ディレクトリに両ファイルをコピーし、呼び出し元のmise設定から隔離します。検査結果は標準出力と標準エラーを保持して診断へ使い、[install --apply](../bin/dotfiles) の進捗は端末へ直接流します。準備、miseの実行、後片付けの結果は別々に保持し、miseと後片付けが同時に失敗した場合はmiseの終了コードを優先しつつ、両方の診断を表示します。
 
-テストケース、テスト用環境の準備と後片付け、検証は原則として `node:test` で記述します。外部CLIのテスト用コマンド、実シェル・実miseとの境界テスト、テスト起動処理にはシェルを使います。シェルテストで独自の分岐やアサーションが増え、境界確認より処理の組み立てが中心になった場合は、`node:test`への移行を検討します。各レイヤーの役割と品質保証の範囲は [テスト戦略](TEST-STRATEGY.md) を参照してください。
+一時プロジェクトで実行するツールのinstall・設定確認・ツール検査では、miseが設定の追跡・信頼情報を書き込むstateを一時ディレクトリへ隔離します。ツールのinstallでは、利用者のdataとcacheを使います。mise Dotfilesのdry-runとverifyでもstateを隔離します。初回起動時のdata migrationとcache更新を除き、利用者のHOME・data・stateを変更しないことをE2Eで確認します。
 
-Node.js はmise設定とロックファイルで固定し、[tests/run.sh](../tests/run.sh) が管理版を選択します。全Node.jsテストは [tests/run.sh](../tests/run.sh)、mise環境分離の境界だけは [tests/integration/mise-isolation.sh](../tests/integration/mise-isolation.sh) で単独実行できます。[make lint](../Makefile) は構文検査とBiome、[make test](../Makefile) は両方のテストを実行します。[make ci](../Makefile) はlintとtestをこの順に実行します。
+テストは、自作コードの安全性を確認するNode.jsテスト、実miseによる境界確認、隔離HOMEでinstall、verify、uninstall、再installを行うE2Eで構成します。内容と保証範囲は[テスト戦略](TEST-STRATEGY.md)を参照してください。[make lint](../Makefile) はシェル構文とBiome、[make test](../Makefile) は安全性テストと境界確認を実行します。[make ci](../Makefile) はlintとtestをこの順に実行します。
 
 ## 管理対象
 

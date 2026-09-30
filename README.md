@@ -88,13 +88,11 @@ make test
 
 `make verify` は、パッケージ、ツール、設定、シンボリックリンクが現在の環境で期待どおりか確認します。`make ci` は開発中の変更を検査するコマンドで、`make lint`、`make test` の順に実行します。
 
-`make lint` はシェルスクリプトの構文チェックとBiomeによるJavaScriptの検査、`make test` はNode.jsのテスト一式とmiseを使うシェルの境界テストを実行します。境界テストは実際のmiseを使うため、環境やキャッシュの状態によって時間がかかることがあります。実行には `mise` と、リポジトリのmise設定で固定されたNode.js / Biomeが必要です。必要なツールは次で導入・確認できます。
+`make lint` はシェルスクリプトの構文チェックとBiome、`make test` はNode.jsの安全性テストと実miseによる境界テストを実行します。install/uninstall/reinstall の正常系は、隔離HOMEを使うUbuntu/macOSのE2Eで確認します。実行には `mise` が必要です。必要なツールは次で導入・確認できます。
 
 ```bash
 ./setup/mise-install.sh --apply
 mise install
 ```
-
-Node.jsのテスト一式だけを実行する場合は`tests/run.sh`を使います。miseの境界テストは`tests/integration/mise-isolation.sh`と`tests/integration/dotfiles-lifecycle.sh`から個別に実行できます。Node.jsのテストファイルは機能別に分かれており、必要なファイルだけを`mise exec -- node --test tests/check.test.js`のように単独実行できます。JavaScriptは、リポジトリ直下の`package.json`にある`"type": "module"`によりES Modulesとして扱います。
 
 テストのレイヤーと品質保証の範囲は [テスト戦略](docs/TEST-STRATEGY.md)、その他の詳細は [docs/](./docs/) を参照してください。
