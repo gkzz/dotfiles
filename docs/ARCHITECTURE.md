@@ -104,7 +104,7 @@ mise が PATH にない場合は、[setup/mise-install.sh](../setup/mise-install
 
 リポジトリのmise設定とロックファイルを検査するときは、一時ディレクトリに両ファイルをコピーし、呼び出し元のmise設定から隔離します。検査結果は標準出力と標準エラーを保持して診断へ使い、[install --apply](../bin/dotfiles) の進捗は端末へ直接流します。準備、miseの実行、後片付けの結果は別々に保持し、miseと後片付けが同時に失敗した場合はmiseの終了コードを優先しつつ、両方の診断を表示します。
 
-dry-runとverifyでは、miseが設定の追跡・信頼情報を書き込むstateを一時ディレクトリへ隔離します。初回起動時のdata migrationとcache更新を除き、利用者のHOME・data・stateを変更しないことをE2Eで確認します。
+一時プロジェクトで実行するツールのinstall・設定確認・ツール検査では、miseが設定の追跡・信頼情報を書き込むstateを一時ディレクトリへ隔離します。ツールのinstallでは、利用者のdataとcacheを使います。mise Dotfilesのdry-runとverifyでもstateを隔離します。初回起動時のdata migrationとcache更新を除き、利用者のHOME・data・stateを変更しないことをE2Eで確認します。
 
 テストは、自作コードの安全性を確認するNode.jsテスト、実miseによる境界確認、隔離HOMEでinstall、verify、uninstall、再installを行うE2Eで構成します。内容と保証範囲は[テスト戦略](TEST-STRATEGY.md)を参照してください。[make lint](../Makefile) はシェル構文とBiome、[make test](../Makefile) は安全性テストと境界確認を実行します。[make ci](../Makefile) はlintとtestをこの順に実行します。
 
