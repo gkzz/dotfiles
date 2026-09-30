@@ -8,12 +8,14 @@
 
 | レイヤー | テスト | 確認すること |
 | --- | --- | --- |
-| E2E | [Dotfiles lifecycle E2E](../.github/workflows/e2e_smoke.yml) | Ubuntu/macOSでdry-runとverifyがHOME・mise data・stateを変更しないこと、installの冪等性、uninstall直後のツール保持、再install、管理対象リンク |
+| E2E | [lifecycle-e2e.sh](../tests/integration/lifecycle-e2e.sh)（[CI](../.github/workflows/e2e_smoke.yml)） | Ubuntu/macOSでdry-runとverifyがHOME・mise data・stateを変更しないこと、installの冪等性、uninstall直後のツール保持、再install、管理対象リンク |
 | 結合テスト | [dotfiles-lifecycle.sh](../tests/integration/dotfiles-lifecycle.sh) | 既存ファイルとの競合で中断し、内容を上書きしないこと。危険なXDGパス経由でHOME外を変更しないこと。miseへ破壊的な`--force`を渡さないこと |
 | 結合テスト | [mise-isolation.sh](../tests/integration/mise-isolation.sh) | 呼び出し元、HOME、リポジトリ内の追加設定がmiseの検査へ混入しないこと |
 | コンポーネント・単体テスト | [Node.jsテスト](../tests/run.sh) | 排他制御、利用者データの保護、失敗時の終了状態と診断、Gitフックのstaged内容・ignore・Dockerへの受け渡し、通常installのstate隔離とdata/cacheへの書き込み、スナップショットの権限変更検出と失敗伝播 |
 
 `make test` はNode.jsテストと実miseによる境界確認を実行します。Ubuntu/macOSのCIでも同じテストを実行します。installから再installまでの正常な一連の動作と、リンク欠落時のverifyの失敗・非修復は、pull requestのE2Eで確認します。
+
+E2Eの環境準備・検証・後片付けは `tests/integration/lifecycle-e2e.sh` にまとめています。CIはスナップショット用Node.jsの導入とダウンロードキャッシュを用意してから、このスクリプトを実行します。ローカルでも、固定バージョンのmiseとNode.jsを用意して `mise exec -- ./tests/integration/lifecycle-e2e.sh` で実行できます。
 
 E2Eではmiseの初回migrationを準備段階で実行し、その後のHOME・data・stateを比較します。mise初回起動時のmigration記録とcacheの更新は、非変更性の保証に含めません。
 
