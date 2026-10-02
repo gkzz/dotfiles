@@ -93,8 +93,7 @@ sequenceDiagram
 | [setup/dotfiles.bash](../setup/dotfiles.bash) | 一時設定、設定隔離、配置先の親コンポーネントの検証、mise Dotfilesの実行 |
 | [setup/context.bash](../setup/context.bash) | HOME / XDG と管理対象パスの決定 |
 | [setup/lib.bash](../setup/lib.bash) | 共通の検証とログ出力 |
-| [tests/integration/](../tests/integration/) | 隔離HOMEでのライフサイクルE2Eと事故防止の境界確認 |
-| [tests/](../tests/) | 自作ラッパー、Gitフック、テスト基盤のNode.jsテスト |
+| [tests/integration/](../tests/integration/) | 既存ファイル保護・mise設定隔離の境界確認 |
 
 設定の解析、パッケージとツール、シンボリックリンクの状態管理には公式コマンドを使います。ラッパーはmise Dotfilesの実行順と安全な呼び出し境界を管理します。
 
@@ -104,9 +103,9 @@ mise が PATH にない場合は、[setup/mise-install.sh](../setup/mise-install
 
 リポジトリのmise設定とロックファイルを検査するときは、一時ディレクトリに両ファイルをコピーし、呼び出し元のmise設定から隔離します。検査結果は標準出力と標準エラーを保持して診断へ使い、[install --apply](../bin/dotfiles) の進捗は端末へ直接流します。準備、miseの実行、後片付けの結果は別々に保持し、miseと後片付けが同時に失敗した場合はmiseの終了コードを優先しつつ、両方の診断を表示します。
 
-一時プロジェクトで実行するツールのinstall・設定確認・ツール検査では、miseが設定の追跡・信頼情報を書き込むstateを一時ディレクトリへ隔離します。ツールのinstallでは、利用者のdataとcacheを使います。mise Dotfilesのdry-runとverifyでもstateを隔離します。初回起動時のdata migrationとcache更新を除き、利用者のHOME・data・stateを変更しないことをE2Eで確認します。
+一時プロジェクトで実行するツールのinstall・設定確認・ツール検査では、miseが設定の追跡・信頼情報を書き込むstateを一時ディレクトリへ隔離します。ツールのinstallでは、利用者のdataとcacheを使います。mise Dotfilesのdry-runとverifyでもstateを隔離します。ライフサイクル確認ではHOME、data、stateを一時ディレクトリに置いて実行します。
 
-テストは、自作コードの安全性を確認するNode.jsテスト、実miseによる境界確認、隔離HOMEでinstall、verify、uninstall、再installを行うE2Eで構成します。内容と保証範囲は[テスト戦略](TEST-STRATEGY.md)を参照してください。[make lint](../Makefile) はシェル構文とBiome、[make test](../Makefile) は安全性テストと境界確認を実行します。[make ci](../Makefile) はlintとtestをこの順に実行します。
+確認は、Lint、実miseによる境界確認、[CI workflow](../.github/workflows/e2e_smoke.yml)で隔離環境にMakeターゲットを順に実行するライフサイクル確認で構成します。内容と保証範囲は[テスト戦略](TEST-STRATEGY.md)を参照してください。[make lint](../Makefile) はシェル構文とBiome、[make test](../Makefile) は境界確認を実行します。[make ci](../Makefile) はlintとtestをこの順に実行します。
 
 ## 管理対象
 

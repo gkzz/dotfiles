@@ -1,4 +1,4 @@
-name: Dotfiles lifecycle E2E
+name: Dotfiles lifecycle
 
 on:
   pull_request:
@@ -9,7 +9,7 @@ permissions:
 
 jobs:
   smoke:
-    name: Lifecycle E2E (${{ matrix.os }}, --skip-brew)
+    name: Lifecycle (${{ matrix.os }}, --skip-brew)
     strategy:
       fail-fast: false
       matrix:
@@ -20,13 +20,22 @@ jobs:
       - name: Checkout
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
-      - name: Install snapshot toolchain
-        uses: ./.github/actions/setup-mise
-        env:
-          MISE_GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          install-node: "true"
-          cache-installs: "false"
+      - name: Prepare isolated HOME and mise directories
+        shell: bash
+        run: |
+          set -euo pipefail
+          test_root="${RUNNER_TEMP}/dotfiles-lifecycle"
+          mkdir -p "$test_root/home" "$test_root/mise-data" "$test_root/mise-state" "$test_root/mise-config" "$RUNNER_TEMP/mise-cache"
+          {
+            echo "HOME=$test_root/home"
+            echo "XDG_CONFIG_HOME=$test_root/home/.config"
+            echo "XDG_STATE_HOME=$test_root/home/.local/state"
+            echo "MISE_DATA_DIR=$test_root/mise-data"
+            echo "MISE_STATE_DIR=$test_root/mise-state"
+            echo "MISE_CONFIG_DIR=$test_root/mise-config"
+            echo "MISE_CACHE_DIR=$RUNNER_TEMP/mise-cache"
+            echo "DOTFILES_SKIP_BREW=1"
+          } >> "$GITHUB_ENV"
 
       - name: Cache mise downloads
         uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
@@ -34,10 +43,24 @@ jobs:
           path: ${{ runner.temp }}/mise-cache
           key: ${{ runner.os }}-mise-${{ hashFiles('mise.lock') }}
 
-      - name: Verify lifecycle in isolated HOME
+      - name: Install mise
+        uses: ./.github/actions/setup-mise
         env:
-          MISE_CACHE_DIR: ${{ runner.temp }}/mise-cache
-        run: |
-          node_directory="$(mise where node)/bin"
-          export PATH="$node_directory:$PATH"
-          ./tests/integration/lifecycle-e2e.sh
+          MISE_GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          cache-installs: "false"
+
+      - name: Run make install (dry-run)
+        run: make install
+
+      - name: Run make install-apply
+        run: make install-apply
+
+      - name: Verify installed state
+        run: make verify
+
+      - name: Run make uninstall (dry-run)
+        run: make uninstall
+
+      - name: Run make uninstall-apply
+        run: make uninstall-apply

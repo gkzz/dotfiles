@@ -88,7 +88,7 @@ make test
 
 `make verify` は、パッケージ、ツール、設定、シンボリックリンクが現在の環境で期待どおりか確認します。`make ci` は開発中の変更を検査するコマンドで、`make lint`、`make test` の順に実行します。
 
-`make lint` はシェルスクリプトの構文チェックとBiome、`make test` はNode.jsの安全性テストと実miseによる境界テストを実行します。install/uninstall/reinstall の正常系は、隔離HOMEを使うUbuntu/macOSのE2Eで確認します。実行には `mise` が必要です。必要なツールは次で導入・確認できます。
+`make lint` はシェルスクリプトの構文チェックとBiome、`make test` は既存ファイルの保護とmise設定の隔離を確認します。pull requestではUbuntu/macOS上でHOMEとmiseの設定先を隔離し、`make install`、`make install-apply`、`make verify`、`make uninstall`、`make uninstall-apply` を順に実行します。実行には `mise` が必要です。必要なツールは次で導入・確認できます。
 
 ```bash
 ./setup/mise-install.sh --apply

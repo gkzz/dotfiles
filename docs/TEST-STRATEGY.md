@@ -1,6 +1,6 @@
 # テスト戦略
 
-自作ラッパーとGitフックの安全性はNode.jsテストで確認します。mise Dotfilesの正常系は模倣せず、隔離したHOMEで実際にinstall、uninstall、再installするE2Eで確認します。
+Lint、dry-run、隔離HOMEでmakeターゲットを順に実行するライフサイクル確認を中心にします。個別の内部処理を網羅する単体テストは行わず、ライフサイクル確認では再現しにくい既存ファイル保護とmise設定の隔離だけを境界テストとして残します。
 
 ## 自動テスト
 
@@ -8,19 +8,31 @@
 
 | レイヤー | テスト | 確認すること |
 | --- | --- | --- |
-| E2E | [lifecycle-e2e.sh](../tests/integration/lifecycle-e2e.sh)（[CI](../.github/workflows/e2e_smoke.yml)） | Ubuntu/macOSでdry-runとverifyがHOME・mise data・stateを変更しないこと、installの冪等性、uninstall直後のツール保持、再install、管理対象リンク |
-| 結合テスト | [dotfiles-lifecycle.sh](../tests/integration/dotfiles-lifecycle.sh) | 既存ファイルとの競合で中断し、内容を上書きしないこと。危険なXDGパス経由でHOME外を変更しないこと。miseへ破壊的な`--force`を渡さないこと |
-| 結合テスト | [mise-isolation.sh](../tests/integration/mise-isolation.sh) | 呼び出し元、HOME、リポジトリ内の追加設定がmiseの検査へ混入しないこと |
-| コンポーネント・単体テスト | [Node.jsテスト](../tests/run.sh) | 排他制御、利用者データの保護、失敗時の終了状態と診断、Gitフックのstaged内容・ignore・Dockerへの受け渡し、通常installのstate隔離とdata/cacheへの書き込み、スナップショットの権限変更検出と失敗伝播 |
+| Lint | [lint.yml](../.github/workflows/lint.yml)、`make lint` | シェル構文と静的解析 |
+| Dry-run | [test.yml](../.github/workflows/test.yml) | mise bootstrap がdry-runで完了すること |
+| ライフサイクル | [CI](../.github/workflows/e2e_smoke.yml) | Ubuntu/macOSでmake install、install-apply、verify、uninstall、uninstall-applyを隔離HOME上で順に実行 |
+| 境界テスト | [dotfiles-lifecycle.sh](../tests/integration/dotfiles-lifecycle.sh) | 既存ファイルとの競合で停止し、内容を上書きしないこと。HOME外の変更を防ぎ、miseへ`--force`を渡さないこと |
+| 境界テスト | [mise-isolation.sh](../tests/integration/mise-isolation.sh) | 呼び出し元、HOME、リポジトリ内の追加設定がmiseの検査へ混入しないこと |
 
-`make test` はNode.jsテストと実miseによる境界確認を実行します。Ubuntu/macOSのCIでも同じテストを実行します。installから再installまでの正常な一連の動作と、リンク欠落時のverifyの失敗・非修復は、pull requestのE2Eで確認します。
+`make ci` はLintと境界テストを実行します。ライフサイクルの一連の動作は、pull requestのworkflowで確認します。
 
-E2Eの環境準備・検証・後片付けは `tests/integration/lifecycle-e2e.sh` にまとめています。CIはスナップショット用Node.jsの導入とダウンロードキャッシュを用意してから、このスクリプトを実行します。ローカルでも、固定バージョンのmiseとNode.jsを用意して `mise exec -- ./tests/integration/lifecycle-e2e.sh` で実行できます。
-
-E2Eではmiseの初回migrationを準備段階で実行し、その後のHOME・data・stateを比較します。mise初回起動時のmigration記録とcacheの更新は、非変更性の保証に含めません。
-
-スナップショットはNode.jsの1プロセスで比較対象のルートディレクトリ自身の権限と、配下のファイル種別・権限・SHA-256・symlink参照先を記録します。E2Eの検証用Node.jsは、比較対象のmise dataとは別に導入します。列挙、権限取得、読み取りのどれかが失敗したら、既存のスナップショットを置き換えずに失敗します。
+workflowではHOME、mise data、state、configを一時ディレクトリに隔離し、Homebrewを省略します。miseを準備した後、installのdry-run/apply、verify、uninstallのdry-run/applyを順に実行します。uninstall後は管理対象リンクが存在しないためverifyを実行しません。
 
 ## 自動テストで確認しないこと
 
-mise DotfilesやGit、Dockerの仕様は再実装して確認しません。テスト用コマンドは、自作コードへの応答と障害注入に使います。実際の利用者HOMEへの適用、Homebrewの実インストール、Secretlintの検出精度は自動テストの対象外です。実HOMEに適用する場合は、dry-runの計画と競合を確認してください。
+内部関数の網羅、CLI全オプションの組み合わせ、エラーメッセージ全文、verifyの全異常パターン、全パッケージの導入成功、CI未実施OSでの動作、あらゆる状態での冪等性とuninstall安全性は保証しません。mise DotfilesやGit、Dockerの仕様は再実装して確認しません。実際の利用者HOMEへの適用、Homebrewの実インストール、Secretlintの検出精度も自動テストの対象外です。実HOMEに適用する場合は、dry-runの計画と競合を確認してください。
+
+機密情報の検出はローカルのpre-commitに設定したsecretlintで行い、CIでは独立したSecret Scanを実行しません。pre-commitの未実行や`--no-verify`によるスキップは保証対象外です。
+
+未保証の動作で不具合が起きた場合は必要に応じて修正・検証します。特に既存データを破壊する可能性がある不具合には、再発防止の確認を追加します。
+
+## 検証方針
+
+| 対象 | 保証する範囲 | 手段 |
+| --- | --- | --- |
+| 構文・静的解析 | シェル構文と静的解析で検出できる問題 | Lint |
+| dry-run | セットアップ処理が変更を加えず完了すること | CI dry-run、ライフサイクル確認 |
+| install / verify / uninstall | 隔離環境での基本ライフサイクル | CI workflow |
+| 既存ファイル | 代表的な競合で停止し、内容を維持すること | 境界テスト |
+
+正常系の一連の動作はライフサイクル確認で扱い、個別の境界テストには重ねて持ちません。

@@ -13,7 +13,7 @@ help:
 	@printf '  %-24s %s\n' 'make gcm-apply' 'Configure Git Credential Manager'
 	@printf '  %-24s %s\n' 'make ci' 'Run lint and test sequentially'
 	@printf '  %-24s %s\n' 'make lint' 'Run Bash syntax checks and Biome'
-	@printf '  %-24s %s\n' 'make test' 'Run safety and mise isolation tests'
+	@printf '  %-24s %s\n' 'make test' 'Run lifecycle boundary checks'
 
 install:
 	./bin/dotfiles install
@@ -41,10 +41,9 @@ ci:
 	$(MAKE) test
 
 lint:
-	bash -n bin/dotfiles git/hooks/pre-commit setup/*.bash setup/*.sh tests/*.sh tests/fixtures/*.bash tests/integration/*.sh bash/*.bash .bashrc .bash_profile
-	mise exec -- biome check --config-path "$$(pwd)/biome.jsonc" "$$(pwd)/tests"
+	bash -n bin/dotfiles git/hooks/pre-commit setup/*.bash setup/*.sh tests/fixtures/*.bash tests/helpers/*.js tests/integration/*.sh bash/*.bash .bashrc .bash_profile
+	mise exec -- biome check --config-path "$$(pwd)/biome.jsonc" "$$(pwd)/tests/helpers/home-snapshot.js"
 
 test:
-	./tests/run.sh
 	./tests/integration/dotfiles-lifecycle.sh
 	./tests/integration/mise-isolation.sh

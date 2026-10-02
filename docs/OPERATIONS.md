@@ -39,7 +39,7 @@ bin/dotfiles install --skip-brew
 bin/dotfiles install --skip-brew --apply
 ```
 
-たとえば E2Eスモークテストでは、Homebrew に依存せずライフサイクルを確認するために [bin/dotfiles install --skip-brew --apply](../bin/dotfiles) を明示的に実行します。
+CIのライフサイクル確認では、Homebrew に依存しないよう環境変数で省略し、Makeターゲットを順に実行します。
 
 管理対象のシンボリックリンクの参照元ファイルだけを変更した場合、install の再実行は不要です。
 
