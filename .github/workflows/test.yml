@@ -37,8 +37,8 @@ jobs:
           ./setup/gcm.sh --help
           ./setup/mise-install.sh --help
 
-      - name: Run lifecycle safety checks
-        run: make ci
+      - name: xxx
+        run: make test
 
       - name: Dry-run mise bootstrap
         run: ./setup/mise-install.sh --dry-run

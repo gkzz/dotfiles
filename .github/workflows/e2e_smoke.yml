@@ -50,17 +50,17 @@ jobs:
         with:
           cache-installs: "false"
 
-      - name: Run make install (dry-run)
+      - name: Run make install (dry-run mode)
         run: make install
 
-      - name: Run make install-apply
+      - name: Run make install (apply mode)
         run: make install-apply
 
       - name: Verify installed state
         run: make verify
 
-      - name: Run make uninstall (dry-run)
+      - name: Run make uninstall (dry-run mode)
         run: make uninstall
 
-      - name: Run make uninstall-apply
+      - name: Run make uninstall (apply mode)
         run: make uninstall-apply
