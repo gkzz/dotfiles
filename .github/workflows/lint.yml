@@ -40,20 +40,10 @@ jobs:
           docker run --rm -v "$PWD:/workspace:ro" -w /workspace koalaman/shellcheck:v0.11.0@sha256:61862eba1fcf09a484ebcc6feea46f1782532571a34ed51fedf90dd25f925a8d \
             --shell=bash \
             --exclude=SC1090,SC1091 \
-            bin/dotfiles \
+            setup/init.sh \
             git/hooks/pre-commit \
-            setup/lib.bash \
-            setup/context.bash \
-            setup/lifecycle.bash \
-            setup/plan.bash \
-            setup/packages.bash \
-            setup/dotfiles.bash \
-            setup/homebrew-install.sh \
             setup/gcm.sh \
             setup/mise-install.sh \
-            tests/*.sh \
-            tests/fixtures/*.bash \
-            tests/integration/*.sh \
             bash/*.bash \
             .bashrc \
             .bash_profile
@@ -65,13 +55,6 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-
-      - name: Install mise
-        uses: ./.github/actions/setup-mise
-        env:
-          MISE_GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          install-node: "true"
 
       - name: Run lint
         run: make lint

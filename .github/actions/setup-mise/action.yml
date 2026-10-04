@@ -14,11 +14,6 @@ inputs:
     description: Caller repository directory containing the mise config.
     required: false
     default: "."
-  install-node:
-    description: Install the repository-pinned Node.js and Biome validation tools.
-    required: false
-    default: "false"
-
 runs:
   using: composite
   steps:
@@ -107,12 +102,3 @@ runs:
       run: |
         set -euo pipefail
         mise install --locked --yes
-
-    - name: Install repository validation tools
-      if: inputs.install-node == 'true'
-      shell: bash
-      run: |
-        set -euo pipefail
-        mise --cd "$GITHUB_WORKSPACE" install node biome
-        mise --cd "$GITHUB_WORKSPACE" exec -- node --version
-        mise --cd "$GITHUB_WORKSPACE" exec -- biome --version
