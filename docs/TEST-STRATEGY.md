@@ -1,26 +1,22 @@
 # テスト戦略
 
-自作ラッパーとGitフックの安全性はNode.jsテストで確認します。mise Dotfilesの正常系は模倣せず、隔離したHOMEで実際にinstall、uninstall、再installするE2Eで確認します。
+このリポジトリは mise bootstrap を利用します。CI では mise のパッケージや dotfile の処理を再実装せず、help の出力、bootstrap の dry-run、dotfile の適用と解除に加え、Git フックの既存テストを実行します。
 
 ## 自動テスト
 
-テストピラミッドの上から、対象範囲が広い順に並べています。
-
-| レイヤー | テスト | 確認すること |
+| レイヤー | テスト | 確認内容 |
 | --- | --- | --- |
-| E2E | [lifecycle-e2e.sh](../tests/integration/lifecycle-e2e.sh)（[CI](../.github/workflows/e2e_smoke.yml)） | Ubuntu/macOSでdry-runとverifyがHOME・mise data・stateを変更しないこと、installの冪等性、uninstall直後のツール保持、再install、管理対象リンク |
-| 結合テスト | [dotfiles-lifecycle.sh](../tests/integration/dotfiles-lifecycle.sh) | 既存ファイルとの競合で中断し、内容を上書きしないこと。危険なXDGパス経由でHOME外を変更しないこと。miseへ破壊的な`--force`を渡さないこと |
-| 結合テスト | [mise-isolation.sh](../tests/integration/mise-isolation.sh) | 呼び出し元、HOME、リポジトリ内の追加設定がmiseの検査へ混入しないこと |
-| コンポーネント・単体テスト | [Node.jsテスト](../tests/run.sh) | 排他制御、利用者データの保護、失敗時の終了状態と診断、Gitフックのstaged内容・ignore・Dockerへの受け渡し、通常installのstate隔離とdata/cacheへの書き込み、スナップショットの権限変更検出と失敗伝播 |
+| Lint | `make lint` | hook、setup、補助スクリプトの Bash 構文 |
+| Git hook | `make test-git-hooks` | 既存16ケースでステージ済み内容、ignore、設定、失敗時の処理、Git からのフック実行を確認 |
+| Help | [test.yml](../.github/workflows/test.yml) | Makefile と補助スクリプトの help 出力 |
+| Dry-run | [test.yml](../.github/workflows/test.yml) | packages と dotfiles を除いた bootstrap の dry-run が完了すること |
+| Package dry-run | [test.yml](../.github/workflows/test.yml) | Homebrew package bootstrap の dry-run が完了すること |
+| Dotfiles lifecycle | [test.yml](../.github/workflows/test.yml) | 一時 HOME で install の dry-run/apply 後に `status --missing` が成功し、unapply 後は全 dotfile が missing と判定されること |
 
-`make test` はNode.jsテストと実miseによる境界確認を実行します。Ubuntu/macOSのCIでも同じテストを実行します。installから再installまでの正常な一連の動作と、リンク欠落時のverifyの失敗・非修復は、pull requestのE2Eで確認します。
+Git hook の Bash 構文は `make ci` の lint で確認します。既存テストは Docker を模擬するため、実際の secretlint による secret 検出は確認しません。テストの整理は今後改めて検討します。`make ci` は lint、bootstrap dry-run、Git フックの既存テストを実行し、GitHub Actions では一時 HOME で dotfile の lifecycle も確認します。
 
-E2Eの環境準備・検証・後片付けは `tests/integration/lifecycle-e2e.sh` にまとめています。CIはスナップショット用Node.jsの導入とダウンロードキャッシュを用意してから、このスクリプトを実行します。ローカルでも、固定バージョンのmiseとNode.jsを用意して `mise exec -- ./tests/integration/lifecycle-e2e.sh` で実行できます。
+`make test` は `make test-bootstrap-dry-run` と `make test-git-hooks` を実行します。この dry-run は dotfile や packages を適用・検証しません。package は別の dry-run target で宣言と解決を確認します。dotfile lifecycle の確認は GitHub Actions で行います。
 
-E2Eではmiseの初回migrationを準備段階で実行し、その後のHOME・data・stateを比較します。mise初回起動時のmigration記録とcacheの更新は、非変更性の保証に含めません。
+## テスト対象外
 
-スナップショットはNode.jsの1プロセスで比較対象のルートディレクトリ自身の権限と、配下のファイル種別・権限・SHA-256・symlink参照先を記録します。E2Eの検証用Node.jsは、比較対象のmise dataとは別に導入します。列挙、権限取得、読み取りのどれかが失敗したら、既存のスナップショットを置き換えずに失敗します。
-
-## 自動テストで確認しないこと
-
-mise DotfilesやGit、Dockerの仕様は再実装して確認しません。テスト用コマンドは、自作コードへの応答と障害注入に使います。実際の利用者HOMEへの適用、Homebrewの実インストール、Secretlintの検出精度は自動テストの対象外です。実HOMEに適用する場合は、dry-runの計画と競合を確認してください。
+`make setup` がネットワーク経由で Homebrew や mise を実際に導入する処理、全パッケージのインストール成功、mise 自身による競合解決や unapply の実装は、自動テストの対象外です。実環境に bootstrap を適用する前に dry-run を確認してください。

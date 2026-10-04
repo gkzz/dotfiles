@@ -1,77 +1,50 @@
-# Troubleshooting
+# トラブルシューティング
 
-## 最初に確認する
+## 適用に失敗する
 
 ```bash
 make install
 make verify
-make ci
 ```
 
-install の dry-run でエラーを解消してから [make install-apply](../Makefile) を実行してください。
+mise の出力を確認し、競合や不足を解消してください。bootstrap は全対象を一括で事前検査しないため、先に処理した項目が適用されてから後続の処理が失敗することがあります。原因を解消したら dry-run で確認し、再実行してください。
 
-## ライフサイクルロックを取得できない
+## 初回導入に失敗する
 
-同じ HOME に対する install / uninstall が実行中です。PID は次のコマンドで確認できます。
+`make setup` は Homebrew、Git、ネットワークを使います。まず Homebrew や Git のエラーを解消してください。このコマンドは実行元が Git checkout であることを確認します。別のリポジトリから実行した場合は、dotfiles の checkout に移動して `make setup` を実行してください。
+
+mise が見つからない場合、`make setup` は `setup/mise-install.sh` を使って固定バージョンを checksum 検証付きで導入します。手動導入やバージョン確認は[運用手順](OPERATIONS.md#mise-の導入とバージョン確認)を参照してください。既存の mise が古い場合は `mise version` を確認し、リポジトリの `min_version` 以上へ更新してください。
+
+## pre-commit hook が失敗する
+
+hook は Docker で固定バージョンの secretlint を実行します。Docker が利用できる状態か確認してください。検査を意図的に省略する場合は `git commit --no-verify` を使います。
+
+## dotfile のリンクが競合する
 
 ```bash
-cat "$HOME/.dotfiles-lifecycle.lock/pid"
+make install
+make verify
 ```
 
-実行中の処理が終わってから再実行してください。記録された PID が終了済みなら、次回の apply がロックを回収します。不正な PID のロックは自動で削除しません。dotfiles が動いていないことを確認してから、ロック用ディレクトリを別名へ退避してください。
+既存ファイルや古いリンクの参照先を確認し、必要な内容を保存したうえで個別に解消します。部分適用の後に失敗した場合も、現在の状態を確認してから再実行してください。一括置換に `--force` は使いません。
 
-## シンボリックリンクが競合する
+## 状態を確認する
 
 ```bash
-bin/dotfiles install --dry-run
+make verify
 ```
 
-競合する配置先の内容と参照先を確認し、必要なデータを手動で退避してから競合を解消してください。`--force`はサポートしていません。
-
-## mise が見つからない、または古い
-
-```bash
-bin/dotfiles install --dry-run
-mise version
-```
-
-mise がなければ、install は [リポジトリで指定したバージョンのmise実行ファイル](../setup/mise-install.sh) をダウンロードし、SHA-256チェックサムを照合してインストールします。既存 mise は自動更新しません。`curl`、SHA-256チェックサムの照合、ネットワーク、バージョン、設定、ロックに関する mise のエラーを確認し、必要なら対応版をインストールしてください。
-
-## Homebrew が利用できない
-
-Homebrew がなければ、install は [公式インストールスクリプトを呼び出す処理](../setup/homebrew-install.sh) の実行を予定します。OS、Command Line Tools、コンパイラー、権限に関するエラーは [インストールスクリプト](../setup/homebrew-install.sh) の出力を確認してください。
-
-Homebrew を使わない場合は [--skip-brew](../bin/dotfiles) を指定します。
-
-## verify が失敗する
-
-出力の先頭で、状態の不一致と検査処理のエラーを区別できます。
-
-- `verify failed:`: 検査は完了したものの、設定やインストール状態が期待と異なります。
-- `verify error:`: 必須コマンドの不足やコマンドの異常終了により、検査を完了できませんでした。続けて表示される元のエラーも確認してください。
-
-dotfilesの状態はmiseの`bootstrap dotfiles status --missing`で確認します。verifyは不一致を報告するだけで、シンボリックリンクを張り替えません。
-
-各項目を個別に確認します。
-
-```bash
-bash -n .bashrc .bash_profile
-git config --no-includes --file .gitconfig --list
-brew bundle check --no-upgrade --file Brewfile
-bin/dotfiles verify --skip-brew
-```
+mise のグローバル設定リンクは `~/.config/mise/config.toml` に作成されます。リンク先の決定に `XDG_CONFIG_HOME` は使いません。
 
 ## リポジトリを移動した
 
-`~/.dotfiles`は新しいリポジトリを自動参照しません。参照先を確認して手動で削除した後、新しいリポジトリからinstallを再実行してください。以前のバージョンが作成したバックアップや状態管理ファイルは自動で探索・削除しません。
+dotfile は bootstrap に使った checkout を参照します。checkout を別の場所へ移した場合は、新しい場所から `make install-apply` を再実行してください。
 
-## 調査情報を保存する
+## dotfile を解除する
 
 ```bash
-bin/dotfiles install --dry-run
-bin/dotfiles verify --skip-brew
-uname -a
-bash --version | head -n 1
+make uninstall       # dry-run
+make uninstall-apply # 解除
 ```
 
-認証情報、メールアドレス、署名鍵、トークン、`~/.gitconfig.local` の内容は共有しないでください。
+解除対象は mise が管理する dotfile のリンクです。Homebrew、mise 本体、clone したリポジトリ、パッケージ、開発ツールは残ります。変更されたリンク先など mise が安全に解除できない対象は、表示された内容を確認して個別に対応してください。
