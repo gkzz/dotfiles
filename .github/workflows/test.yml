@@ -11,8 +11,35 @@ permissions:
   contents: read
 
 jobs:
-  safety-checks:
-    name: Lifecycle safety checks
+  checks:
+    name: mise bootstrap dry-run and help
+    runs-on: ubuntu-24.04
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Install mise
+        uses: ./.github/actions/setup-mise
+        env:
+          MISE_GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          cache-installs: "false"
+
+      - name: Verify command help output
+        run: |
+          make help
+          ./setup/gcm.sh --help
+          ./setup/mise-install.sh --help
+
+      - name: Run bootstrap dry-run and Git hook tests
+        run: make test
+
+      - name: Run package bootstrap dry-run
+        run: make test-bootstrap-packages-dry-run
+
+  dotfiles-lifecycle:
+    name: Dotfiles lifecycle (${{ matrix.os }})
     strategy:
       fail-fast: false
       matrix:
@@ -28,17 +55,41 @@ jobs:
         env:
           MISE_GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          install-node: "true"
+          cache-installs: "false"
 
-      - name: Verify command help output
+      - name: Prepare isolated HOME
+        env:
+          HOME: ${{ runner.temp }}/dotfiles-home
         run: |
-          make help
-          ./bin/dotfiles --help
-          ./setup/gcm.sh --help
-          ./setup/mise-install.sh --help
+          set -euo pipefail
+          printf 'DOTFILES=%s\n' "$GITHUB_WORKSPACE" >> "$GITHUB_ENV"
 
-      - name: Run lifecycle safety checks
-        run: make ci
+      - name: make install (dotfiles dry-run)
+        env:
+          HOME: ${{ runner.temp }}/dotfiles-home
+        run: make install MISE_BOOTSTRAP_ARGS="--only dotfiles"
 
-      - name: Dry-run mise bootstrap
-        run: ./setup/mise-install.sh --dry-run
+      - name: make install-apply (dotfiles only)
+        env:
+          HOME: ${{ runner.temp }}/dotfiles-home
+        run: make install-apply MISE_BOOTSTRAP_ARGS="--only dotfiles"
+
+      - name: make verify-dotfiles
+        env:
+          HOME: ${{ runner.temp }}/dotfiles-home
+        run: make verify-dotfiles
+
+      - name: make uninstall (dry-run)
+        env:
+          HOME: ${{ runner.temp }}/dotfiles-home
+        run: make uninstall
+
+      - name: make uninstall-apply
+        env:
+          HOME: ${{ runner.temp }}/dotfiles-home
+        run: make uninstall-apply
+
+      - name: Verify dotfiles are uninstalled
+        env:
+          HOME: ${{ runner.temp }}/dotfiles-home
+        run: make verify-uninstalled

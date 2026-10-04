@@ -18,10 +18,16 @@ ghq = "1.10.1"
 peco = "0.6.0"
 direnv = "2.37.1"
 
+[bootstrap.packages]
+"brew:git" = "latest"
+"brew-cask:git-credential-manager" = { os = "macos" }
+
 [dotfiles]
-"~/.bashrc" = { source = "~/.dotfiles/.bashrc" }
-"~/.bash_profile" = { source = "~/.dotfiles/.bash_profile" }
-"~/.gitconfig" = { source = "~/.dotfiles/.gitconfig" }
+"~/.dotfiles" = { source = "." }
+"~/.bashrc" = { source = ".bashrc" }
+"~/.bash_profile" = { source = ".bash_profile" }
+"~/.gitconfig" = { source = ".gitconfig" }
+"~/.config/mise/config.toml" = { source = "mise.toml" }
 
 [task_config]
 dir = "{{cwd}}"

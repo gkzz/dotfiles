@@ -1,69 +1,82 @@
-# Operations
+# 運用手順
 
-## コマンド
+## 初回導入
 
-| 操作 | dry-run | [--apply](../bin/dotfiles) |
-| --- | --- | --- |
-| [install](../bin/dotfiles) | デフォルト。インストール内容を表示する | パッケージ、ツール、管理対象のシンボリックリンクを適用する |
-| [uninstall](../bin/dotfiles) | デフォルト。削除対象を表示する | 管理対象のシンボリックリンクを削除する |
-| [verify](../bin/dotfiles) | 対象外 | 対象外。現在の状態を確認するだけ |
+dotfiles を clone したら、checkout のルートで最初に `make setup` を実行し、Homebrew と mise 本体を準備してください。このコマンドは mise bootstrap 自体は実行しません。準備後、dry-run の内容を確認してから適用します。
+
+```bash
+make setup
+make install       # 適用内容を確認
+make install-apply # 適用
+```
+
+Homebrew のインストール時に OS や権限の確認が求められることがあります。`make setup` は実行元 checkout を使います。Git のグローバル `pre-commit` hook はこのリポジトリで管理しており、実行には Docker が必要です。
+
+## 既存環境からの移行
+
+mise のグローバル設定先は `~/.config/mise/config.toml` に固定します。独自の `XDG_CONFIG_HOME` を設定している端末では、設定内の必要な内容を保存し、旧設定先の管理リンクを手動で解除してから、独自指定を外してください。シェル起動ファイルや `~/.bashrc.local` の指定も確認し、新しいシェルで移行を進めます。
+
+既存の `~/.dotfiles` は、同じ checkout を指すリンクならそのまま使います。別の checkout を指す場合は、内容と参照先を確認して手動で解除してから適用してください。
+
+## mise の導入とバージョン確認
+
+`make setup` は mise が見つからない場合、固定バージョンを導入します。手動で導入する場合は次を実行してください。
+
+```bash
+./setup/mise-install.sh --dry-run
+./setup/mise-install.sh --apply
+```
+
+導入するバージョンは `mise.toml` の `min_version` から取得します。OS と CPU に応じた SHA-256 checksum を検証します。現在のバージョンは次のコマンドで確認できます。
+
+```bash
+./setup/mise-version.sh
+```
+
+## 適用と状態確認
+
+リポジトリルートから Makefile の target を実行します。
 
 ```bash
 make install
 make install-apply
 make verify
-make uninstall
-make uninstall-apply
 ```
 
-直接実行する場合は次を使います。
+適用前に dry-run の出力を確認してください。bootstrap は宣言されたパッケージ、dotfile、ツールを順に適用します。競合が起きたら mise の診断を確認し、対象を個別に解消して再実行してください。処理の途中で失敗した場合、それ以前の変更は残ることがあります。同じ HOME への適用・解除は同時に実行しないでください。
+
+## 解除
 
 ```bash
-bin/dotfiles install [--dry-run|--apply] [--skip-brew]
-bin/dotfiles verify [--skip-brew]
-bin/dotfiles uninstall [--dry-run|--apply]
+make uninstall       # 解除内容を確認
+make uninstall-apply # 解除
 ```
 
-## install
+mise が管理する dotfile のリンクを解除します。Homebrew、mise 本体、リポジトリ、パッケージ、開発ツールは残ります。変更されたファイルなど mise が安全に識別できない対象は、表示された診断に従って個別に対応してください。
 
-最初に [make install](../Makefile) で内容を確認し、問題がなければ [make install-apply](../Makefile) を実行します。miseの設定、miseのロックファイル、Brewfile を変更した場合も同じ手順で反映します。
+> [!NOTE]
+> ### スコープ外
+>
+> `uninstall-apply` は、Homebrew や mise 本体、インストール済みのパッケージや開発ツールを削除しません。`setup` で準備した環境をどこまで削除するかは利用状況によって異なるため、インストール前の状態へ戻す処理は用意していません。
 
-mise がインストールされていない場合、apply 時には `curl`、SHA-256チェックサムを照合できるコマンド、ネットワーク接続が必要です。リポジトリに固定したバージョンとチェックサムを使って mise をインストールします。
+## Git Credential Manager の設定
 
-既存のファイル、別の参照先を指すシンボリックリンク、ディレクトリと競合した場合は停止します。自動的な置換やバックアップは行いません。内容を確認し、競合を手動で解消してからinstallを再実行してください。
-
-Homebrewパッケージをこのライフサイクルの管理対象にしない場合や、Homebrew を利用できない環境で mise と管理対象のシンボリックリンクだけを適用したい場合は [--skip-brew](../bin/dotfiles) を使います。Homebrew の検出、初期導入、Brewfile の適用を省略しますが、mise と管理対象のシンボリックリンクは通常どおり処理します。
+`mise.toml` は macOS で Git Credential Manager (GCM) をパッケージとして導入します。GCM の Git 設定は必要に応じて別途適用します。
 
 ```bash
-bin/dotfiles install --skip-brew
-bin/dotfiles install --skip-brew --apply
+./setup/gcm.sh --help
+./setup/gcm.sh --dry-run
+./setup/gcm.sh --apply
 ```
 
-たとえば E2Eスモークテストでは、Homebrew に依存せずライフサイクルを確認するために [bin/dotfiles install --skip-brew --apply](../bin/dotfiles) を明示的に実行します。
+`--apply` は `credential.helper` と `credential.credentialStore` のグローバル設定を更新します。適用前に dry-run の出力を確認してください。
 
-管理対象のシンボリックリンクの参照元ファイルだけを変更した場合、install の再実行は不要です。
-
-## verify
-
-[make verify](../Makefile) は Bash、Git、Homebrew、mise、管理対象のシンボリックリンクを確認します。修復やライフサイクルロックの作成は行いません。[make ci](../Makefile) はリポジトリのlintとテストを実行する開発用コマンドです。
-
-miseの設定、ロックファイル、ツールを確認するときは、一時ディレクトリにリポジトリの設定をコピーして検査します。このディレクトリは検査の終了時に削除されます。削除できなかった場合は `verify error:` を表示し、verify は失敗します。
-
-`verify failed:` は設定やインストール状態の不一致、`verify error:` は検査に必要な処理を完了できなかったことを表します。どちらの場合も終了コードは `1` です。
-
-Homebrewパッケージを管理対象にしない場合や Homebrew を利用できない環境では [bin/dotfiles verify --skip-brew](../bin/dotfiles) を使います。この場合、Brewfile に記載した Homebrewパッケージやcaskなどが現在の環境にすべて入っているかの確認を省略します。
-
-## uninstall
-
-最初に [make uninstall](../Makefile) で削除対象を確認し、問題がなければ [make uninstall-apply](../Makefile) を実行します。削除するのはmise Dotfilesが管理する5本です。パッケージとツール、Homebrewとmise本体、miseの状態、以前のバージョンが作成した状態管理ファイルは残します。uninstallにはmiseが必要です。
-
-## ローカル設定と補助操作
-
-個人のGitメールアドレス、署名鍵、認証情報の上書き設定は `~/.gitconfig.local`、端末固有のシェル設定は `~/.bashrc.local` に置きます。
-
-Git Credential Manager はライフサイクルとは別に管理します。
+## 開発用コマンド
 
 ```bash
-make gcm
-make gcm-apply
+make lint
+make test
+make ci
 ```
+
+`make test` は `make test-bootstrap-dry-run` と `make test-git-hooks` を実行します。Git フックの既存テストは Docker を模擬して実行します。この dry-run は packages と dotfiles を除いて mise bootstrap を確認します。`make test-bootstrap-packages-dry-run` は Homebrew package bootstrap を dry-run します。どちらも実際のインストールは行いません。dotfiles の lifecycle は GitHub Actions で別途確認します。

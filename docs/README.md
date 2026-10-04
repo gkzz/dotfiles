@@ -1,6 +1,6 @@
 # ドキュメント
 
-- [Architecture](ARCHITECTURE.md): リポジトリの構成、処理の流れ、内部の責務
-- [テスト戦略](TEST-STRATEGY.md): テストのレイヤー、手段、品質保証の範囲
-- [Operations](OPERATIONS.md): install / verify / uninstall の使い方
-- [Troubleshooting](TROUBLESHOOTING.md): エラー時の確認と復旧
+- [構成](ARCHITECTURE.md): リポジトリの処理の流れと各ファイルの役割
+- [テスト戦略](TEST-STRATEGY.md): テストの範囲と確認方法
+- [運用手順](OPERATIONS.md): 初回導入、適用、状態確認、解除
+- [トラブルシューティング](TROUBLESHOOTING.md): エラーの確認と復旧

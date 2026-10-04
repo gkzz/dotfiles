@@ -92,8 +92,18 @@ done
 DOTFILES="${DOTFILES:-$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)}"
 export DOTFILES
 
-# shellcheck source=setup/lib.bash
-. "$DOTFILES/setup/lib.bash"
+log() {
+    printf '%s\n' "$*"
+}
+
+die() {
+    printf 'error: %s\n' "$*" >&2
+    exit 1
+}
+
+have_cmd() {
+    command -v "$1" >/dev/null 2>&1
+}
 
 if ! have_cmd git; then
     if "$dry_run"; then

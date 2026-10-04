@@ -1,98 +1,52 @@
 # dotfiles
 
-WSL2 を主環境とする Bash 環境用の dotfiles です。mise の開発ツール、Homebrew パッケージ、シェル起動時の設定、Git の共有設定を管理します。
+WSL2 を主な利用環境とする Bash 用の dotfiles です。[mise bootstrap](https://mise.jdx.dev/bootstrap.html) を使い、シェル設定、Git 設定、Homebrew パッケージ、開発ツールを管理します。
 
-処理の流れと内部構成は [Architecture](docs/ARCHITECTURE.md) を参照してください。
+対応環境は Linux/WSL2（x86_64、arm64）です。zsh の起動ファイルは管理しません。macOSは対応中です。
 
-対応環境は Linux/WSL2（x86_64、arm64）です。zsh の起動ファイルは管理しません。
+## 初回導入
 
-macOS も対応できるように目指しているところです。
-
-## 操作
-
-通常の操作は `install`、`verify`、`uninstall` の3つです。Makefileでも、現在の環境を確認する `verify` 操作を `make verify` で実行します。`make ci` はリポジトリのlintとテストに使います。dry-run が既定で、変更には `--apply` が必要です。
+まずリポジトリを任意の場所に clone します。checkout のルートで最初に `make setup` を実行し、mise bootstrap に必要な Homebrew と mise 本体を準備してください。
 
 ```bash
-make install
-make install-apply
-make verify
-make uninstall
-make uninstall-apply
+git clone https://github.com/gkzz/dotfiles.git
+cd dotfiles
+make setup
 ```
 
-直接実行する場合は次を使います。
+## 通常操作
+
+Makefile の target から mise bootstrap を操作します。
 
 ```bash
-bin/dotfiles install [--dry-run|--apply] [--skip-brew]
-bin/dotfiles verify [--skip-brew]
-bin/dotfiles uninstall [--dry-run|--apply]
+make install         # 適用内容を確認（dry-run）
+make install-apply   # 適用
+make verify          # bootstrap 全体の状態を確認
+make verify-dotfiles # dotfile の状態を確認
 ```
 
-### OS パッケージの更新
+bootstrap は宣言された処理を順に進めます。競合などで途中に失敗した場合は mise の診断を確認し、対象を個別に解消してから dry-run と適用をやり直してください。失敗前に完了した処理は残ります。同じ HOME への適用・解除は同時に実行しないでください。
 
-WSL の Bash を含む OS パッケージは、このリポジトリでは管理しません。Ubuntu の通常のメンテナンスとして更新してください。
+## 解除
 
 ```bash
-sudo apt update
-sudo apt upgrade
+make uninstall       # 解除内容を確認（dry-run）
+make uninstall-apply # dotfile のリンクを解除
 ```
 
-`install` と `install-apply` は `apt` や `sudo` を実行しません。
+解除対象は mise が管理する dotfile のリンクです。Homebrew、mise 本体、リポジトリ、パッケージ、開発ツールは残ります。
 
-### 操作と確認の関係
+## 管理対象と端末固有の設定
 
-| 操作 | 役割 | dry-run | `--apply` |
-| --- | --- | --- | --- |
-| `install` | パッケージ、ツール、管理対象のシンボリックリンクを揃える | デフォルト。確認結果と実行内容を表示する | 確認の後に変更する |
-| `uninstall` | dotfiles が作成した管理対象のシンボリックリンクを削除する | デフォルト。削除対象を表示する | 確認の後に削除する |
-| `verify` | パッケージ、ツール、設定、シンボリックリンクが期待どおりか確認する | — | — |
+- `.bashrc`、`.bash_profile`、`.gitconfig`
+- `~/.dotfiles`（実際の checkout へのリンク。Git フックはこのリンク経由で参照）
+- `~/.config/mise/config.toml`（リポジトリルートの `mise.toml` へのリンク）
+- mise の `[bootstrap.packages]` に宣言した Homebrew パッケージ
+- `mise.lock` に記録した開発ツール
 
-`install` と `uninstall` は、変更する前に対象と競合を確認します。dry-run では確認結果と実行内容を表示し、`--apply` では同じ確認の後に変更を実行します。`verify` は install や uninstall とは別に、現在の状態だけを確認します。
+mise のグローバル設定先は `~/.config/mise/config.toml` です。独自の `XDG_CONFIG_HOME` はサポートしません。既存環境からの移行は[運用手順](docs/OPERATIONS.md#既存環境からの移行)を参照してください。端末固有の Git 設定は `~/.gitconfig.local`、シェル設定は `~/.bashrc.local` に置きます。
 
-`install --apply` と `uninstall --apply` は対象 HOME ごとのライフサイクルロックを取得して直列化します。既存ファイルと競合した場合は、置き換えずに停止します。内容を確認し、競合を手動で解消してから再実行してください。
+Git の `pre-commit` hook は、ステージ済みの内容を Docker 版 secretlint で検査します。イメージのバージョンと digest は hook 内で固定しています。検査には `$HOME/.secretlintignore` とステージ済みの `.secretlintignore` を適用します。Docker を利用できない場合や secret が検出された場合、commit は中止されます。
 
-install は Homebrew Bundle、mise、管理対象のシンボリックリンクをまとめて適用します。各ツールの設定確認やバージョン確認は、それぞれのコマンドを使います。
-
-## 管理対象
-
-- `~/.bashrc`
-- `~/.bash_profile`
-- `~/.gitconfig`
-- `~/.dotfiles/git/hooks/pre-commit`を参照するグローバルGitフック
-- `~/.dotfiles`
-- `${XDG_CONFIG_HOME:-$HOME/.config}/mise/config.toml`
-- Brewfile の直接指定項目
-- miseのロックファイルに記載された開発ツール
-
-端末固有の Git 設定は `~/.gitconfig.local`、シェル設定は `~/.bashrc.local` に置きます。
-
-Gitの`pre-commit`フックは、ステージ済みファイルをDocker版secretlintで検査します。使用するイメージはフック内でバージョンとdigestを固定しています。`$HOME/.secretlintignore`と、ステージ済みの`.secretlintignore`をこの順に適用します。作業ツリーにしかない`.secretlintignore`の内容は適用しません。リポジトリ固有の実行可能な`.git/hooks/pre-commit`がある場合は、secretlintより先に実行します。Dockerを利用できない場合や検査でsecretを検出した場合、commitは中止されます。意図的にフックを省略する場合は`git commit --no-verify`を使います。端末固有の`~/.gitconfig.local`で`core.hooksPath`を設定するとこのフックを上書きするため、同項目は置かないでください。
-
-### mise本体のバージョン
-
-`mise.toml` の `min_version` は、設定を読み込める最低バージョンと、dotfilesが初期導入する固定バージョンを兼ねます。ローカルとCIが参照するmise本体のバージョンを1か所で管理するため、この2つは意図的に同じ値とします。
-
-mise本体を更新するときは、`min_version` と `mise.env` のプラットフォーム別SHA-256を、同じリリースの値へまとめて更新してください。互換性の下限と初期導入するバージョンを別々に管理する運用は、このリポジトリでは行いません。
-
-## 補助操作とテスト
-
-Git Credential Manager はライフサイクル外の補助操作です。
-
-```bash
-make gcm
-make gcm-apply
-make ci
-make lint
-make test
-```
-
-`make verify` は、パッケージ、ツール、設定、シンボリックリンクが現在の環境で期待どおりか確認します。`make ci` は開発中の変更を検査するコマンドで、`make lint`、`make test` の順に実行します。
-
-`make lint` はシェルスクリプトの構文チェックとBiome、`make test` はNode.jsの安全性テストと実miseによる境界テストを実行します。install/uninstall/reinstall の正常系は、隔離HOMEを使うUbuntu/macOSのE2Eで確認します。実行には `mise` が必要です。必要なツールは次で導入・確認できます。
-
-```bash
-./setup/mise-install.sh --apply
-mise install
-```
-
-テストのレイヤーと品質保証の範囲は [テスト戦略](docs/TEST-STRATEGY.md)、その他の詳細は [docs/](./docs/) を参照してください。
+## ドキュメント
+[docs/](docs/) をご参照ください。
