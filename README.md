@@ -48,5 +48,7 @@ mise のグローバル設定先は `~/.config/mise/config.toml` です。独自
 
 Git の `pre-commit` hook は、ステージ済みの内容を Docker 版 secretlint で検査します。イメージのバージョンと digest は hook 内で固定しています。検査には `$HOME/.secretlintignore` とステージ済みの `.secretlintignore` を適用します。Docker を利用できない場合や secret が検出された場合、commit は中止されます。
 
+HTTPS での Git 認証には、端末ごとに Git Credential Manager を導入します。Windows（WSL2）と macOS の手順は [GCM の設定](docs/GCM.md)を参照してください。
+
 ## ドキュメント
 [docs/](docs/) をご参照ください。

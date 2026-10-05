@@ -20,7 +20,6 @@ direnv = "2.37.1"
 
 [bootstrap.packages]
 "brew:git" = "latest"
-"brew-cask:git-credential-manager" = { os = "macos" }
 
 [dotfiles]
 "~/.dotfiles" = { source = "." }
