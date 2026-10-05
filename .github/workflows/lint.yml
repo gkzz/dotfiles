@@ -42,7 +42,6 @@ jobs:
             --exclude=SC1090,SC1091 \
             setup/init.sh \
             git/hooks/pre-commit \
-            setup/gcm.sh \
             setup/mise-install.sh \
             bash/*.bash \
             .bashrc \

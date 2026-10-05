@@ -61,15 +61,7 @@ mise が管理する dotfile のリンクを解除します。Homebrew、mise �
 
 ## Git Credential Manager の設定
 
-`mise.toml` は macOS で Git Credential Manager (GCM) をパッケージとして導入します。GCM の Git 設定は必要に応じて別途適用します。
-
-```bash
-./setup/gcm.sh --help
-./setup/gcm.sh --dry-run
-./setup/gcm.sh --apply
-```
-
-`--apply` は `credential.helper` と `credential.credentialStore` のグローバル設定を更新します。適用前に dry-run の出力を確認してください。
+Git Credential Manager (GCM) は端末ごとに導入します。Homebrew の自動導入対象には含めません。Windows（WSL2）では Windows 側の GCM、macOS では手動導入した GCM と Keychain を使います。導入、設定、確認、元に戻す手順は [GCM の設定](GCM.md)を参照してください。
 
 ## 開発用コマンド
 

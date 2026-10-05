@@ -43,7 +43,7 @@ mise bootstrap を Makefile から下記のとおり操作します。
 
 ルートの `mise.toml` が bootstrap の宣言元です。`[dotfiles]` は、この設定ファイルと同じディレクトリにある `.bashrc`、`.bash_profile`、`.gitconfig` と `mise.toml` を symlink します。リンク元には相対パスを使い、任意の clone 先から適用できます。`~/.dotfiles` も checkout へのリンクとして管理し、Git フックは `~/.dotfiles/git/hooks` を参照します。
 
-`[bootstrap.packages]` は Homebrew の `git` と Git Credential Manager を管理します。開発ツールは `[tools]` と `mise.lock` で管理します。secretlint のグローバル Git hook はこのリポジトリの `git/hooks/pre-commit` にあり、Docker イメージのバージョンと digest を固定しています。Git Credential Manager の Git 設定は別の補助操作で適用します。
+`[bootstrap.packages]` は Homebrew の `git` を管理します。開発ツールは `[tools]` と `mise.lock` で管理します。secretlint のグローバル Git hook はこのリポジトリの `git/hooks/pre-commit` にあり、Docker イメージのバージョンと digest を固定しています。Git Credential Manager は端末ごとに導入し、Git 設定を `~/.gitconfig.local` に保存します。手順は [GCM の設定](GCM.md)を参照してください。
 
 ## ファイルの役割
 
@@ -53,7 +53,6 @@ mise bootstrap を Makefile から下記のとおり操作します。
 | [mise.toml](../mise.toml) | パッケージ、dotfile、開発ツールの宣言 |
 | [git/hooks/pre-commit](../git/hooks/pre-commit) | 固定イメージを使うグローバル secretlint hook |
 | [setup/mise-install.sh](../setup/mise-install.sh) | 固定バージョンの mise を checksum 検証付きで導入 |
-| [setup/gcm.sh](../setup/gcm.sh) | Git Credential Manager の Git 設定 |
 
 ## 失敗時の処理
 
