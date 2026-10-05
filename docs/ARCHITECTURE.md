@@ -9,19 +9,21 @@ flowchart LR
     makefile --> setup[setup/init.sh]
     setup --> brew[Homebrew]
     config[mise.toml] --> mise
-    makefile --> mise[mise bootstrap]
+    operations[mise-operations.toml] --> tasks
+    makefile --> tasks[mise run dotfiles:*]
+    tasks --> mise[mise bootstrap]
     mise --> packages[bootstrap.packages]
     mise --> dotfiles[dotfiles]
     mise --> tools[tools / mise.lock]
 ```
 
-利用者はリポジトリルートの Makefile から操作します。
+利用者はリポジトリルートの Makefile から操作します。`setup` は直接スクリプトを実行し、それ以外の操作は `mise-operations.toml` のタスクを呼び出します。タスクから Makefile は呼びません。
 
 ### mise bootstrap の前処理
 `setup` は mise bootstrap の実行に必要な Homebrew と mise 本体を準備します。bootstrap 自体は実行しません。
 
 ### mise bootstrap
-mise bootstrap を Makefile から下記のとおり操作します。
+Makefile を入口に、mise のタスク経由で bootstrap を操作します。
 
 | Target | 動作 |
 | --- | --- |
@@ -50,7 +52,9 @@ mise bootstrap を Makefile から下記のとおり操作します。
 | ファイル | 役割 |
 | --- | --- |
 | [setup/init.sh](../setup/init.sh) | Homebrew、checkout の確認、mise の準備 |
+| [Makefile](../Makefile) | setup と mise タスクを呼び出す入口 |
 | [mise.toml](../mise.toml) | パッケージ、dotfile、開発ツールの宣言 |
+| [mise-operations.toml](../mise-operations.toml) | 導入・解除・状態確認・テストのタスクと、操作用の設定 |
 | [git/hooks/pre-commit](../git/hooks/pre-commit) | 固定イメージを使うグローバル secretlint hook |
 | [setup/mise-install.sh](../setup/mise-install.sh) | 固定バージョンの mise を checksum 検証付きで導入 |
 

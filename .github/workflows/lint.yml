@@ -55,5 +55,12 @@ jobs:
       - name: Checkout
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
+      - name: Install mise
+        uses: ./.github/actions/setup-mise
+        env:
+          MISE_GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          cache-installs: "false"
+
       - name: Run lint
         run: make lint

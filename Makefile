@@ -2,11 +2,11 @@
 
 .PHONY: help setup install install-apply verify verify-dotfiles uninstall uninstall-apply verify-uninstalled ci lint test test-bootstrap-dry-run test-bootstrap-packages-dry-run test-git-hooks
 
-MISE_BOOTSTRAP_ARGS ?=
+export MISE_BOOTSTRAP_ARGS ?=
 
 export PATH := $(HOME)/.local/bin:/home/linuxbrew/.linuxbrew/bin:/home/linuxbrew/.linuxbrew/sbin:/opt/homebrew/bin:/opt/homebrew/sbin:/usr/local/bin:/usr/local/sbin:$(PATH)
 MISE := $(shell command -v mise 2>/dev/null || if [ -x "$(HOME)/.local/bin/mise" ]; then printf '%s' "$(HOME)/.local/bin/mise"; fi)
-MISE_CONFIG := $(CURDIR)/mise.toml
+MISE_CONFIG := $(CURDIR)/mise-operations.toml
 MISE_RUN = MISE_CONFIG_FILE="$(MISE_CONFIG)" MISE_TRUSTED_CONFIG_PATHS="$(CURDIR)" $(MISE)
 
 help:
@@ -27,41 +27,42 @@ help:
 setup:
 	./setup/init.sh
 
+# Operation implementations live in mise-operations.toml; setup/help work without mise.
 install:
-	$(MISE_RUN) bootstrap --dry-run $(MISE_BOOTSTRAP_ARGS)
+	$(MISE_RUN) run dotfiles:install
 
 install-apply:
-	$(MISE_RUN) bootstrap --yes $(MISE_BOOTSTRAP_ARGS)
+	$(MISE_RUN) run dotfiles:install:apply
 
 verify:
-	$(MISE_RUN) bootstrap status --missing
+	$(MISE_RUN) run dotfiles:verify
 
 verify-dotfiles:
-	$(MISE_RUN) bootstrap dotfiles status --missing
+	$(MISE_RUN) run dotfiles:verify:dotfiles
 
 uninstall:
-	$(MISE_RUN) bootstrap dotfiles unapply --dry-run
+	$(MISE_RUN) run dotfiles:uninstall
 
 uninstall-apply:
-	$(MISE_RUN) bootstrap dotfiles unapply --yes
+	$(MISE_RUN) run dotfiles:uninstall:apply
 
 verify-uninstalled:
-	@$(MISE_RUN) bootstrap dotfiles status --json | jq -e '.files | length == 5 and all(.[]; .state == "missing")' >/dev/null
+	$(MISE_RUN) run dotfiles:verify:uninstalled
 
 ci:
-	$(MAKE) lint
-	$(MAKE) test
+	$(MISE_RUN) run dotfiles:ci
 
 lint:
-	bash -n git/hooks/pre-commit setup/*.sh bash/*.bash .bashrc .bash_profile
+	$(MISE_RUN) run dotfiles:lint
 
-test: test-bootstrap-dry-run test-git-hooks
+test:
+	$(MISE_RUN) run dotfiles:test
 
 test-bootstrap-dry-run:
-	$(MISE_RUN) bootstrap --dry-run --skip packages,dotfiles
+	$(MISE_RUN) run dotfiles:test:bootstrap-dry-run
 
 test-bootstrap-packages-dry-run:
-	$(MISE_RUN) bootstrap --dry-run --only packages
+	$(MISE_RUN) run dotfiles:test:bootstrap-packages-dry-run
 
 test-git-hooks:
-	$(MISE_RUN) exec -- node --test --test-isolation=none --test-concurrency=1 tests/git-hooks.test.js
+	$(MISE_RUN) run dotfiles:test:git-hooks

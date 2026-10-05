@@ -35,7 +35,7 @@ mise のグローバル設定先は `~/.config/mise/config.toml` に固定しま
 
 ## 適用と状態確認
 
-リポジトリルートから Makefile の target を実行します。
+リポジトリルートから Makefile の target を実行します。`setup` 以外は `mise-operations.toml` に定義したタスクを呼ぶラッパーです。たとえば `make install` は `MISE_CONFIG_FILE="$PWD/mise-operations.toml" mise run dotfiles:install` を実行します。
 
 ```bash
 make install
@@ -71,4 +71,14 @@ make test
 make ci
 ```
 
-`make test` は `make test-bootstrap-dry-run` と `make test-git-hooks` を実行します。Git フックの既存テストは Docker を模擬して実行します。この dry-run は packages と dotfiles を除いて mise bootstrap を確認します。`make test-bootstrap-packages-dry-run` は Homebrew package bootstrap を dry-run します。どちらも実際のインストールは行いません。dotfiles の lifecycle は GitHub Actions で別途確認します。
+`make test` は mise の `dotfiles:test` タスクを呼び、bootstrap の dry-run と Git hook のテストを順に実行します。Git フックの既存テストは Docker を模擬して実行します。この dry-run は packages と dotfiles を除いて mise bootstrap を確認します。`make test-bootstrap-packages-dry-run` は Homebrew package bootstrap を dry-run します。どちらも実際のインストールは行いません。dotfiles の lifecycle は GitHub Actions で別途確認します。
+
+タスクは checkout のルートで実行されます。`MISE_BOOTSTRAP_ARGS` は導入タスクへ渡せます（例：`make install MISE_BOOTSTRAP_ARGS="--only dotfiles"`）。
+
+操作用設定を指定すれば、Makefile を使わずにタスクを直接実行できます。
+
+```bash
+MISE_CONFIG_FILE="$PWD/mise-operations.toml" mise run dotfiles:install
+```
+
+`mise-operations.toml` では `task.run_auto_install = false` にしているため、直接呼んでもタスク実行前にツールを自動導入しません。管理対象の `mise.toml` は引き続きグローバル設定へリンクしますが、操作用設定はリンクせず、ほかのプロジェクトのタスクには影響させません。従来のグローバルタスク呼び出しは、上記の操作用設定の指定に切り替えてください。
