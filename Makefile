@@ -1,6 +1,6 @@
 .DEFAULT_GOAL := help
 
-.PHONY: help setup install install-apply verify verify-dotfiles uninstall uninstall-apply verify-uninstalled gcm gcm-apply ci lint test test-bootstrap-dry-run test-bootstrap-packages-dry-run test-git-hooks
+.PHONY: help setup install install-apply verify verify-dotfiles uninstall uninstall-apply verify-uninstalled ci lint test test-bootstrap-dry-run test-bootstrap-packages-dry-run test-git-hooks
 
 MISE_BOOTSTRAP_ARGS ?=
 
@@ -18,8 +18,6 @@ help:
 	@printf '  %-24s %s\n' 'make verify-dotfiles' 'Check mise-managed dotfiles status'
 	@printf '  %-24s %s\n' 'make uninstall' 'Preview dotfile removal'
 	@printf '  %-24s %s\n' 'make uninstall-apply' 'Remove mise-managed dotfiles'
-	@printf '  %-24s %s\n' 'make gcm' 'dry-run Git Credential Manager setup'
-	@printf '  %-24s %s\n' 'make gcm-apply' 'Configure Git Credential Manager'
 	@printf '  %-24s %s\n' 'make ci' 'Run lint and test sequentially'
 	@printf '  %-24s %s\n' 'make lint' 'Run Bash syntax checks'
 	@printf '  %-24s %s\n' 'make test-bootstrap-dry-run' 'Dry-run bootstrap without packages or dotfiles'
@@ -49,12 +47,6 @@ uninstall-apply:
 
 verify-uninstalled:
 	@$(MISE_RUN) bootstrap dotfiles status --json | jq -e '.files | length == 5 and all(.[]; .state == "missing")' >/dev/null
-
-gcm:
-	./setup/gcm.sh --dry-run
-
-gcm-apply:
-	./setup/gcm.sh --apply
 
 ci:
 	$(MAKE) lint

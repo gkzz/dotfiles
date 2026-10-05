@@ -63,8 +63,6 @@ mise が管理する dotfile のリンクを解除します。Homebrew、mise �
 
 Git Credential Manager (GCM) は端末ごとに導入します。Homebrew の自動導入対象には含めません。Windows（WSL2）では Windows 側の GCM、macOS では手動導入した GCM と Keychain を使います。導入、設定、確認、元に戻す手順は [GCM の設定](GCM.md)を参照してください。
 
-従来の `setup/gcm.sh --apply`（`make gcm-apply` / `mise run dotfiles:gcm:apply`）は `git config --global` で共有の `.gitconfig` を書き換えます。端末固有の設定には使わず、上記の手順で `~/.gitconfig.local` を更新してください。
-
 ## 開発用コマンド
 
 ```bash

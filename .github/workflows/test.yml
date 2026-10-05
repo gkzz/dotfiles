@@ -29,7 +29,6 @@ jobs:
       - name: Verify command help output
         run: |
           make help
-          ./setup/gcm.sh --help
           ./setup/mise-install.sh --help
 
       - name: Run bootstrap dry-run and Git hook tests

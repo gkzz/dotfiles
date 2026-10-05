@@ -51,14 +51,6 @@ run = 'cd "$DOTFILES" && make uninstall-apply'
 description = "Verify the installed lifecycle state"
 run = 'cd "$DOTFILES" && make verify'
 
-[tasks."dotfiles:gcm"]
-description = "dry-run Git Credential Manager setup"
-run = 'cd "$DOTFILES" && ./setup/gcm.sh --dry-run'
-
-[tasks."dotfiles:gcm:apply"]
-description = "Configure Git Credential Manager"
-run = 'cd "$DOTFILES" && ./setup/gcm.sh --apply'
-
 [tasks."dotfiles:ci"]
 description = "Run lint and test sequentially"
 run = 'cd "$DOTFILES" && make ci'

@@ -53,7 +53,6 @@ mise bootstrap を Makefile から下記のとおり操作します。
 | [mise.toml](../mise.toml) | パッケージ、dotfile、開発ツールの宣言 |
 | [git/hooks/pre-commit](../git/hooks/pre-commit) | 固定イメージを使うグローバル secretlint hook |
 | [setup/mise-install.sh](../setup/mise-install.sh) | 固定バージョンの mise を checksum 検証付きで導入 |
-| [setup/gcm.sh](../setup/gcm.sh) | 従来の GCM 設定補助（グローバル設定を更新） |
 
 ## 失敗時の処理
 
