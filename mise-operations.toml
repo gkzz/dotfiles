@@ -1,0 +1,65 @@
+# Dotfiles operations only; this file is not linked as the global mise config.
+[env]
+DOTFILES = "{{ config_source | canonicalize | dirname }}"
+# Keep nested task invocations on the operation config.
+MISE_CONFIG_FILE = "{{ config_source | canonicalize }}"
+
+[settings]
+task.run_auto_install = false
+
+[task_config]
+dir = "{{ env.DOTFILES }}"
+
+[tasks."dotfiles:install"]
+description = "dry-run dotfiles install"
+run = 'MISE_CONFIG_FILE="$DOTFILES/mise.toml" mise bootstrap --dry-run ${MISE_BOOTSTRAP_ARGS:-}'
+
+[tasks."dotfiles:install:apply"]
+description = "Apply dotfiles install"
+run = 'MISE_CONFIG_FILE="$DOTFILES/mise.toml" mise bootstrap --yes ${MISE_BOOTSTRAP_ARGS:-}'
+
+[tasks."dotfiles:uninstall"]
+description = "dry-run managed symlink removal"
+run = 'MISE_CONFIG_FILE="$DOTFILES/mise.toml" mise bootstrap dotfiles unapply --dry-run'
+
+[tasks."dotfiles:uninstall:apply"]
+description = "Remove managed symlinks"
+run = 'MISE_CONFIG_FILE="$DOTFILES/mise.toml" mise bootstrap dotfiles unapply --yes'
+
+[tasks."dotfiles:verify"]
+description = "Verify the installed lifecycle state"
+run = 'MISE_CONFIG_FILE="$DOTFILES/mise.toml" mise bootstrap status --missing'
+
+[tasks."dotfiles:verify:dotfiles"]
+description = "Check mise-managed dotfiles status"
+run = 'MISE_CONFIG_FILE="$DOTFILES/mise.toml" mise bootstrap dotfiles status --missing'
+
+[tasks."dotfiles:verify:uninstalled"]
+description = "Verify all managed symlinks are absent"
+run = """
+MISE_CONFIG_FILE="$DOTFILES/mise.toml" mise bootstrap dotfiles status --json | jq -e '.files | length == 5 and all(.[]; .state == "missing")' >/dev/null
+"""
+
+[tasks."dotfiles:lint"]
+description = "Run Bash syntax checks"
+run = 'bash -n git/hooks/pre-commit setup/*.sh bash/*.bash .bashrc .bash_profile'
+
+[tasks."dotfiles:test:bootstrap-dry-run"]
+description = "Dry-run bootstrap without packages or dotfiles"
+run = 'MISE_CONFIG_FILE="$DOTFILES/mise.toml" mise bootstrap --dry-run --skip packages,dotfiles'
+
+[tasks."dotfiles:test:bootstrap-packages-dry-run"]
+description = "Dry-run Homebrew package bootstrap"
+run = 'MISE_CONFIG_FILE="$DOTFILES/mise.toml" mise bootstrap --dry-run --only packages'
+
+[tasks."dotfiles:test:git-hooks"]
+description = "Run existing Git hook tests"
+run = 'MISE_CONFIG_FILE="$DOTFILES/mise.toml" mise exec -- node --test --test-isolation=none --test-concurrency=1 tests/git-hooks.test.js'
+
+[tasks."dotfiles:test"]
+description = "Run bootstrap dry-run and Git hook tests"
+run = ['mise run dotfiles:test:bootstrap-dry-run', 'mise run dotfiles:test:git-hooks']
+
+[tasks."dotfiles:ci"]
+description = "Run lint and test sequentially"
+run = ['mise run dotfiles:lint', 'mise run dotfiles:test']

@@ -16,7 +16,7 @@ make setup
 
 ## 通常操作
 
-Makefile の target から mise bootstrap を操作します。
+管理対象は `mise.toml`、操作のタスクは `mise-operations.toml` に定義し、Makefile から呼び出します。mise 導入前の `setup` だけは Makefile から直接実行します。
 
 ```bash
 make install         # 適用内容を確認（dry-run）

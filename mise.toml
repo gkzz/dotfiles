@@ -27,30 +27,3 @@ direnv = "2.37.1"
 "~/.bash_profile" = { source = ".bash_profile" }
 "~/.gitconfig" = { source = ".gitconfig" }
 "~/.config/mise/config.toml" = { source = "mise.toml" }
-
-[task_config]
-dir = "{{cwd}}"
-
-[tasks."dotfiles:install"]
-description = "dry-run dotfiles install"
-run = 'cd "$DOTFILES" && make install'
-
-[tasks."dotfiles:install:apply"]
-description = "Apply dotfiles install"
-run = 'cd "$DOTFILES" && make install-apply'
-
-[tasks."dotfiles:uninstall"]
-description = "dry-run managed symlink removal"
-run = 'cd "$DOTFILES" && make uninstall'
-
-[tasks."dotfiles:uninstall:apply"]
-description = "Remove managed symlinks"
-run = 'cd "$DOTFILES" && make uninstall-apply'
-
-[tasks."dotfiles:verify"]
-description = "Verify the installed lifecycle state"
-run = 'cd "$DOTFILES" && make verify'
-
-[tasks."dotfiles:ci"]
-description = "Run lint and test sequentially"
-run = 'cd "$DOTFILES" && make ci'
