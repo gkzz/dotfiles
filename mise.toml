@@ -22,8 +22,8 @@ direnv = "2.37.1"
 "brew:git" = "latest"
 
 [dotfiles]
-"~/.dotfiles" = { source = "." }
-"~/.bashrc" = { source = ".bashrc" }
-"~/.bash_profile" = { source = ".bash_profile" }
-"~/.gitconfig" = { source = ".gitconfig" }
-"~/.config/mise/config.toml" = { source = "mise.toml" }
+"~/.dotfiles" = { source = ".", mode = "symlink" }
+"~/.bashrc" = { source = ".bashrc", mode = "symlink" }
+"~/.bash_profile" = { source = ".bash_profile", mode = "symlink" }
+"~/.gitconfig" = { source = ".gitconfig", mode = "symlink" }
+"~/.config/mise/config.toml" = { source = "mise.toml", mode = "symlink" }
