@@ -1,16 +1,17 @@
 ---
 name: natural-japanese-lite
 description: 日本語の文書を、読みやすく自然な文章へ書き起こす・推敲する・診断する。議事録、レポート、ガイド、企画書、メール、ブログなどの作成やリライト、AI臭さや翻訳調の除去、論旨・語順・読点・文の長さの改善を求められたときに使う。Markdownの書式整形だけが目的の場合は使わない。
+metadata:
+  source_repo: "coji/natural-japanese"
+  source_url: "https://github.com/coji/natural-japanese/tree/21e632661a910bf97289c501089ad11eb8b4d85f/skills/natural-japanese"
+  source_version: "v1.5.0"
+  source_license: "MIT"
+  source_copyright: "Copyright (c) 2026 coji"
+  origin: adapted
+  language: ja
 ---
 
 # natural-japanese-lite
-
-## Provenance
-
-- Version: v1.5.0
-- Source commit: [coji/natural-japanese@21e632661a910bf97289c501089ad11eb8b4d85f](https://github.com/coji/natural-japanese/tree/21e632661a910bf97289c501089ad11eb8b4d85f/skills/natural-japanese)
-- License: MIT
-- Copyright: Copyright (c) 2026 coji
 
 仕事の文書からブログやエッセイまで、日本語を読みやすく自然に仕上げる。目的は文章を均一に整えることではない。読者が迷わず要点をつかめて、書き手の判断や温度が残る文章を作る。
 

@@ -23,7 +23,7 @@ flowchart LR
 `setup` は mise bootstrap の実行に必要な Homebrew と mise 本体を準備します。bootstrap 自体は実行しません。
 
 ### mise bootstrap
-Makefile を入口に、mise のタスク経由で bootstrap を操作します。
+Makefile をエントリポイントとして、mise のタスク経由で bootstrap を操作します。
 
 | Target | 動作 |
 | --- | --- |
@@ -52,7 +52,7 @@ Makefile を入口に、mise のタスク経由で bootstrap を操作します�
 | ファイル | 役割 |
 | --- | --- |
 | [setup/init.sh](../setup/init.sh) | Homebrew、checkout の確認、mise の準備 |
-| [Makefile](../Makefile) | setup と mise タスクを呼び出す入口 |
+| [Makefile](../Makefile) | setup と mise タスクを呼び出すエントリポイント |
 | [mise.toml](../mise.toml) | パッケージ、dotfile、開発ツールの宣言 |
 | [mise-operations.toml](../mise-operations.toml) | 導入・解除・状態確認・テストのタスクと、操作用の設定 |
 | [git/hooks/pre-commit](../git/hooks/pre-commit) | 固定イメージを使うグローバル secretlint hook |
