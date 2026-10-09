@@ -1,16 +1,17 @@
 ---
 name: grill-me
 description: 計画・設計・技術的な意思決定を質問で厳しく検証し、曖昧さや矛盾を解消する。ユーザーが「grill-me」「grill me」「グリルして」「質問攻めにして」「grillme」と依頼したときや、実装前に案を徹底的に詰めたいときに使う。
+metadata:
+  source_repo: "mattpocock/skills"
+  source_url: "https://github.com/mattpocock/skills/blob/321658273cb1d20b76026717d027d505790106d4/docs/productivity/grill-me.md"
+  source_license: "MIT"
+  source_copyright: "Copyright (c) 2026 Matt Pocock"
+  origin: adapted
+  language: ja
+  local_modifications: "adapted for this global skills collection"
 ---
 
 # Grill Me
-
-## Provenance
-
-- Based on: [mattpocock/skills — grill-me](https://github.com/mattpocock/skills/blob/321658273cb1d20b76026717d027d505790106d4/docs/productivity/grill-me.md)
-- License: MIT
-- Copyright: Copyright (c) 2026 Matt Pocock
-- Local modifications: adapted for this global skills collection
 
 計画・設計・アイデアを決定木として捉え、共通理解に達するまで質問を続ける。曖昧な回答や楽観的な前提をそのまま受け入れず、矛盾、未定義、失敗条件を具体化する。
 
