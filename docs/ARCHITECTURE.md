@@ -23,7 +23,7 @@ flowchart LR
 `setup` は mise bootstrap の実行に必要な Homebrew と mise 本体を準備します。bootstrap 自体は実行しません。
 
 ### mise bootstrap
-Makefile をエントリポイント、mise のタスク経由で bootstrap を操作します。
+Makefile をエントリポイントとして、mise のタスク経由で bootstrap を操作します。
 
 | Target | 動作 |
 | --- | --- |
