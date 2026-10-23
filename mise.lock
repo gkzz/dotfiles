@@ -29,72 +29,72 @@ url_api = "https://api.github.com/repos/biomejs/biome/releases/assets/567471271"
 provenance = "github-attestations"
 
 [[tools.direnv]]
-version = "2.37.1"
+version = "2.38.1"
 backend = "aqua:direnv/direnv"
 
 [tools.direnv."platforms.linux-arm64"]
-checksum = "sha256:2a9cef8d73521d6a3ec3f2871c4b747b8c4cc038628c1b57a7efa42b393a2d82"
-url = "https://github.com/direnv/direnv/releases/download/v2.37.1/direnv.linux-arm64"
-url_api = "https://api.github.com/repos/direnv/direnv/releases/assets/274610549"
+checksum = "sha256:a5deedd4165c94e629a4f3faf74fc0425d3c34a2fcee438a95d628a5f41f5bd8"
+url = "https://github.com/direnv/direnv/releases/download/v2.38.1/direnv.linux-arm64"
+url_api = "https://api.github.com/repos/direnv/direnv/releases/assets/616472958"
 
 [tools.direnv."platforms.linux-x64"]
-checksum = "sha256:1f1b93dd6f38523fde26dfac96151ef9d31a374e3005cd3345fb93555ae0c9b5"
-url = "https://github.com/direnv/direnv/releases/download/v2.37.1/direnv.linux-amd64"
-url_api = "https://api.github.com/repos/direnv/direnv/releases/assets/274610548"
+checksum = "sha256:a19470b6d93afeb226b89b1dabf95a5e559533905122be235ed35408e9983b3c"
+url = "https://github.com/direnv/direnv/releases/download/v2.38.1/direnv.linux-amd64"
+url_api = "https://api.github.com/repos/direnv/direnv/releases/assets/616472953"
 
 [tools.direnv."platforms.macos-arm64"]
-checksum = "sha256:4f569f3a36732bfd8b8fea7bfcc6ad87a59745c109022164d0ca4832451d5369"
-url = "https://github.com/direnv/direnv/releases/download/v2.37.1/direnv.darwin-arm64"
-url_api = "https://api.github.com/repos/direnv/direnv/releases/assets/274610544"
+checksum = "sha256:e7819f1b8ef73cc2d96e7b938b0c56aeff052d3872deae6daad0b16bd700386c"
+url = "https://github.com/direnv/direnv/releases/download/v2.38.1/direnv.darwin-arm64"
+url_api = "https://api.github.com/repos/direnv/direnv/releases/assets/616472921"
 
 [tools.direnv."platforms.macos-x64"]
-checksum = "sha256:24fb9ce48b563d7e9fbdd3a4e3e836941654a31ce3e67eba9eaafc3dcd8ae73b"
-url = "https://github.com/direnv/direnv/releases/download/v2.37.1/direnv.darwin-amd64"
-url_api = "https://api.github.com/repos/direnv/direnv/releases/assets/274610540"
+checksum = "sha256:a0501604814f2dcc19a7588e17701c546327880fb7466f779033051be5a00586"
+url = "https://github.com/direnv/direnv/releases/download/v2.38.1/direnv.darwin-amd64"
+url_api = "https://api.github.com/repos/direnv/direnv/releases/assets/616472923"
 
 [[tools.ghq]]
-version = "1.10.1"
+version = "1.11.2"
 backend = "aqua:x-motemen/ghq"
 
 [tools.ghq."platforms.linux-arm64"]
-checksum = "sha256:7ed154f62751e91c8a2d415280caeeba3d114050d01e39f3d0f4aa1be15f3954"
-url = "https://github.com/x-motemen/ghq/releases/download/v1.10.1/ghq_linux_arm64.zip"
-url_api = "https://api.github.com/repos/x-motemen/ghq/releases/assets/394135805"
+checksum = "sha256:0a083c5d5b214dd0f4f693cf8839b15f6b5cc4e2d91b0cb4abb8748dcdb353c9"
+url = "https://github.com/x-motemen/ghq/releases/download/v1.11.2/ghq_linux_arm64.zip"
+url_api = "https://api.github.com/repos/x-motemen/ghq/releases/assets/598741476"
 
 [tools.ghq."platforms.linux-x64"]
-checksum = "sha256:32e380aa8ac76fdd58758cc06174d9ee5db7270bd0cbcc18138b5d36def91b6b"
-url = "https://github.com/x-motemen/ghq/releases/download/v1.10.1/ghq_linux_amd64.zip"
-url_api = "https://api.github.com/repos/x-motemen/ghq/releases/assets/394135802"
+checksum = "sha256:efa5c1de4e763565b71649229449d8123ceb7131a8d0ed25755aaee73969cdf1"
+url = "https://github.com/x-motemen/ghq/releases/download/v1.11.2/ghq_linux_amd64.zip"
+url_api = "https://api.github.com/repos/x-motemen/ghq/releases/assets/598741424"
 
 [tools.ghq."platforms.macos-arm64"]
-checksum = "sha256:5e3100de0c5a248eebe6ab176ad94d6e12386af70a58c535368a4301861b1398"
-url = "https://github.com/x-motemen/ghq/releases/download/v1.10.1/ghq_darwin_arm64.zip"
-url_api = "https://api.github.com/repos/x-motemen/ghq/releases/assets/394135804"
+checksum = "sha256:8317f8ea5671bccb31e7747eb0a892a77a472dbc7c988f9d47cdfc969a59e242"
+url = "https://github.com/x-motemen/ghq/releases/download/v1.11.2/ghq_darwin_arm64.zip"
+url_api = "https://api.github.com/repos/x-motemen/ghq/releases/assets/598741463"
 
 [tools.ghq."platforms.macos-x64"]
-checksum = "sha256:491e88380b817eee3ab5a3aa09dbe8491b9495a0ffc5223b60e7f4679a97a8eb"
-url = "https://github.com/x-motemen/ghq/releases/download/v1.10.1/ghq_darwin_amd64.zip"
-url_api = "https://api.github.com/repos/x-motemen/ghq/releases/assets/394135808"
+checksum = "sha256:abfe6b378ec8b59dd441a7eb13bc0f0f5b38b76dbdc78bd034df826302004639"
+url = "https://github.com/x-motemen/ghq/releases/download/v1.11.2/ghq_darwin_amd64.zip"
+url_api = "https://api.github.com/repos/x-motemen/ghq/releases/assets/598741428"
 
 [[tools.go]]
-version = "1.27.0"
+version = "1.27.2"
 backend = "core:go"
 
 [tools.go."platforms.linux-arm64"]
-checksum = "sha256:51798d2c42d0e1c6ed7fd9f48728b4193abac9e8aad6dbac2fe96a81f5909bda"
-url = "https://dl.google.com/go/go1.27.0.linux-arm64.tar.gz"
+checksum = "sha256:94f3e30b8e374bc285e7dadc11e0865726b9bc6e85b841ccceaabc0214c6b7c8"
+url = "https://dl.google.com/go/go1.27.2.linux-arm64.tar.gz"
 
 [tools.go."platforms.linux-x64"]
-checksum = "sha256:675c26c449cbb18fc24b74650de1eabbae6e16f64326fd85a283fb3b58280685"
-url = "https://dl.google.com/go/go1.27.0.linux-amd64.tar.gz"
+checksum = "sha256:ecbadb99091a3f46e31f5f934b068b1864eafa7995211b39eaddf76996045fe5"
+url = "https://dl.google.com/go/go1.27.2.linux-amd64.tar.gz"
 
 [tools.go."platforms.macos-arm64"]
-checksum = "sha256:90493b3bbd5e10f91d12153198bf1994fd756399b4fec93b49b0c6e2acdeeb3e"
-url = "https://dl.google.com/go/go1.27.0.darwin-arm64.tar.gz"
+checksum = "sha256:76812b213b1b2302c978d28fa52fa92d541704b9e7d9d5db8002c50e4018c4c5"
+url = "https://dl.google.com/go/go1.27.2.darwin-arm64.tar.gz"
 
 [tools.go."platforms.macos-x64"]
-checksum = "sha256:d3314e25496e4381d71a5c51d2907e7af655d199f6780b549f015bd85fef4986"
-url = "https://dl.google.com/go/go1.27.0.darwin-amd64.tar.gz"
+checksum = "sha256:587b59182488b23aa6e5fc25110405a3e0e5b38ed2f5b2f46ed13c32aee356fe"
+url = "https://dl.google.com/go/go1.27.2.darwin-amd64.tar.gz"
 
 [[tools.java]]
 version = "27.0.0"
@@ -116,24 +116,24 @@ checksum = "sha256:ff42134c1bc5ac81c5a91a95fd4df87479db5d0499ba875d6adb5bda5626c
 url = "https://download.java.net/java/GA/jdk27/55ce5470a6294008af0057ff4626d0e5/35/GPL/openjdk-27_macos-aarch64_bin.tar.gz"
 
 [[tools.node]]
-version = "24.19.0"
+version = "24.21.0"
 backend = "core:node"
 
 [tools.node."platforms.linux-arm64"]
-checksum = "sha256:d28c8a5bf0a808f0ed434a1dce8c54ae98f0371c0bd86ac58abc613f73e6643f"
-url = "https://nodejs.org/dist/v24.19.0/node-v24.19.0-linux-arm64.tar.gz"
+checksum = "sha256:724282c3b43aec998aa9527380465b45d229e021b58035f5f4f63095eabfe5d5"
+url = "https://nodejs.org/dist/v24.21.0/node-v24.21.0-linux-arm64.tar.gz"
 
 [tools.node."platforms.linux-x64"]
-checksum = "sha256:f625d97cd707df4ff96254916fbc5ff014f09c09effe5a1e0ca8f6d41a8789d4"
-url = "https://nodejs.org/dist/v24.19.0/node-v24.19.0-linux-x64.tar.gz"
+checksum = "sha256:6e1db87ef58b8819e5d5402eff1536491b18edd8eb7bee5ef7897876e88dc5ff"
+url = "https://nodejs.org/dist/v24.21.0/node-v24.21.0-linux-x64.tar.gz"
 
 [tools.node."platforms.macos-arm64"]
-checksum = "sha256:8294b7aa9b03997481c06babf1e8b270c859358f27da57a11509afe537ac381d"
-url = "https://nodejs.org/dist/v24.19.0/node-v24.19.0-darwin-arm64.tar.gz"
+checksum = "sha256:bed7eea5325e1108f32ce5228ddd6a5f0f08a499ee42aa7442aea583702f6057"
+url = "https://nodejs.org/dist/v24.21.0/node-v24.21.0-darwin-arm64.tar.gz"
 
 [tools.node."platforms.macos-x64"]
-checksum = "sha256:d1b5e999db158c62fe8f7267a4476b035d8bd93b1a605bac24a3f0dd166e3316"
-url = "https://nodejs.org/dist/v24.19.0/node-v24.19.0-darwin-x64.tar.gz"
+checksum = "sha256:1462cb3b3046b815cf8ea436d3da450ec1a9f11dac7e5a46b0ada5305d7e8097"
+url = "https://nodejs.org/dist/v24.21.0/node-v24.21.0-darwin-x64.tar.gz"
 
 [[tools.peco]]
 version = "0.6.0"
@@ -160,47 +160,47 @@ url = "https://github.com/peco/peco/releases/download/v0.6.0/peco_0.6.0_darwin_a
 url_api = "https://api.github.com/repos/peco/peco/releases/assets/361190164"
 
 [[tools.pnpm]]
-version = "11.19.0"
+version = "11.28.5"
 backend = "aqua:pnpm/pnpm"
 
 [tools.pnpm."platforms.linux-arm64"]
-checksum = "sha256:1b1630c3ae133448a9445911499ab2d59bd77f860abbd595dbc89da4eb82c22b"
-url = "https://github.com/pnpm/pnpm/releases/download/v11.19.0/pnpm-linux-arm64.tar.gz"
-url_api = "https://api.github.com/repos/pnpm/pnpm/releases/assets/496485122"
+checksum = "sha256:8118c0c80d6c4cceedbf48b44a620988c1f979f9de06e1a3a0347aa2554e88eb"
+url = "https://github.com/pnpm/pnpm/releases/download/v11.28.5/pnpm-linux-arm64.tar.gz"
+url_api = "https://api.github.com/repos/pnpm/pnpm/releases/assets/613990820"
 provenance = "github-attestations"
 
 [tools.pnpm."platforms.linux-x64"]
-checksum = "sha256:01562375e2b05b5cdc8d67e0bbfed549221c8a739b485ee0dac13d32d383ec24"
-url = "https://github.com/pnpm/pnpm/releases/download/v11.19.0/pnpm-linux-x64.tar.gz"
-url_api = "https://api.github.com/repos/pnpm/pnpm/releases/assets/496485123"
+checksum = "sha256:8cfc53d32a38d3c5e89777a5c097d910b4a79e660e1988045d05cd81449e42d9"
+url = "https://github.com/pnpm/pnpm/releases/download/v11.28.5/pnpm-linux-x64.tar.gz"
+url_api = "https://api.github.com/repos/pnpm/pnpm/releases/assets/613990822"
 provenance = "github-attestations"
 
 [tools.pnpm."platforms.macos-arm64"]
-checksum = "sha256:00075435e24d20f5d369c9aec1ee1c29ebb78b52de8ea9807013fc70187ea0e5"
-url = "https://github.com/pnpm/pnpm/releases/download/v11.19.0/pnpm-darwin-arm64.tar.gz"
-url_api = "https://api.github.com/repos/pnpm/pnpm/releases/assets/496485121"
+checksum = "sha256:809b67a5e31e4fab0342c5bf069072dd597f9fec6714b3375cf15b25125f213e"
+url = "https://github.com/pnpm/pnpm/releases/download/v11.28.5/pnpm-darwin-arm64.tar.gz"
+url_api = "https://api.github.com/repos/pnpm/pnpm/releases/assets/613990816"
 provenance = "github-attestations"
 
 [[tools.python]]
-version = "3.14.7"
+version = "3.15.0"
 backend = "core:python"
 
 [tools.python."platforms.linux-arm64"]
-checksum = "sha256:8a0798baa8a2c27b5751d590aced543eaa85e20b3f73d93c1af049688acdc9c5"
-url = "https://github.com/astral-sh/python-build-standalone/releases/download/20260901/cpython-3.14.7+20260901-aarch64-unknown-linux-gnu-install_only_stripped.tar.gz"
+checksum = "sha256:341f9984c0206fef013761fa6adc5b26f28fcf333dd9bc9ff64f23b6fdf9b58b"
+url = "https://github.com/astral-sh/python-build-standalone/releases/download/20261020/cpython-3.15.0+20261020-aarch64-unknown-linux-gnu-install_only_stripped.tar.gz"
 provenance = "github-attestations"
 
 [tools.python."platforms.linux-x64"]
-checksum = "sha256:3959f92825141e04adf44982d3a83ee57af0877e893b0796e04c1468749d9b04"
-url = "https://github.com/astral-sh/python-build-standalone/releases/download/20260901/cpython-3.14.7+20260901-x86_64-unknown-linux-gnu-install_only_stripped.tar.gz"
+checksum = "sha256:d8982167b0b96b660a688f2b8f1e47e49d7c50da17029a07d3ac5fd418514c63"
+url = "https://github.com/astral-sh/python-build-standalone/releases/download/20261020/cpython-3.15.0+20261020-x86_64-unknown-linux-gnu-install_only_stripped.tar.gz"
 provenance = "github-attestations"
 
 [tools.python."platforms.macos-arm64"]
-checksum = "sha256:4632cb1a6edad9e73d3c81b6d2e69131637d995173e3e85005df14102b0592ba"
-url = "https://github.com/astral-sh/python-build-standalone/releases/download/20260901/cpython-3.14.7+20260901-aarch64-apple-darwin-install_only_stripped.tar.gz"
+checksum = "sha256:80af02b62e3675f653e79fd9560f90f7ab8ced848cd4a5a81ee7e3d6c8dc2a10"
+url = "https://github.com/astral-sh/python-build-standalone/releases/download/20261020/cpython-3.15.0+20261020-aarch64-apple-darwin-install_only_stripped.tar.gz"
 provenance = "github-attestations"
 
 [tools.python."platforms.macos-x64"]
-checksum = "sha256:7e151a7c9028855b61a7d6e78381f2020a1ef185281399f3b1aafc5e1c9a1a64"
-url = "https://github.com/astral-sh/python-build-standalone/releases/download/20260901/cpython-3.14.7+20260901-x86_64-apple-darwin-install_only_stripped.tar.gz"
+checksum = "sha256:cb833e879255122ed1ac191f671297b64ac6e7c1927b37e909d2eae34c331402"
+url = "https://github.com/astral-sh/python-build-standalone/releases/download/20261020/cpython-3.15.0+20261020-x86_64-apple-darwin-install_only_stripped.tar.gz"
 provenance = "github-attestations"
