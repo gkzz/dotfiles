@@ -2,6 +2,12 @@
 # both roles coupled gives local and CI setup a single version source of truth.
 min_version = "2026.8.15"
 
+[settings]
+# 手動アップグレード時も、mise は公開から14日以上経過したリリースから新しいバージョンを選定する。
+# 完全固定したバージョンや mise.lock に記録済みのバージョンは、mise が指定どおりに使用する。
+# なお、Renovate が更新PRで提案するバージョンは、Renovate 側の minimumReleaseAge で管理する。
+minimum_release_age = "14d"
+
 [env]
 # Resolve the repository from this config file so `mise install` works before
 # the managed global config symlink exists.

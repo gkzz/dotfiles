@@ -3,6 +3,14 @@
 
   extends: ["github>gkzz/renovate-config"],
 
+  // lockfile は下記スケジュールで更新し、差分がある場合のみメンテナンス PR を作成する。
+  // タイムゾーン（Asia/Tokyo）と Dashboard の事前承認は共有 Preset を継承する。
+  lockFileMaintenance: {
+    // 毎月第1月曜日（日付1〜7日と月曜日のAND条件）。
+    enabled: true,
+    schedule: ["* * 1-7 * 1"],
+  },
+
   mise: {
     managerFilePatterns: ["/mise.toml$/"],
   },
