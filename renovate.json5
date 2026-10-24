@@ -3,6 +3,19 @@
 
   extends: ["github>gkzz/renovate-config"],
 
+  // lockfile メンテナンスの通常スケジュールを、毎月最初の月曜日とする。
+  // timezone は共有プリセットの Asia/Tokyo を継承する。
+  // 差分がある場合だけPRを作成し、毎月のPR作成は保証しない。
+  // ツールは完全固定を維持し、バージョン更新は通常の更新PRで扱う。
+  // Renovate の cron は日付と曜日の両方を満たす日に一致する（1〜7日かつ月曜）。
+  // https://docs.renovatebot.com/configuration-options/#schedule
+  // 新規ブランチ作成前の Dashboard 承認は、共有設定の dependencyDashboardApproval を継承する。
+  // Dashboard からの手動承認・作成指示はスケジュールを上書きし、期間外にも実行され得る。
+  lockFileMaintenance: {
+    enabled: true,
+    schedule: ["* * 1-7 * 1"],
+  },
+
   mise: {
     managerFilePatterns: ["/mise.toml$/"],
   },
