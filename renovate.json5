@@ -5,7 +5,7 @@
 
   // lockfile メンテナンスの通常スケジュールを、毎月最初の月曜日とする。
   // timezone は共有プリセットの Asia/Tokyo を継承する。
-  // 差分がある場合だけPRを作成し、毎月のPR作成は保証しない。
+  // 実行時に lockfile に差分が生じた場合にPRを作成します。
   // ツールは完全固定を維持し、バージョン更新は通常の更新PRで扱う。
   // Renovate の cron は日付と曜日の両方を満たす日に一致する（1〜7日かつ月曜）。
   // https://docs.renovatebot.com/configuration-options/#schedule

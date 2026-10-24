@@ -2,21 +2,33 @@
 # both roles coupled gives local and CI setup a single version source of truth.
 min_version = "2026.8.15"
 
+[settings]
+# 公開直後の不具合や不正なリリースを取り込むリスクを減らすため、14日待つ。
+# latest やメジャー番号などから新しいバージョンを選ぶ際に適用する。
+# 固定バージョンと既存 lockfile のバージョンは、公開からの日数にかかわらず使用します。
+# リリース日時が不明なバージョンも、待機期間の設定にかかわらず候補に含めます。
+# https://mise.jdx.dev/configuration/settings.html#minimum-release-age
+minimum_release_age = "14d"
+
 [env]
 # Resolve the repository from this config file so `mise install` works before
 # the managed global config symlink exists.
 DOTFILES = "{{ config_source | canonicalize | dirname }}"
 
 [tools]
-biome = "2.5.14"
-node = "24.21.0"
-python = "3.15.0"
-go = "1.27.2"
-java = "27.0.0"
-pnpm = "12.11.1"
-ghq = "1.11.2"
-peco = "0.6.0"
-direnv = "2.38.1"
+# Renovate のセーフモードではプロジェクトの [settings] が無視されるため、
+# 各ツールにも同じ待機期間を指定する。ツールを追加するときも指定すること。
+# 通常のバージョン更新は共有 Renovate 設定の minimumReleaseAge でも14日待つ。
+# この指定でも、固定バージョンや既存 lockfile のバージョンはそのまま使用します。
+biome = { version = "2.5.14", minimum_release_age = "14d" }
+node = { version = "24.21.0", minimum_release_age = "14d" }
+python = { version = "3.15.0", minimum_release_age = "14d" }
+go = { version = "1.27.2", minimum_release_age = "14d" }
+java = { version = "27.0.0", minimum_release_age = "14d" }
+pnpm = { version = "12.11.1", minimum_release_age = "14d" }
+ghq = { version = "1.11.2", minimum_release_age = "14d" }
+peco = { version = "0.6.0", minimum_release_age = "14d" }
+direnv = { version = "2.38.1", minimum_release_age = "14d" }
 
 [bootstrap.packages]
 "brew:git" = "latest"
