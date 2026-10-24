@@ -30,7 +30,7 @@ alias gpuf='git push --force-with-lease origin HEAD'
 
 # ===== Fetch / Pull / Rebase =====
 
-# originの最新情報を取得する（現在の作業ブランチには変更を加えない）
+# originの最新情報を取得します。現在の作業ブランチはそのまま維持します。
 alias gf='git fetch origin'
 
 # 現在のブランチをfast-forwardのみで更新する（主にmainの更新用）
