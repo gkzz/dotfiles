@@ -3,9 +3,9 @@
 min_version = "2026.8.15"
 
 [settings]
-# 手動アップグレード時も、mise は公開から14日以上経過したリリースから新しいバージョンを選定する。
-# 完全固定したバージョンや mise.lock に記録済みのバージョンは、mise が指定どおりに使用する。
-# なお、Renovate が更新PRで提案するバージョンは、Renovate 側の minimumReleaseAge で管理する。
+# latest やメジャー番号などから mise が新しいバージョンを選ぶ際は、公開後14日間待つ。
+# 完全固定したバージョンや mise.lock に記録済みのバージョンは、指定どおりに使用する。
+# Renovate が更新PRで提案するバージョンの待機期間は、Renovate 側の minimumReleaseAge で管理する。
 minimum_release_age = "14d"
 
 [env]
