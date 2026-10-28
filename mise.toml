@@ -3,10 +3,11 @@
 min_version = "2026.8.15"
 
 [settings]
-# latest やメジャー番号などから mise が新しいバージョンを選ぶ際は、公開後14日間待つ。
-# 完全固定したバージョンや mise.lock に記録済みのバージョンは、指定どおりに使用する。
-# Renovate が更新PRで提案するバージョンの待機期間は、Renovate 側の minimumReleaseAge で管理する。
-minimum_release_age = "14d"
+# 通常のバージョン更新は Renovate の minimumReleaseAge で管理する。
+# 手動で latest やメジャー番号から新しいバージョンを選ぶ場合は、
+# 以下のコメントアウトを外して、公開後14日間の待機期間を適用する。
+# 完全固定したバージョンや mise.lock の既存バージョンには適用されない。
+# minimum_release_age = "14d"
 
 [env]
 # Resolve the repository from this config file so `mise install` works before
@@ -14,6 +15,8 @@ minimum_release_age = "14d"
 DOTFILES = "{{ config_source | canonicalize | dirname }}"
 
 [tools]
+# バージョンは完全固定し、更新は Renovate で管理するため、
+# ツール個別の minimum_release_age は指定しない。
 biome = "2.5.14"
 node = "24.21.0"
 python = "3.15.0"
