@@ -45,10 +45,6 @@ case "$(uname -s):$(uname -m)" in
     mise_platform="linux-arm64"
     mise_sha256="$MISE_SHA256_LINUX_ARM64"
     ;;
-  Darwin:x86_64|Darwin:amd64)
-    mise_platform="macos-x64"
-    mise_sha256="$MISE_SHA256_MACOS_X64"
-    ;;
   Darwin:arm64|Darwin:aarch64)
     mise_platform="macos-arm64"
     mise_sha256="$MISE_SHA256_MACOS_ARM64"

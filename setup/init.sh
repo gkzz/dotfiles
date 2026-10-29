@@ -3,6 +3,13 @@ set -euo pipefail
 
 repository_path="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd -P)"
 
+case "$(uname -s):$(uname -m)" in
+  Darwin:x86_64|Darwin:amd64)
+    printf '%s\n' 'error: Intel Macs are not supported; macOS requires Apple Silicon (arm64)' >&2
+    exit 1
+    ;;
+esac
+
 case "$(uname -s)" in
   Linux*)
     for brew_bin in /home/linuxbrew/.linuxbrew/bin /home/linuxbrew/.linuxbrew/sbin; do
@@ -10,7 +17,7 @@ case "$(uname -s)" in
     done
     ;;
   Darwin*)
-    for brew_bin in /opt/homebrew/bin /opt/homebrew/sbin /usr/local/bin /usr/local/sbin; do
+    for brew_bin in /opt/homebrew/bin /opt/homebrew/sbin; do
       [ ! -d "$brew_bin" ] || PATH="$brew_bin:$PATH"
     done
     ;;
