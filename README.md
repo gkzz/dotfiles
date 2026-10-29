@@ -1,5 +1,8 @@
 # dotfiles
 
+[![Lint](https://github.com/gkzz/dotfiles/actions/workflows/lint.yml/badge.svg)](https://github.com/gkzz/dotfiles/actions/workflows/lint.yml)
+[![Test](https://github.com/gkzz/dotfiles/actions/workflows/test.yml/badge.svg)](https://github.com/gkzz/dotfiles/actions/workflows/test.yml)
+
 WSL2 を主な利用環境とする Bash 用の dotfiles です。[mise bootstrap](https://mise.jdx.dev/bootstrap.html) を使い、シェル設定、Git 設定、Homebrew パッケージ、開発ツールを管理します。
 
 対応環境は Linux/WSL2（x86_64、arm64）です。macOS（Apple Silicon / arm64）は対応中です。Intel Mac はサポート対象外です。Bash の設定を管理し、zsh の起動ファイルは管理しません。
