@@ -12,8 +12,14 @@ permissions:
 
 jobs:
   checks:
-    name: mise bootstrap dry-run and help
-    runs-on: ubuntu-24.04
+    name: mise bootstrap dry-run and help (${{ matrix.os }})
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-24.04, macos-15]
+    runs-on: ${{ matrix.os }}
+    env:
+      MISE_GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
     steps:
       - name: Checkout
@@ -21,8 +27,6 @@ jobs:
 
       - name: Install mise
         uses: ./.github/actions/setup-mise
-        env:
-          MISE_GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           cache-installs: "false"
 
@@ -31,7 +35,7 @@ jobs:
           make help
           ./setup/mise-install.sh --help
 
-      - name: Run bootstrap dry-run and Git hook tests
+      - name: Run bootstrap dry-run, Makefile and Git hook tests
         run: make test
 
       - name: Run package bootstrap dry-run
@@ -44,6 +48,8 @@ jobs:
       matrix:
         os: [ubuntu-24.04, macos-15]
     runs-on: ${{ matrix.os }}
+    env:
+      MISE_GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
     steps:
       - name: Checkout
@@ -51,8 +57,6 @@ jobs:
 
       - name: Install mise
         uses: ./.github/actions/setup-mise
-        env:
-          MISE_GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           cache-installs: "false"
 
@@ -77,6 +81,21 @@ jobs:
         env:
           HOME: ${{ runner.temp }}/dotfiles-home
         run: make verify-dotfiles
+
+      - name: Verify macOS Bash login configuration
+        if: runner.os == 'macOS'
+        env:
+          HOME: ${{ runner.temp }}/dotfiles-home
+        run: |
+          set -euo pipefail
+          # Resolve DOTFILES through the installed startup files, not the CI env.
+          unset DOTFILES
+          /bin/bash -ilc '
+            set -eu
+            test "$DOTFILES" = "$(cd "$GITHUB_WORKSPACE" && pwd -P)"
+            alias ll >/dev/null
+            declare -F mise >/dev/null
+          '
 
       - name: make uninstall (dry-run)
         env:

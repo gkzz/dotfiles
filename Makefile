@@ -5,9 +5,10 @@
 export MISE_BOOTSTRAP_ARGS ?=
 
 export PATH := $(HOME)/.local/bin:/home/linuxbrew/.linuxbrew/bin:/home/linuxbrew/.linuxbrew/sbin:/opt/homebrew/bin:/opt/homebrew/sbin:/usr/local/bin:/usr/local/sbin:$(PATH)
-MISE := $(shell command -v mise 2>/dev/null || if [ -x "$(HOME)/.local/bin/mise" ]; then printf '%s' "$(HOME)/.local/bin/mise"; fi)
+# $(shell ...) does not inherit PATH exported by this Makefile.
+MISE := $(shell PATH="$(PATH)" command -v mise 2>/dev/null)
 MISE_CONFIG := $(CURDIR)/mise-operations.toml
-MISE_RUN = MISE_CONFIG_FILE="$(MISE_CONFIG)" MISE_TRUSTED_CONFIG_PATHS="$(CURDIR)" $(MISE)
+MISE_RUN = MISE_CONFIG_FILE="$(MISE_CONFIG)" MISE_TRUSTED_CONFIG_PATHS="$(CURDIR)" "$(MISE)"
 
 help:
 	@printf '%s\n' 'Targets:'
@@ -66,3 +67,9 @@ test-bootstrap-packages-dry-run:
 
 test-git-hooks:
 	$(MISE_RUN) run dotfiles:test:git-hooks
+
+.PHONY: check-mise
+install install-apply verify verify-dotfiles uninstall uninstall-apply verify-uninstalled ci lint test test-bootstrap-dry-run test-bootstrap-packages-dry-run test-git-hooks: check-mise
+
+check-mise:
+	@test -n "$(MISE)" || { printf '%s\n' 'error: mise was not found; run make setup first' >&2; exit 1; }

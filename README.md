@@ -1,8 +1,11 @@
 # dotfiles
 
+[![Lint](https://github.com/gkzz/dotfiles/actions/workflows/lint.yml/badge.svg)](https://github.com/gkzz/dotfiles/actions/workflows/lint.yml)
+[![Test](https://github.com/gkzz/dotfiles/actions/workflows/test.yml/badge.svg)](https://github.com/gkzz/dotfiles/actions/workflows/test.yml)
+
 WSL2 を主な利用環境とする Bash 用の dotfiles です。[mise bootstrap](https://mise.jdx.dev/bootstrap.html) を使い、シェル設定、Git 設定、Homebrew パッケージ、開発ツールを管理します。
 
-対応環境は Linux/WSL2（x86_64、arm64）です。zsh の起動ファイルは管理しません。macOSは対応中です。
+対応環境は Linux/WSL2（x86_64、arm64）です。macOS（Apple Silicon / arm64）は対応中です。Intel Mac はサポート対象外です。Bash の設定を管理し、zsh の起動ファイルは管理しません。
 
 ## 初回導入
 
@@ -13,6 +16,18 @@ git clone https://github.com/gkzz/dotfiles.git
 cd dotfiles
 make setup
 ```
+
+### macOS での準備
+
+Git と make を利用できない場合は、先に Command Line Tools を導入してください。
+
+```bash
+xcode-select --install
+```
+
+導入が完了したら、上記の clone と `make setup` を実行します。Homebrew は `/opt/homebrew` を利用します。Homebrew の初回導入には管理者権限が必要になるため、ターミナルで `sudo -v` を実行してから `make setup` を進めてください。
+
+macOS の標準シェルが zsh でも make の各コマンドは実行できます。適用したシェル設定を利用するときは、ターミナルで `/bin/bash -l` を起動してください。
 
 ## 通常操作
 
