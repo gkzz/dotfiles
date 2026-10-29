@@ -56,9 +56,13 @@ run = 'MISE_CONFIG_FILE="$DOTFILES/mise.toml" mise bootstrap --dry-run --only pa
 description = "Run existing Git hook tests"
 run = 'MISE_CONFIG_FILE="$DOTFILES/mise.toml" mise exec -- node --test --test-isolation=none --test-concurrency=1 tests/git-hooks.test.js'
 
+[tasks."dotfiles:test:make"]
+description = "Test Makefile mise discovery"
+run = 'MISE_CONFIG_FILE="$DOTFILES/mise.toml" mise exec -- node --test tests/make.test.js'
+
 [tasks."dotfiles:test"]
-description = "Run bootstrap dry-run and Git hook tests"
-run = ['mise run dotfiles:test:bootstrap-dry-run', 'mise run dotfiles:test:git-hooks']
+description = "Run bootstrap dry-run, Makefile and Git hook tests"
+run = ['mise run dotfiles:test:bootstrap-dry-run', 'mise run dotfiles:test:make', 'mise run dotfiles:test:git-hooks']
 
 [tasks."dotfiles:ci"]
 description = "Run lint and test sequentially"

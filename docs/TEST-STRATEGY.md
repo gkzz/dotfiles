@@ -7,6 +7,7 @@
 | レイヤー | テスト | 確認内容 |
 | --- | --- | --- |
 | Lint | `make lint` | hook、setup、補助スクリプトの Bash 構文 |
+| Makefile | `mise run dotfiles:test:make`（操作用設定を指定） | 追加した PATH からの mise 検出、空白を含むパス、mise 未導入時の案内 |
 | Git hook | `make test-git-hooks` | 既存16ケースでステージ済み内容、ignore、設定、失敗時の処理、Git からのフック実行を確認 |
 | Help | [test.yml](../.github/workflows/test.yml) | Makefile と補助スクリプトの help 出力 |
 | Dry-run | [test.yml](../.github/workflows/test.yml) | packages と dotfiles を除いた bootstrap の dry-run が完了すること |
@@ -15,7 +16,7 @@
 
 Git hook の Bash 構文は `make ci` の lint で確認します。既存テストは Docker を模擬するため、実際の secretlint による secret 検出は確認しません。テストの整理は今後改めて検討します。`make ci` は lint、bootstrap dry-run、Git フックの既存テストを実行し、GitHub Actions では一時 HOME で dotfile の lifecycle も確認します。
 
-`make test` は `make test-bootstrap-dry-run` と `make test-git-hooks` を実行します。この dry-run は dotfile や packages を適用・検証しません。package は別の dry-run target で宣言と解決を確認します。dotfile lifecycle の確認は GitHub Actions で行います。
+`make test` は bootstrap の dry-run、Makefile、Git hook のテストを順に実行します。この dry-run は dotfile や packages を適用・検証しません。package は別の dry-run target で宣言と解決を確認します。dotfile lifecycle の確認は GitHub Actions で行います。help、dry-run、Makefile、Git hook、dotfile lifecycle は Linux と macOS の両方で確認します。
 
 ## テスト対象外
 

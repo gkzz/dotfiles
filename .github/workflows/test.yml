@@ -12,8 +12,12 @@ permissions:
 
 jobs:
   checks:
-    name: mise bootstrap dry-run and help
-    runs-on: ubuntu-24.04
+    name: mise bootstrap dry-run and help (${{ matrix.os }})
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-24.04, macos-15]
+    runs-on: ${{ matrix.os }}
 
     steps:
       - name: Checkout
@@ -31,7 +35,7 @@ jobs:
           make help
           ./setup/mise-install.sh --help
 
-      - name: Run bootstrap dry-run and Git hook tests
+      - name: Run bootstrap dry-run, Makefile and Git hook tests
         run: make test
 
       - name: Run package bootstrap dry-run

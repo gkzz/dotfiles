@@ -71,7 +71,7 @@ make test
 make ci
 ```
 
-`make test` は mise の `dotfiles:test` タスクを呼び、bootstrap の dry-run と Git hook のテストを順に実行します。Git フックの既存テストは Docker を模擬して実行します。この dry-run は packages と dotfiles を除いて mise bootstrap を確認します。`make test-bootstrap-packages-dry-run` は Homebrew package bootstrap を dry-run します。どちらも実際のインストールは行いません。dotfiles の lifecycle は GitHub Actions で別途確認します。
+`make test` は mise の `dotfiles:test` タスクを呼び、bootstrap の dry-run、Makefile、Git hook のテストを順に実行します。Git フックの既存テストは Docker を模擬して実行します。この dry-run は packages と dotfiles を除いて mise bootstrap を確認します。`make test-bootstrap-packages-dry-run` は Homebrew package bootstrap を dry-run します。どちらも実際のインストールは行いません。dotfiles の lifecycle は GitHub Actions で別途確認します。
 
 タスクは checkout のルートで実行されます。`MISE_BOOTSTRAP_ARGS` は導入タスクへ渡せます（例：`make install MISE_BOOTSTRAP_ARGS="--only dotfiles"`）。
 
