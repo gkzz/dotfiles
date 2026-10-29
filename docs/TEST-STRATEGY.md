@@ -13,6 +13,7 @@
 | Dry-run | [test.yml](../.github/workflows/test.yml) | packages と dotfiles を除いた bootstrap の dry-run が完了すること |
 | Package dry-run | [test.yml](../.github/workflows/test.yml) | Homebrew package bootstrap の dry-run が完了すること |
 | Dotfiles lifecycle | [test.yml](../.github/workflows/test.yml) | 一時 HOME で install の dry-run/apply 後に `status --missing` が成功し、unapply 後は全 dotfile が missing と判定されること |
+| macOS Bash 起動 | [test.yml](../.github/workflows/test.yml) | 一時 HOME への適用後、`/bin/bash -ilc` で `DOTFILES`、`ll` alias、mise のシェル関数が読み込まれること |
 
 Git hook の Bash 構文は `make ci` の lint で確認します。既存テストは Docker を模擬するため、実際の secretlint による secret 検出は確認しません。テストの整理は今後改めて検討します。`make ci` は lint、bootstrap dry-run、Git フックの既存テストを実行し、GitHub Actions では一時 HOME で dotfile の lifecycle も確認します。
 
