@@ -13,7 +13,7 @@ peco-cd() {
     command -v peco >/dev/null 2>&1 || return 1
 
     local dir
-    dir="$(ghq list --full-path | peco)" || return 1
+    dir="$(ghq list --full-path "$@" | peco)" || return 1
     [ -n "$dir" ] && cd "$dir" || return 1
 }
 
