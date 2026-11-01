@@ -14,4 +14,39 @@
   mise: {
     managerFilePatterns: ["/mise.toml$/"],
   },
+
+  customManagers: [
+    {
+      customType: "regex",
+      managerFilePatterns: ["/^mise\\.toml$/"],
+      matchStrings: ['min_version = "(?<currentValue>[^"\\s]+)"'],
+      depNameTemplate: "mise",
+      packageNameTemplate: "jdx/mise",
+      datasourceTemplate: "github-releases",
+      versioningTemplate: "semver",
+      extractVersionTemplate: "^v(?<version>\\d+\\.\\d+\\.\\d+)$",
+    },
+    {
+      // The attachment datasource maps each existing digest to its release asset.
+      customType: "regex",
+      managerFilePatterns: ["/^mise\\.env$/"],
+      matchStrings: [
+        '# mise (?<currentValue>v[0-9.]+) (?<depName>[^\\s]+)\\nMISE_SHA256_[A-Z0-9_]+="(?<currentDigest>[a-f0-9]{64})"',
+      ],
+      packageNameTemplate: "jdx/mise",
+      datasourceTemplate: "github-release-attachments",
+      versioningTemplate: "semver",
+    },
+  ],
+
+  packageRules: [
+    {
+      matchManagers: ["custom.regex"],
+      matchPackageNames: ["jdx/mise"],
+      groupName: "mise CLI",
+      groupSlug: "mise-cli",
+      // Keep a year-boundary release in the same PR as all platform digests.
+      separateMajorMinor: false,
+    },
+  ],
 }

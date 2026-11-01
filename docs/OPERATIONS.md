@@ -33,6 +33,8 @@ mise のグローバル設定先は `~/.config/mise/config.toml` に固定しま
 ./setup/mise-version.sh
 ```
 
+mise 本体は Renovate が `min_version` と `mise.env` の3環境分の SHA-256 checksum を同じ PR で更新します。共有設定の公開後14日間の待機期間と Dependency Dashboard での事前承認が適用されます。手動で更新する場合も、`min_version`、各 checksum、その直前のバージョンコメントを合わせて更新してください。
+
 ## 適用と状態確認
 
 リポジトリルートから Makefile の target を実行します。`setup` 以外は `mise-operations.toml` に定義したタスクを呼ぶラッパーです。たとえば `make install` は `MISE_CONFIG_FILE="$PWD/mise-operations.toml" mise run dotfiles:install` を実行します。
