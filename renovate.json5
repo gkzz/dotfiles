@@ -24,6 +24,7 @@
       packageNameTemplate: "jdx/mise",
       datasourceTemplate: "github-releases",
       versioningTemplate: "semver",
+      extractVersionTemplate: "^v(?<version>\\d+\\.\\d+\\.\\d+)$",
     },
     {
       // The attachment datasource maps each existing digest to its release asset.
