@@ -1,6 +1,6 @@
 # Policy: use the hard minimum as the exact bootstrap version as well. Keeping
 # both roles coupled gives local and CI setup a single version source of truth.
-min_version = "2026.8.15"
+min_version = "2026.10.15"
 
 [settings]
 # 通常のバージョン更新は Renovate の minimumReleaseAge で管理する。
