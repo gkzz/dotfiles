@@ -77,23 +77,20 @@ checksum = "sha256:76812b213b1b2302c978d28fa52fa92d541704b9e7d9d5db8002c50e4018c
 url = "https://dl.google.com/go/go1.27.2.darwin-arm64.tar.gz"
 
 [[tools.java]]
-version = "27.0.0"
+version = "temurin-25.0.5+8.0.LTS"
 backend = "core:java"
 
-[tools.java.options]
-shorthand_vendor = "openjdk"
-
 [tools.java."platforms.linux-arm64"]
-checksum = "sha256:da4e9dde1fff90204739e969187bab4751bd59a2a1c479672e1a1810f7dd23ea"
-url = "https://download.java.net/java/GA/jdk27/55ce5470a6294008af0057ff4626d0e5/35/GPL/openjdk-27_linux-aarch64_bin.tar.gz"
+checksum = "sha256:bb5b2ded252f21c6090cf780b0a408ad0d83bbb557e702955643557f13231880"
+url = "https://github.com/adoptium/temurin25-binaries/releases/download/jdk-25.0.5%2B8/OpenJDK25U-jdk_aarch64_linux_hotspot_25.0.5_8.tar.gz"
 
 [tools.java."platforms.linux-x64"]
-checksum = "sha256:95fc37eb3a18a27a26d5904c2d89d52bace8dafa9a078ca27f4747fbc4bf070b"
-url = "https://download.java.net/java/GA/jdk27/55ce5470a6294008af0057ff4626d0e5/35/GPL/openjdk-27_linux-x64_bin.tar.gz"
+checksum = "sha256:68982529869257d0ee6b824ec5aa270ff8b118bb438670da0b97ebdab178d7fb"
+url = "https://github.com/adoptium/temurin25-binaries/releases/download/jdk-25.0.5%2B8/OpenJDK25U-jdk_x64_linux_hotspot_25.0.5_8.tar.gz"
 
 [tools.java."platforms.macos-arm64"]
-checksum = "sha256:ff42134c1bc5ac81c5a91a95fd4df87479db5d0499ba875d6adb5bda5626c3e8"
-url = "https://download.java.net/java/GA/jdk27/55ce5470a6294008af0057ff4626d0e5/35/GPL/openjdk-27_macos-aarch64_bin.tar.gz"
+checksum = "sha256:36dc14d797aaff6d89aab302cd053fdba6207dfdcf772052fa7b023a94b0e857"
+url = "https://github.com/adoptium/temurin25-binaries/releases/download/jdk-25.0.5%2B8/OpenJDK25U-jdk_aarch64_mac_hotspot_25.0.5_8.tar.gz"
 
 [[tools.node]]
 version = "24.22.1"
