@@ -27,13 +27,34 @@ mise のグローバル設定先は `~/.config/mise/config.toml` に固定しま
 ./setup/mise-install.sh --apply
 ```
 
-導入するバージョンは `mise.toml` の `min_version` から取得します。OS と CPU に応じた SHA-256 checksum を検証します。現在のバージョンは次のコマンドで確認できます。
+導入するバージョンは `mise.toml` の `min_version` から取得します。OS と CPU に応じた SHA-256 checksum を検証します。リポジトリが指定する導入バージョンと、現在使用している mise は次のコマンドで確認できます。
 
 ```bash
 ./setup/mise-version.sh
+type -a mise
+mise version
 ```
 
 mise 本体は Renovate が `min_version` と `mise.env` の3環境分の SHA-256 checksum を同じ PR で更新します。共有設定の公開後14日間の待機期間と Dependency Dashboard での事前承認が適用されます。手動で更新する場合も、`min_version`、各 checksum、その直前のバージョンコメントを合わせて更新してください。
+
+### mise 本体の更新
+
+`min_version` は mise の最低要求バージョンです。このリポジトリでは、初回導入と本体更新のバージョン指定にも使います。
+
+更新 PR をチェックアウトしたら、リポジトリルートで次を実行してください。このリポジトリのセットアップで導入した mise が対象です。
+
+```bash
+mise self-update --no-plugins "$(./setup/mise-version.sh)"
+mise version
+mise install --locked
+make ci
+```
+
+`mise version` の出力が `./setup/mise-version.sh` の指定と一致することを確認します。`mise install --locked` は `mise.lock` に固定された開発ツールを導入し、`make ci` は lint とテストを実行します。
+
+[`mise self-update`](https://mise.jdx.dev/cli/self-update.html) は mise 本体を更新します。`--no-plugins` を付けると、プラグインは更新しません。Homebrew などのパッケージマネージャーで導入した mise は、そのパッケージマネージャーで更新してください。
+
+`make setup` は既にインストール済みの mise を更新しません。`./setup/mise-install.sh --apply` も初回導入用で、インストール先にファイルが存在するとエラーになります。また、`mise upgrade` は管理対象ツールの更新用であり、mise 本体の更新には使いません。
 
 ## 適用と状態確認
 
