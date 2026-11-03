@@ -13,7 +13,7 @@ permissions:
 jobs:
   workflow-lint:
     name: Workflow syntax lint
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-latest
 
     steps:
       - name: Checkout
@@ -26,7 +26,7 @@ jobs:
 
   shellcheck:
     name: Shell script lint
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-latest
 
     steps:
       - name: Checkout
@@ -49,7 +49,7 @@ jobs:
 
   static:
     name: Static validation
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-latest
     env:
       MISE_GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
