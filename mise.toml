@@ -27,6 +27,7 @@ pnpm = "12.14.0"
 ghq = "1.11.2"
 peco = "0.6.0"
 direnv = "2.38.2"
+"go:github.com/gkzz/renodash/cmd/renodash" = "v0.0.4-0.20261103085119-d4ec06cd2d6d"
 
 [bootstrap.packages]
 "brew:git" = "latest"
