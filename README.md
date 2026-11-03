@@ -56,6 +56,7 @@ make uninstall-apply # dotfile のリンクを解除
 - `.bashrc`、`.bash_profile`、`.gitconfig`
 - `~/.dotfiles`（実際の checkout へのリンク。Git フックはこのリンク経由で参照）
 - `~/.config/mise/config.toml`（リポジトリルートの `mise.toml` へのリンク）
+- `~/.agents/skills/` と `~/.codex/skills/` のリポジトリ管理スキル
 - mise の `[bootstrap.packages]` に宣言した Homebrew パッケージ
 - `mise.lock` に記録した開発ツール
 

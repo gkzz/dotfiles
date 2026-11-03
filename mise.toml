@@ -38,3 +38,13 @@ direnv = "2.38.2"
 "~/.bash_profile" = { source = ".bash_profile", mode = "symlink" }
 "~/.gitconfig" = { source = ".gitconfig", mode = "symlink" }
 "~/.config/mise/config.toml" = { source = "mise.toml", mode = "symlink" }
+"~/.agents/skills/git-command" = { source = ".agents/skills/git-command", mode = "symlink" }
+"~/.agents/skills/grill-me" = { source = ".agents/skills/grill-me", mode = "symlink" }
+"~/.agents/skills/natural-japanese-lite" = { source = ".agents/skills/natural-japanese-lite", mode = "symlink" }
+"~/.agents/skills/pr-body" = { source = ".agents/skills/pr-body", mode = "symlink" }
+"~/.agents/skills/renodash-dashboard" = { source = ".agents/skills/renodash-dashboard", mode = "symlink" }
+"~/.codex/skills/git-command" = { source = ".codex/skills/git-command", mode = "symlink" }
+"~/.codex/skills/grill-me" = { source = ".codex/skills/grill-me", mode = "symlink" }
+"~/.codex/skills/natural-japanese-lite" = { source = ".codex/skills/natural-japanese-lite", mode = "symlink" }
+"~/.codex/skills/pr-body" = { source = ".codex/skills/pr-body", mode = "symlink" }
+"~/.codex/skills/renodash-dashboard" = { source = ".codex/skills/renodash-dashboard", mode = "symlink" }
