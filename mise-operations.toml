@@ -37,7 +37,7 @@ run = 'MISE_CONFIG_FILE="$DOTFILES/mise.toml" mise bootstrap dotfiles status --m
 [tasks."dotfiles:verify:uninstalled"]
 description = "Verify all managed symlinks are absent"
 run = """
-MISE_CONFIG_FILE="$DOTFILES/mise.toml" mise bootstrap dotfiles status --json | jq -e '.files | length == 15 and all(.[]; .state == "missing")' >/dev/null
+MISE_CONFIG_FILE="$DOTFILES/mise.toml" mise bootstrap dotfiles status --json | jq -e '.files | length == 10 and all(.[]; .state == "missing")' >/dev/null
 """
 
 [tasks."dotfiles:lint"]
