@@ -57,8 +57,11 @@ make uninstall-apply # dotfile のリンクを解除
 - `.bashrc`、`.bash_profile`、`.gitconfig`
 - `~/.dotfiles`（実際の checkout へのリンク。Git フックはこのリンク経由で参照）
 - `~/.config/mise/config.toml`（リポジトリルートの `mise.toml` へのリンク）
+- `~/.agents/skills/` のリポジトリ管理スキル（Codex もこの場所から読み込みます）
 - mise の `[bootstrap.packages]` に宣言した Homebrew パッケージ
 - `mise.lock` に記録した開発ツール
+
+`renodash-dashboard` スキルは、[renodash v0.0.6 のサンプル](https://github.com/gkzz/renodash/blob/v0.0.6/examples/skills/renodash-dashboard/SKILL.md)を正本とします。dotfiles には配布用のコピーを置き、更新時に正本と照合します。mise はそのコピーを `~/.agents/skills/renodash-dashboard` にリンクします。renodash リポジトリを clone する必要はありません。
 
 mise のグローバル設定先は `~/.config/mise/config.toml` です。独自の `XDG_CONFIG_HOME` はサポートしません。既存環境からの移行は[使い方](docs/USAGE.md#既存環境からの移行)を参照してください。端末固有の Git 設定は `~/.gitconfig.local`、シェル設定は `~/.bashrc.local` に置きます。
 
