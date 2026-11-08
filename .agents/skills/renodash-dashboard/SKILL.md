@@ -7,7 +7,7 @@ description: Read a Renovate Dependency Dashboard issue with renodash get, then 
 
 指定された `OWNER/REPO#ISSUE_NUMBER` の Dependency Dashboard を読み取り、更新候補を報告する。認証済みの `gh` と、renodash v0.0.5 以降が必要。解析に使う `renodash` のバージョンは `renodash version` で確認する。
 
-正本: [renodash のサンプルスキル](https://github.com/gkzz/renodash/blob/main/examples/skills/renodash-dashboard/SKILL.md)
+正本: [renodash v0.0.6 のサンプルスキル](https://github.com/gkzz/renodash/blob/v0.0.6/examples/skills/renodash-dashboard/SKILL.md)
 
 ## 取得と解析
 
