@@ -9,23 +9,24 @@ WSL2 を主な利用環境とする Bash 用の dotfiles です。[mise bootstra
 
 ## 初回導入
 
-まずリポジトリを任意の場所に clone します。checkout のルートで最初に `make setup` を実行し、mise bootstrap に必要な Homebrew と mise 本体を準備してください。
-
-```bash
-git clone https://github.com/gkzz/dotfiles.git
-cd dotfiles
-make setup
-```
-
-### macOS での準備
-
-Git と make を利用できない場合は、先に Command Line Tools を導入してください。
+macOS で Git と make を利用できない場合は、先に Command Line Tools を導入してください。
 
 ```bash
 xcode-select --install
 ```
 
-導入が完了したら、上記の clone と `make setup` を実行します。Homebrew は `/opt/homebrew` を利用します。Homebrew の初回導入には管理者権限が必要になるため、ターミナルで `sudo -v` を実行してから `make setup` を進めてください。
+macOS の Homebrew は `/opt/homebrew` を利用します。macOS で Homebrew を初めて導入する場合は、ターミナルで `sudo -v` を実行してから次の手順へ進んでください。
+
+リポジトリを任意の場所に clone し、ルートで準備、適用内容の確認、適用、状態確認の順に進めます。
+
+```bash
+git clone https://github.com/gkzz/dotfiles.git
+cd dotfiles
+make setup
+make install       # 適用内容を確認（dry-run）
+make install-apply # 適用
+make verify        # 状態を確認
+```
 
 macOS の標準シェルが zsh でも make の各コマンドは実行できます。適用したシェル設定を利用するときは、ターミナルで `/bin/bash -l` を起動してください。
 
@@ -59,11 +60,12 @@ make uninstall-apply # dotfile のリンクを解除
 - mise の `[bootstrap.packages]` に宣言した Homebrew パッケージ
 - `mise.lock` に記録した開発ツール
 
-mise のグローバル設定先は `~/.config/mise/config.toml` です。独自の `XDG_CONFIG_HOME` はサポートしません。既存環境からの移行は[運用手順](docs/OPERATIONS.md#既存環境からの移行)を参照してください。端末固有の Git 設定は `~/.gitconfig.local`、シェル設定は `~/.bashrc.local` に置きます。
+mise のグローバル設定先は `~/.config/mise/config.toml` です。独自の `XDG_CONFIG_HOME` はサポートしません。既存環境からの移行は[使い方](docs/USAGE.md#既存環境からの移行)を参照してください。端末固有の Git 設定は `~/.gitconfig.local`、シェル設定は `~/.bashrc.local` に置きます。
 
 Git の `pre-commit` hook は、ステージ済みの内容を Docker 版 secretlint で検査します。イメージのバージョンと digest は hook 内で固定しています。検査には `$HOME/.secretlintignore` とステージ済みの `.secretlintignore` を適用します。Docker を利用できない場合や secret が検出された場合、commit は中止されます。
 
-HTTPS での Git 認証には、端末ごとに Git Credential Manager を導入します。Windows（WSL2）と macOS の手順は [GCM の設定](docs/GCM.md)を参照してください。
+HTTPS での Git 認証には、端末ごとに Git Credential Manager を導入します。Windows（WSL2）と macOS の手順は [GCM の設定](docs/GIT-CREDENTIAL-MANAGER.md)を参照してください。
 
 ## ドキュメント
-[docs/](docs/) をご参照ください。
+
+導入・適用の詳細は[使い方](docs/USAGE.md)、目的別の案内は[ドキュメント一覧](docs/README.md)を参照してください。
