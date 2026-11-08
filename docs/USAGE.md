@@ -1,4 +1,4 @@
-# 運用手順
+# 使い方
 
 ## 初回導入
 
@@ -8,6 +8,7 @@ dotfiles を clone したら、checkout のルートで最初に `make setup` �
 make setup
 make install       # 適用内容を確認
 make install-apply # 適用
+make verify        # 状態を確認
 ```
 
 Homebrew のインストール時に OS や権限の確認が求められることがあります。`make setup` は実行元 checkout を使います。Git のグローバル `pre-commit` hook はこのリポジトリで管理しており、実行には Docker が必要です。
@@ -17,6 +18,33 @@ Homebrew のインストール時に OS や権限の確認が求められるこ�
 mise のグローバル設定先は `~/.config/mise/config.toml` に固定します。独自の `XDG_CONFIG_HOME` を設定している端末では、設定内の必要な内容を保存し、旧設定先の管理リンクを手動で解除してから、独自指定を外してください。シェル起動ファイルや `~/.bashrc.local` の指定も確認し、新しいシェルで移行を進めます。
 
 既存の `~/.dotfiles` は、同じ checkout を指すリンクならそのまま使います。別の checkout を指す場合は、内容と参照先を確認して手動で解除してから適用してください。
+
+## 適用と状態確認
+
+リポジトリルートから Makefile の target を実行します。`setup` 以外は `mise-operations.toml` に定義したタスクを呼ぶラッパーです。たとえば `make install` は `MISE_CONFIG_FILE="$PWD/mise-operations.toml" mise run dotfiles:install` を実行します。
+
+```bash
+make install
+make install-apply
+make verify
+```
+
+適用前に dry-run の出力を確認してください。bootstrap は宣言されたパッケージ、dotfile、ツールを順に適用します。競合が起きたら mise の診断を確認し、対象を個別に解消して再実行してください。処理の途中で失敗した場合、それ以前の変更は残ることがあります。同じ HOME への適用・解除は同時に実行しないでください。
+
+## 解除
+
+```bash
+make uninstall       # 解除内容を確認
+make uninstall-apply # 解除
+```
+
+mise が管理する dotfile のリンクを解除します。Homebrew、mise 本体、リポジトリ、パッケージ、開発ツールは残ります。変更されたファイルなど mise が安全に識別できない対象は、表示された診断に従って個別に対応してください。
+
+インストール前の状態へ戻す処理は用意していません。`setup` で準備した環境の削除は、利用状況に応じて判断してください。
+
+## Git Credential Manager の設定
+
+Git Credential Manager (GCM) は端末ごとに導入します。Homebrew の自動導入対象には含めません。Windows（WSL2）では Windows 側の GCM、macOS では手動導入した GCM と Keychain を使います。導入先と端末固有の設定については [GCM の設定](GIT-CREDENTIAL-MANAGER.md)を参照してください。
 
 ## mise の導入とバージョン確認
 
@@ -56,36 +84,6 @@ make ci
 
 `make setup` は既にインストール済みの mise を更新しません。`./setup/mise-install.sh --apply` も初回導入用で、インストール先にファイルが存在するとエラーになります。また、`mise upgrade` は管理対象ツールの更新用であり、mise 本体の更新には使いません。
 
-## 適用と状態確認
-
-リポジトリルートから Makefile の target を実行します。`setup` 以外は `mise-operations.toml` に定義したタスクを呼ぶラッパーです。たとえば `make install` は `MISE_CONFIG_FILE="$PWD/mise-operations.toml" mise run dotfiles:install` を実行します。
-
-```bash
-make install
-make install-apply
-make verify
-```
-
-適用前に dry-run の出力を確認してください。bootstrap は宣言されたパッケージ、dotfile、ツールを順に適用します。競合が起きたら mise の診断を確認し、対象を個別に解消して再実行してください。処理の途中で失敗した場合、それ以前の変更は残ることがあります。同じ HOME への適用・解除は同時に実行しないでください。
-
-## 解除
-
-```bash
-make uninstall       # 解除内容を確認
-make uninstall-apply # 解除
-```
-
-mise が管理する dotfile のリンクを解除します。Homebrew、mise 本体、リポジトリ、パッケージ、開発ツールは残ります。変更されたファイルなど mise が安全に識別できない対象は、表示された診断に従って個別に対応してください。
-
-> [!NOTE]
-> ### スコープ外
->
-> `uninstall-apply` は、Homebrew や mise 本体、インストール済みのパッケージや開発ツールを削除しません。`setup` で準備した環境をどこまで削除するかは利用状況によって異なるため、インストール前の状態へ戻す処理は用意していません。
-
-## Git Credential Manager の設定
-
-Git Credential Manager (GCM) は端末ごとに導入します。Homebrew の自動導入対象には含めません。Windows（WSL2）では Windows 側の GCM、macOS では手動導入した GCM と Keychain を使います。導入、設定、確認、元に戻す手順は [GCM の設定](GCM.md)を参照してください。
-
 ## 開発用コマンド
 
 ```bash
@@ -94,7 +92,7 @@ make test
 make ci
 ```
 
-`make test` は mise の `dotfiles:test` タスクを呼び、bootstrap の dry-run、Makefile、Git hook のテストを順に実行します。Git フックの既存テストは Docker を模擬して実行します。この dry-run は packages と dotfiles を除いて mise bootstrap を確認します。`make test-bootstrap-packages-dry-run` は Homebrew package bootstrap を dry-run します。どちらも実際のインストールは行いません。dotfiles の lifecycle は GitHub Actions で別途確認します。
+`make ci` は lint とテストを順に実行します。テストの実行方法と確認範囲は[テスト](TESTING.md)を参照してください。
 
 タスクは checkout のルートで実行されます。`MISE_BOOTSTRAP_ARGS` は導入タスクへ渡せます（例：`make install MISE_BOOTSTRAP_ARGS="--only dotfiles"`）。
 
