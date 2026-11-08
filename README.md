@@ -60,6 +60,8 @@ make uninstall-apply # dotfile のリンクを解除
 - mise の `[bootstrap.packages]` に宣言した Homebrew パッケージ
 - `mise.lock` に記録した開発ツール
 
+`renodash-dashboard` スキルは、[renodash v0.0.4 のサンプル](https://github.com/gkzz/renodash/blob/v0.0.4/examples/skills/renodash-dashboard/SKILL.md)を正本とします。dotfiles には配布用のコピーを置き、更新時に正本と照合します。mise はそのコピーを `~/.agents/skills/renodash-dashboard` にリンクします。renodash リポジトリを clone する必要はありません。
+
 mise のグローバル設定先は `~/.config/mise/config.toml` です。独自の `XDG_CONFIG_HOME` はサポートしません。既存環境からの移行は[使い方](docs/USAGE.md#既存環境からの移行)を参照してください。端末固有の Git 設定は `~/.gitconfig.local`、シェル設定は `~/.bashrc.local` に置きます。
 
 Git の `pre-commit` hook は、ステージ済みの内容を Docker 版 secretlint で検査します。イメージのバージョンと digest は hook 内で固定しています。検査には `$HOME/.secretlintignore` とステージ済みの `.secretlintignore` を適用します。Docker を利用できない場合や secret が検出された場合、commit は中止されます。
