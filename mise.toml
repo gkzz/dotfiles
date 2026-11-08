@@ -18,6 +18,7 @@ DOTFILES = "{{ config_source | canonicalize | dirname }}"
 # バージョンは完全固定し、更新は Renovate で管理するため、
 # ツール個別の minimum_release_age は指定しない。
 biome = "2.5.14"
+codex = "0.163.0"
 node = "24.22.1"
 python = "3.15.1"
 uv = "0.13.5"
