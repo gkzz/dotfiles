@@ -19,6 +19,8 @@ mise のグローバル設定先は `~/.config/mise/config.toml` に固定しま
 
 既存の `~/.dotfiles` は、同じ checkout を指すリンクならそのまま使います。別の checkout を指す場合は、内容と参照先を確認して手動で解除してから適用してください。
 
+`~/.agents/skills/` の管理対象スキルが実ディレクトリや別のリンクとして存在する場合も、内容と参照先を確認して退避してから適用してください。mise はリポジトリの各スキルへリンクし、Codex もこの場所からスキルを読み込みます。
+
 ## 適用と状態確認
 
 リポジトリルートから Makefile の target を実行します。`setup` 以外は `mise-operations.toml` に定義したタスクを呼ぶラッパーです。たとえば `make install` は `MISE_CONFIG_FILE="$PWD/mise-operations.toml" mise run dotfiles:install` を実行します。
