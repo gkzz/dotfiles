@@ -5,3 +5,4 @@
 - [トラブルシューティング](TROUBLESHOOTING.md): エラーの確認と復旧
 - [構成](ARCHITECTURE.md): 処理の流れと各ファイルの役割
 - [テスト](TESTING.md): テストの実行方法、確認範囲、対象外の処理
+- [日本語の執筆ガイド](writing.ja.md): 文章の書き方と textlint の実行方法

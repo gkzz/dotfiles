@@ -41,8 +41,12 @@ MISE_CONFIG_FILE="$DOTFILES/mise.toml" mise bootstrap dotfiles status --json | j
 """
 
 [tasks."dotfiles:lint"]
-description = "Run Bash syntax checks"
-run = 'bash -n git/hooks/pre-commit setup/*.sh bash/*.bash .bashrc .bash_profile'
+description = "Run Bash syntax and documentation checks"
+run = ['bash -n git/hooks/pre-commit setup/*.sh bash/*.bash .bashrc .bash_profile', 'mise run dotfiles:docs-lint']
+
+[tasks."dotfiles:docs-lint"]
+description = "Check Japanese documentation"
+run = 'MISE_CONFIG_FILE="$DOTFILES/mise.toml" mise exec -- pnpm run lint:docs'
 
 [tasks."dotfiles:test:bootstrap-dry-run"]
 description = "Dry-run bootstrap without packages or dotfiles"

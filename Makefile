@@ -1,6 +1,6 @@
 .DEFAULT_GOAL := help
 
-.PHONY: help setup install install-apply verify verify-dotfiles uninstall uninstall-apply verify-uninstalled ci lint test test-bootstrap-dry-run test-bootstrap-packages-dry-run test-git-hooks
+.PHONY: help setup install install-apply verify verify-dotfiles uninstall uninstall-apply verify-uninstalled ci lint docs-lint test test-bootstrap-dry-run test-bootstrap-packages-dry-run test-git-hooks
 
 export MISE_BOOTSTRAP_ARGS ?=
 
@@ -20,7 +20,8 @@ help:
 	@printf '  %-24s %s\n' 'make uninstall' 'Preview dotfile removal'
 	@printf '  %-24s %s\n' 'make uninstall-apply' 'Remove mise-managed dotfiles'
 	@printf '  %-24s %s\n' 'make ci' 'Run lint and test sequentially'
-	@printf '  %-24s %s\n' 'make lint' 'Run Bash syntax checks'
+	@printf '  %-24s %s\n' 'make lint' 'Run Bash syntax and documentation checks'
+	@printf '  %-24s %s\n' 'make docs-lint' 'Check Japanese documentation'
 	@printf '  %-24s %s\n' 'make test-bootstrap-dry-run' 'Dry-run bootstrap without packages or dotfiles'
 	@printf '  %-24s %s\n' 'make test-bootstrap-packages-dry-run' 'Dry-run Homebrew package bootstrap'
 	@printf '  %-24s %s\n' 'make test-git-hooks' 'Run existing Git hook tests'
@@ -56,6 +57,9 @@ ci:
 lint:
 	$(MISE_RUN) run dotfiles:lint
 
+docs-lint:
+	$(MISE_RUN) run dotfiles:docs-lint
+
 test:
 	$(MISE_RUN) run dotfiles:test
 
@@ -69,7 +73,7 @@ test-git-hooks:
 	$(MISE_RUN) run dotfiles:test:git-hooks
 
 .PHONY: check-mise
-install install-apply verify verify-dotfiles uninstall uninstall-apply verify-uninstalled ci lint test test-bootstrap-dry-run test-bootstrap-packages-dry-run test-git-hooks: check-mise
+install install-apply verify verify-dotfiles uninstall uninstall-apply verify-uninstalled ci lint docs-lint test test-bootstrap-dry-run test-bootstrap-packages-dry-run test-git-hooks: check-mise
 
 check-mise:
 	@test -n "$(MISE)" || { printf '%s\n' 'error: mise was not found; run make setup first' >&2; exit 1; }
