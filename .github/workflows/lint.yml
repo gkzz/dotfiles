@@ -62,5 +62,11 @@ jobs:
         with:
           cache-installs: "false"
 
+      - name: Install documentation lint tools
+        run: mise install --locked node pnpm
+
+      - name: Install documentation lint dependencies
+        run: mise exec -- pnpm install --frozen-lockfile
+
       - name: Run lint
         run: make lint

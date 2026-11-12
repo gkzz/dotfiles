@@ -22,3 +22,6 @@
 
 # mise bootstrap generated runtime/cache
 .mise-ci/
+
+# documentation lint dependencies
+node_modules/

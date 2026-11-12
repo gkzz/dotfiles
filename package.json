@@ -1,4 +1,13 @@
 {
   "private": true,
-  "type": "module"
+  "type": "module",
+  "scripts": {
+    "lint:docs": "textlint --config .config/textlint/.textlintrc.ja.json --ignore-path .config/textlint/.textlintignore README.md \"docs/**/*.md\" \".agents/skills/**/*.md\"",
+    "lint:docs:fix": "pnpm run lint:docs --fix"
+  },
+  "devDependencies": {
+    "textlint": "15.8.0",
+    "textlint-rule-preset-ja-technical-writing": "12.0.2"
+  },
+  "packageManager": "pnpm@12.15.0"
 }

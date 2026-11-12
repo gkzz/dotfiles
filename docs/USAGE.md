@@ -2,7 +2,7 @@
 
 ## 初回導入
 
-dotfiles を clone したら、checkout のルートで最初に `make setup` を実行し、Homebrew と mise 本体を準備してください。このコマンドは mise bootstrap 自体は実行しません。準備後、dry-run の内容を確認してから適用します。
+dotfiles を clone したら、checkout のルートで最初に `make setup` を実行し、Homebrew と mise 本体を準備してください。このコマンドで mise bootstrap 自体を実行することはありません。準備後、dry-run の内容を確認してから適用します。
 
 ```bash
 make setup
@@ -11,7 +11,7 @@ make install-apply # 適用
 make verify        # 状態を確認
 ```
 
-Homebrew のインストール時に OS や権限の確認が求められることがあります。`make setup` は実行元 checkout を使います。Git のグローバル `pre-commit` hook はこのリポジトリで管理しており、実行には Docker が必要です。
+Homebrew のインストール時に OS や権限の確認を求められる場合があります。`make setup` は実行元 checkout を使います。Git のグローバル `pre-commit` hook はこのリポジトリで管理しており、実行には Docker が必要です。
 
 ## 既存環境からの移行
 
@@ -88,13 +88,22 @@ make ci
 
 ## 開発用コマンド
 
+初回と依存関係の更新後は、固定したツールとパッケージを導入します。
+
 ```bash
+mise install --locked node pnpm
+mise exec -- pnpm install --frozen-lockfile
+```
+
+```bash
+make docs-lint # 日本語の文章を検査
 make lint
 make test
 make ci
 ```
 
-`make ci` は lint とテストを順に実行します。テストの実行方法と確認範囲は[テスト](TESTING.md)を参照してください。
+`make lint` は Bash 構文と日本語の文章を検査します。`make ci` は lint とテストを順に実行します。
+文章の自動修正には `mise exec -- pnpm run lint:docs:fix` を使い、変更内容を確認してください。執筆方針は[日本語の執筆ガイド](writing.ja.md)を参照してください。テストの実行方法と確認範囲は[テスト](TESTING.md)を参照してください。
 
 タスクは checkout のルートで実行されます。`MISE_BOOTSTRAP_ARGS` は導入タスクへ渡せます（例：`make install MISE_BOOTSTRAP_ARGS="--only dotfiles"`）。
 

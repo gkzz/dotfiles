@@ -147,7 +147,7 @@ git fetch origin
 git rebase -i origin/main
 ```
 
-interactive rebase の代表的な操作:
+interactive rebase の代表的な操作を示す。
 
 - `pick`: commit をそのまま残す。
 - `reword`: commit の中身は残し、commit message だけ変更する。
@@ -181,7 +181,7 @@ git rebase --abort
 
 ## 回答方針
 
-- Git に不慣れなメンバー向けに、目的、現在のブランチへの影響、push 済みかどうかの違いを簡潔に説明する。
+- Git 操作に不慣れなメンバーへ、目的、現在のブランチへの影響、push 済みかどうかの違いを簡潔に説明する。
 - 実際の Git コマンドを先に示し、関連する alias を直下にコメントで示す。
 - `fetch`、`pull --ff-only`、`rebase` のどれを使うか、その理由を明確にする。
 - rebase は push 済み履歴を書き換える可能性があるため、必要なときは明示的に注意する。

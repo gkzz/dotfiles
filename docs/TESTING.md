@@ -18,7 +18,7 @@ make test-bootstrap-packages-dry-run # パッケージの dry-run
 
 | レイヤー | テスト | 確認内容 |
 | --- | --- | --- |
-| Lint | `make lint` | hook、setup、補助スクリプトの Bash 構文 |
+| Lint | `make lint` | hook、setup、補助スクリプトの Bash 構文と日本語の文章 |
 | Makefile | `mise run dotfiles:test:make`（操作用設定を指定） | 追加した PATH からの mise 検出、空白を含むパス、mise 未導入時の案内 |
 | Git hook | `make test-git-hooks` | 既存16ケースでステージ済み内容、ignore、設定、失敗時の処理、Git からのフック実行を確認 |
 | Help | [test.yml](../.github/workflows/test.yml) | Makefile と補助スクリプトの help 出力 |
