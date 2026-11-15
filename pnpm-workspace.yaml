@@ -1,3 +1,4 @@
+# pnpm itself is managed by mise.toml/mise.lock; use mise exec -- pnpm.
 # GHSA-g3hv-75wg-m249: glob 14 supports the patched minimatch 11.
 overrides:
   'textlint@15>glob': 14.0.6
