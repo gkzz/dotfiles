@@ -11,6 +11,8 @@
     schedule: ["* * 1-7 * 1"],
   },
 
+  // pnpm itself is pinned only in mise.toml/mise.lock, so its updates stay
+  // in the inherited mise toolchain group. Keep npm enabled for devDependencies.
   mise: {
     managerFilePatterns: ["/mise.toml$/"],
   },
