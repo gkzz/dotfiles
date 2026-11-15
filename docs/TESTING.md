@@ -8,7 +8,7 @@
 
 ```bash
 make ci                              # lint とテスト
-make test                            # bootstrap dry-run、Makefile、Git hook のテスト
+make test                            # bootstrap dry-run、Makefile、Git hook、textlint のテスト
 make test-bootstrap-packages-dry-run # パッケージの dry-run
 ```
 
@@ -16,11 +16,14 @@ make test-bootstrap-packages-dry-run # パッケージの dry-run
 
 ## 自動テスト
 
+textlint のテストには依存パッケージが必要です。初回は `mise exec -- pnpm install --frozen-lockfile` を実行してください。
+
 | レイヤー | テスト | 確認内容 |
 | --- | --- | --- |
 | Lint | `make lint` | hook、setup、補助スクリプトの Bash 構文と日本語の文章 |
 | Makefile | `mise run dotfiles:test:make`（操作用設定を指定） | 追加した PATH からの mise 検出、空白を含むパス、mise 未導入時の案内 |
 | Git hook | `make test-git-hooks` | 既存16ケースでステージ済み内容、ignore、設定、失敗時の処理、Git からのフック実行を確認 |
+| textlint | `mise run dotfiles:test:textlint`（操作用設定を指定） | 再帰探索、隠しディレクトリ、ignore、全件除外、対象なしの挙動 |
 | Help | [test.yml](../.github/workflows/test.yml) | Makefile と補助スクリプトの help 出力 |
 | Dry-run | [test.yml](../.github/workflows/test.yml) | packages と dotfiles を除いた bootstrap の dry-run が完了すること |
 | Package dry-run | [test.yml](../.github/workflows/test.yml) | Homebrew package bootstrap の dry-run が完了すること |
