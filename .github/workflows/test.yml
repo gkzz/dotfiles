@@ -35,7 +35,13 @@ jobs:
           make help
           ./setup/mise-install.sh --help
 
-      - name: Run bootstrap dry-run, Makefile and Git hook tests
+      - name: Install documentation lint tools
+        run: mise install --locked node pnpm
+
+      - name: Install documentation lint dependencies
+        run: mise exec -- pnpm install --frozen-lockfile
+
+      - name: Run bootstrap dry-run, Makefile, Git hook and textlint tests
         run: make test
 
       - name: Run package bootstrap dry-run
