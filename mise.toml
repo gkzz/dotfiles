@@ -19,7 +19,7 @@ DOTFILES = "{{ config_source | canonicalize | dirname }}"
 # ツール個別の minimum_release_age は指定しない。
 biome = "2.5.14"
 codex = "0.163.0"
-node = "24.22.1"
+node = "26.13.0"
 python = "3.15.2"
 uv = "0.13.5"
 go = "1.27.3"
