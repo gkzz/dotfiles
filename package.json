@@ -9,5 +9,5 @@
     "textlint": "15.8.0",
     "textlint-rule-preset-ja-technical-writing": "12.0.2"
   },
-  "packageManager": "pnpm@12.15.0"
+  "packageManager": "pnpm@12.17.0"
 }
