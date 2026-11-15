@@ -69,6 +69,10 @@ alias gd='git diff'
 # ステージング済み（次のコミットに入る）の変更を確認する
 alias gds='git diff --staged'
 
+# PRの差分を確認する（例: ghpd https://github.com/gkzz/renodash/pull/78）
+# 番号で指定する場合: ghpd 78 --repo gkzz/renodash
+alias ghpd='gh pr diff'
+
 
 # ===== Log =====
 
