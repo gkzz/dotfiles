@@ -86,6 +86,23 @@ make ci
 
 `make setup` は既にインストール済みの mise を更新しません。`./setup/mise-install.sh --apply` も初回導入用で、インストール先にファイルが存在するとエラーになります。また、`mise upgrade` は管理対象ツールの更新用であり、mise 本体の更新には使いません。
 
+## 依存パッケージの脆弱性検査
+
+[Lint ワークフロー](../.github/workflows/lint.yml)は、main への push、pull request、手動実行時に、独立したジョブで `pnpm audit` を実行します。
+textlint 用の開発依存も含め、重大度による絞り込みや例外を指定せず、既定の失敗条件に該当する脆弱性があればジョブを失敗させます。
+この検査は `make lint` と `make ci` には含まれません。
+
+ローカルでは、リポジトリルートで次のコマンドを実行します。
+
+```bash
+mise install --locked node pnpm
+mise exec -- pnpm install --frozen-lockfile
+mise exec -- pnpm audit
+```
+
+検査には脆弱性データベースへのネットワーク接続が必要です。検出内容を確認してから、依存パッケージの更新や例外の必要性を判断してください。
+Bash には依存パッケージの定義がなく、Go・Python のモジュールや依存ファイルもないため、これらの依存検査は追加していません。
+
 ## 開発用コマンド
 
 初回と依存関係の更新後は、固定したツールとパッケージを導入します。
