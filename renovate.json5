@@ -11,8 +11,8 @@
     schedule: ["* * 1-7 * 1"],
   },
 
-  // pnpm itself is pinned only in mise.toml/mise.lock, so its updates stay
-  // in the inherited mise toolchain group. Keep npm enabled for devDependencies.
+  // pnpm 本体は mise.toml/mise.lock だけで固定し、共有 Preset の mise ツール群で更新する。
+  // devDependencies の更新には npm マネージャーを引き続き使用する。
   mise: {
     managerFilePatterns: ["/mise.toml$/"],
   },
@@ -29,7 +29,7 @@
       extractVersionTemplate: "^v(?<version>\\d+\\.\\d+\\.\\d+)$",
     },
     {
-      // The attachment datasource maps each existing digest to its release asset.
+      // 添付ファイルのデータソースで、各 digest を対応するリリースのアセットに紐付ける。
       customType: "regex",
       managerFilePatterns: ["/^mise\\.env$/"],
       matchStrings: [
@@ -47,8 +47,25 @@
       matchPackageNames: ["jdx/mise"],
       groupName: "mise CLI",
       groupSlug: "mise-cli",
-      // Keep a year-boundary release in the same PR as all platform digests.
+      // 年をまたぐ major 更新も、全環境の digest と同じ PR にまとめる。
       separateMajorMinor: false,
+    },
+    {
+      // Node.js の major 更新は Renovate の提案対象から除外する。
+      description: "Node.js の major 更新を無効にする",
+      matchManagers: ["mise"],
+      matchPackageNames: ["node"],
+      matchUpdateTypes: ["major"],
+      enabled: false,
+    },
+    {
+      // Node.js をツール群のグループから外し、patch と minor の更新 PR を分ける。
+      // patch 更新の確認後（PR のマージ後など）に、Dependency Dashboard で minor 更新を手動承認する。
+      description: "Node.js の patch 更新と minor 更新を分ける",
+      matchManagers: ["mise"],
+      matchPackageNames: ["node"],
+      groupName: null,
+      separateMinorPatch: true,
     },
   ],
 }
