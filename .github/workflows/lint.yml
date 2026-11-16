@@ -47,6 +47,33 @@ jobs:
             .bashrc \
             .bash_profile
 
+  node-audit:
+    name: Node.js dependency vulnerability check
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    env:
+      MISE_GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Install mise
+        uses: ./.github/actions/setup-mise
+        with:
+          cache-installs: "false"
+
+      - name: Install Node.js and pnpm
+        run: mise install --locked node pnpm
+
+      - name: Install dependencies
+        run: mise exec -- pnpm install --frozen-lockfile
+
+      - name: Audit Node.js dependencies
+        run: mise exec -- pnpm audit
+
   static:
     name: Static validation
     runs-on: ubuntu-latest
