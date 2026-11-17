@@ -1,7 +1,10 @@
 {
   $schema: "https://docs.renovatebot.com/renovate-schema.json",
 
-  extends: ["github>gkzz/renovate-config"],
+  extends: [
+    "github>gkzz/renovate-config",
+    "github>gkzz/renovate-config:actions-lock",
+  ],
 
   // lockfile は下記スケジュールで更新し、差分がある場合のみメンテナンス PR を作成する。
   // タイムゾーン（Asia/Tokyo）と Dashboard の事前承認は共有 Preset を継承する。
