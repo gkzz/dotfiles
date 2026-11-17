@@ -103,6 +103,28 @@ mise exec -- pnpm audit
 検査には脆弱性データベースへのネットワーク接続が必要です。検出内容を確認してから、依存パッケージの更新や例外の必要性を判断してください。
 Bash には依存パッケージの定義がなく、Go・Python のモジュールや依存ファイルもないため、これらの依存検査は追加していません。
 
+## GitHub Actions の依存関係の更新
+
+[gh-actions-lock](https://github.com/github/gh-actions-lock) で、Action の依存先を `.github/workflows/actions.lock` に記録します。[検証ワークフロー](../.github/workflows/verify-lockfile.yml)は、main への push、pull request、手動実行時にロックファイルの整合性と依存先を検証します。
+
+認証済みの GitHub CLI で、CI と同じバージョンの拡張を導入してください。
+
+```bash
+gh extension install github/gh-actions-lock --pin v0.4.1
+```
+
+別バージョンを導入済みの場合は、`gh extension remove gh-actions-lock` で削除してから上記のコマンドで導入し直します。
+ワークフローの追加や `uses:` の変更後は、リポジトリルートで次を実行します。Renovate の更新 PR でも同じ手順が必要です。
+
+```bash
+gh actions-lock
+gh actions-lock --verify
+```
+
+ワークフローとロックファイルの差分を確認し、同じコミットに含めてください。共通 Action の参照には `$/` を使い、その内部の外部 Action もロック対象にします。新たに `./` で参照する Action を追加した場合は、`gh actions-lock --migrate-local-actions` で移行します。
+
+タグやブランチの参照先を最新のコミットへ更新する場合は `gh actions-lock --relock` を使います。ネットワーク接続なしで記録の有無だけを確認する場合は `gh actions-lock --verify-local` を使えます。依存先の検証には `--verify` が必要です。
+
 ## 開発用コマンド
 
 初回と依存関係の更新後は、固定したツールとパッケージを導入します。

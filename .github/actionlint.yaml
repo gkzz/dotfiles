@@ -1,0 +1,7 @@
+# actionlint v1.7.12 does not recognize the $/ same-repository action syntax.
+# gh-actions-lock --verify covers this action and its remote dependencies.
+# Remove this exception when actionlint supports $/ references.
+paths:
+  .github/workflows/{lint,test}.yml:
+    ignore:
+      - '^specifying action "\$/\.github/actions/setup-mise" in invalid format because ref is missing\.'
