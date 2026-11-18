@@ -43,6 +43,16 @@
 
   packageRules: [
     {
+      // Codex の rust-v タグから安定版を抽出し、リリース公開日を待機期間の基準にする。
+      matchManagers: ["mise"],
+      matchDepNames: ["codex"],
+      matchPackageNames: ["openai/codex"],
+      extractVersion: "^rust-v(?<version>\\d+\\.\\d+\\.\\d+)$",
+      overrideDatasource: "github-releases",
+      // リリース頻度に合わせ、Codex の待機期間は3日とする。
+      minimumReleaseAge: "3 days",
+    },
+    {
       matchManagers: ["custom.regex"],
       matchPackageNames: ["jdx/mise"],
       groupName: "mise CLI",
