@@ -103,6 +103,16 @@ mise exec -- pnpm audit
 検査には脆弱性データベースへのネットワーク接続が必要です。検出内容を確認してから、依存パッケージの更新や例外の必要性を判断してください。
 Bash には依存パッケージの定義がなく、Go・Python のモジュールや依存ファイルもないため、これらの依存検査は追加していません。
 
+## GitHub Actions の依存関係の更新
+
+[共有プリセット](../renovate.json5)を使い、Action の依存関係を `.github/workflows/actions.lock` に記録します。
+導入・手動更新・検証の共通手順は、[共有ガイド](https://github.com/gkzz/renovate-config/blob/main/docs/actions-lock.md)を参照してください。
+
+- 最初の Renovate による Action 更新 PR では、ロックファイルも更新され、検証に成功していることをマージ前に確認します。
+- ワークフローとロックファイルに記録されたコミットの差分を合わせて確認します。
+- [検証ワークフロー](../.github/workflows/verify-lockfile.yml)は、main への push、pull request、手動実行時にロックファイルの整合性と依存先を検証します。
+- 共通 Action の参照には `$/` を使い、内部の `actions/cache` もロック対象にしています。
+
 ## 開発用コマンド
 
 初回と依存関係の更新後は、固定したツールとパッケージを導入します。
