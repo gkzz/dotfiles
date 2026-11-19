@@ -11,7 +11,7 @@
     schedule: ["* * 1-7 * 1"],
   },
 
-  // pnpm 本体は mise.toml/mise.lock だけで固定し、共有 Preset の mise ツール群で更新する。
+  // pnpm 本体は mise.toml/mise.lock だけで固定し、下記の JavaScript グループで更新する。
   // devDependencies の更新には npm マネージャーを引き続き使用する。
   mise: {
     managerFilePatterns: ["/mise.toml$/"],
@@ -42,6 +42,50 @@
   ],
 
   packageRules: [
+    {
+      // 共有 Preset の toolchain グループを解除し、未分類のツールは個別に更新する。
+      matchManagers: ["mise"],
+      groupName: null,
+      groupSlug: null,
+    },
+    {
+      matchManagers: ["mise"],
+      matchDepNames: ["codex"],
+      groupName: "AI tools",
+      groupSlug: "mise-ai",
+    },
+    {
+      matchManagers: ["mise"],
+      matchDepNames: ["pnpm", "biome"],
+      groupName: "JavaScript tools",
+      groupSlug: "mise-javascript",
+    },
+    {
+      matchManagers: ["mise"],
+      matchDepNames: ["python", "uv"],
+      groupName: "Python tools",
+      groupSlug: "mise-python",
+    },
+    {
+      matchManagers: ["mise"],
+      matchDepNames: ["go", "go:github.com/gkzz/renodash"],
+      groupName: "Go tools",
+      groupSlug: "mise-go",
+    },
+    {
+      matchManagers: ["mise"],
+      matchDepNames: ["java"],
+      groupName: "Java tools",
+      groupSlug: "mise-java",
+      // mise.lock の temurin- 接頭辞も含めて比較する。標準の java-version では invalid-version になる。
+      versioning: "regex:^(?:temurin-)?(?<major>\\d+)\\.(?<minor>\\d+)\\.(?<patch>\\d+)\\+(?<build>\\d+)(?:\\.0\\.LTS)?$",
+    },
+    {
+      matchManagers: ["mise"],
+      matchDepNames: ["ghq", "peco", "direnv"],
+      groupName: "Shell and development utilities",
+      groupSlug: "mise-shell-utilities",
+    },
     {
       // Codex の rust-v タグから安定版を抽出し、リリース公開日を待機期間の基準にする。
       matchManagers: ["mise"],
@@ -75,6 +119,7 @@
       matchManagers: ["mise"],
       matchPackageNames: ["node"],
       groupName: null,
+      groupSlug: null,
       separateMinorPatch: true,
     },
   ],
