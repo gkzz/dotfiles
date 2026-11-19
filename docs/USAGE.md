@@ -105,23 +105,13 @@ Bash には依存パッケージの定義がなく、Go・Python のモジュー
 
 ## GitHub Actions の依存関係の更新
 
-[共有プリセット](https://github.com/gkzz/renovate-config/blob/main/docs/actions-lock.md)を使い、Renovate が Action のバージョンと `.github/workflows/actions.lock` を同じ PR で更新します。
-[検証ワークフロー](../.github/workflows/verify-lockfile.yml)は、main への push、pull request、手動実行時にロックファイルの整合性と依存先を検証します。
+[共有プリセット](../renovate.json5)を使い、Action の依存関係を `.github/workflows/actions.lock` に記録します。
+導入・手動更新・検証の共通手順は、[共有ガイド](https://github.com/gkzz/renovate-config/blob/main/docs/actions-lock.md)を参照してください。
 
-認証済みの GitHub CLI で、検証ワークフローの `Install gh-actions-lock` ステップにあるコマンドを実行し、CI と同じバージョンの拡張を導入してください。
-別バージョンを導入済みの場合は、`gh extension remove gh-actions-lock` で削除してから同じコマンドで導入し直します。
-手動でワークフローを追加したり `uses:` を変更したりした後は、リポジトリルートで次を実行します。
-
-```bash
-gh actions-lock
-gh actions-lock --verify
-```
-
-ワークフローとロックファイルの差分を確認し、同じコミットに含めてください。
-共通 Action の参照には `$/` を使い、内部の `actions/cache` もロック対象にしています。
-新たに `./` で参照する Action を追加した場合は、`gh actions-lock --migrate-local-actions` で移行します。
-
-タグやブランチの参照先を最新のコミットへ更新する場合は `gh actions-lock --relock` を使います。ネットワーク接続なしで記録の有無だけを確認する場合は `gh actions-lock --verify-local` を使えます。依存先の検証には `--verify` が必要です。
+- 最初の Renovate による Action 更新 PR では、ロックファイルも更新され、検証に成功していることをマージ前に確認します。
+- ワークフローとロックファイルに記録されたコミットの差分を合わせて確認します。
+- [検証ワークフロー](../.github/workflows/verify-lockfile.yml)は、main への push、pull request、手動実行時にロックファイルの整合性と依存先を検証します。
+- 共通 Action の参照には `$/` を使い、内部の `actions/cache` もロック対象にしています。
 
 ## 開発用コマンド
 
