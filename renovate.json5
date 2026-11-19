@@ -56,7 +56,7 @@
     },
     {
       matchManagers: ["mise"],
-      matchDepNames: ["node", "pnpm", "biome"],
+      matchDepNames: ["pnpm", "biome"],
       groupName: "JavaScript tools",
       groupSlug: "mise-javascript",
     },
