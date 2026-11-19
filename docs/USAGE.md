@@ -108,13 +108,8 @@ Bash には依存パッケージの定義がなく、Go・Python のモジュー
 [共有プリセット](https://github.com/gkzz/renovate-config/blob/main/docs/actions-lock.md)を使い、Renovate が Action のバージョンと `.github/workflows/actions.lock` を同じ PR で更新します。
 [検証ワークフロー](../.github/workflows/verify-lockfile.yml)は、main への push、pull request、手動実行時にロックファイルの整合性と依存先を検証します。
 
-認証済みの GitHub CLI で、CI と同じバージョンの拡張を導入してください。
-
-```bash
-gh extension install github/gh-actions-lock --pin v0.4.1
-```
-
-別バージョンを導入済みの場合は、`gh extension remove gh-actions-lock` で削除してから上記のコマンドで導入し直します。
+認証済みの GitHub CLI で、検証ワークフローの `Install gh-actions-lock` ステップにあるコマンドを実行し、CI と同じバージョンの拡張を導入してください。
+別バージョンを導入済みの場合は、`gh extension remove gh-actions-lock` で削除してから同じコマンドで導入し直します。
 手動でワークフローを追加したり `uses:` を変更したりした後は、リポジトリルートで次を実行します。
 
 ```bash
