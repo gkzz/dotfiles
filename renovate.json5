@@ -4,6 +4,7 @@
   extends: [
     "github>gkzz/renovate-config",
     "github>gkzz/renovate-config:actions-lock",
+    "github>gkzz/renovate-config:node-preset.json5",
   ],
 
   // lockfile は下記スケジュールで更新し、差分がある場合のみメンテナンス PR を作成する。
@@ -106,24 +107,6 @@
       groupSlug: "mise-cli",
       // 年をまたぐ major 更新も、全環境の digest と同じ PR にまとめる。
       separateMajorMinor: false,
-    },
-    {
-      // Node.js の major 更新は Renovate の提案対象から除外する。
-      description: "Node.js の major 更新を無効にする",
-      matchManagers: ["mise"],
-      matchPackageNames: ["node"],
-      matchUpdateTypes: ["major"],
-      enabled: false,
-    },
-    {
-      // Node.js をツール群のグループから外し、patch と minor の更新 PR を分ける。
-      // patch 更新の確認後（PR のマージ後など）に、Dependency Dashboard で minor 更新を手動承認する。
-      description: "Node.js の patch 更新と minor 更新を分ける",
-      matchManagers: ["mise"],
-      matchPackageNames: ["node"],
-      groupName: null,
-      groupSlug: null,
-      separateMinorPatch: true,
     },
   ],
 }
