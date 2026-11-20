@@ -50,11 +50,12 @@ make uninstall       # 解除内容を確認（dry-run）
 make uninstall-apply # dotfile のリンクを解除
 ```
 
-解除対象は mise が管理する dotfile のリンクです。Homebrew、mise 本体、リポジトリ、パッケージ、開発ツールは残ります。
+解除対象は mise が管理する dotfile のリンクです。Codex にマージした設定は残ります。Homebrew、mise 本体、リポジトリ、パッケージ、開発ツールは残ります。
 
 ## 管理対象と端末固有の設定
 
 - `.bashrc`、`.bash_profile`、`.gitconfig`
+- `~/.codex/config.toml` の共通の権限設定（マージ）
 - `~/.dotfiles`（実際の checkout へのリンク。Git フックはこのリンク経由で参照）
 - `~/.config/mise/config.toml`（リポジトリルートの `mise.toml` へのリンク）
 - `~/.agents/skills/` のリポジトリ管理スキル（Codex もこの場所から読み込みます）
@@ -70,5 +71,7 @@ Git の `pre-commit` hook は、ステージ済みの内容を Docker 版 secret
 HTTPS での Git 認証には、端末ごとに Git Credential Manager を導入します。Windows（WSL2）と macOS の手順は [GCM の設定](docs/GIT-CREDENTIAL-MANAGER.md)を参照してください。
 
 ## ドキュメント
+
+Codex の設定は[設定ガイド](docs/CODEX.md)を参照してください。共通の権限設定を mise でマージし、端末固有の設定は手元のファイルに残します。
 
 導入・適用の詳細は[使い方](docs/USAGE.md)、目的別の案内は[ドキュメント一覧](docs/README.md)を参照してください。

@@ -8,7 +8,7 @@
 
 ```bash
 make ci                              # lint とテスト
-make test                            # bootstrap dry-run、Makefile、Git hook、textlint のテスト
+make test                            # bootstrap dry-run、Makefile、Git hook、textlint、Codex のテスト
 make test-bootstrap-packages-dry-run # パッケージの dry-run
 ```
 
@@ -24,10 +24,11 @@ textlint のテストには依存パッケージが必要です。初回は `mis
 | Makefile | `mise run dotfiles:test:make`（操作用設定を指定） | 追加した PATH からの mise 検出、空白を含むパス、mise 未導入時の案内 |
 | Git hook | `make test-git-hooks` | 既存16ケースでステージ済み内容、ignore、設定、失敗時の処理、Git からのフック実行を確認 |
 | textlint | `mise run dotfiles:test:textlint`（操作用設定を指定） | 再帰探索、隠しディレクトリ、ignore、全件除外、対象なしの挙動 |
+| Codex | `mise run dotfiles:test:codex`（操作用設定を指定） | 一時 HOME で mise のマージ、既存設定の保持、再適用、解除、不正な設定での停止を確認 |
 | Help | [test.yml](../.github/workflows/test.yml) | Makefile と補助スクリプトの help 出力 |
 | Dry-run | [test.yml](../.github/workflows/test.yml) | packages と dotfiles を除いた bootstrap の dry-run が完了すること |
 | Package dry-run | [test.yml](../.github/workflows/test.yml) | Homebrew package bootstrap の dry-run が完了すること |
-| Dotfiles lifecycle | [test.yml](../.github/workflows/test.yml) | 一時 HOME で install の dry-run/apply 後に `status --missing` が成功し、unapply 後は全 dotfile が missing と判定されること |
+| Dotfiles lifecycle | [test.yml](../.github/workflows/test.yml) | 一時 HOME で install の dry-run/apply 後に `status --missing` が成功し、unapply 後はリンクが missing と判定され、Codex のマージ済み設定が残ること |
 | macOS Bash 起動 | [test.yml](../.github/workflows/test.yml) | 一時 HOME への適用後、`/bin/bash -ilc` で `DOTFILES`、`ll` alias、mise のシェル関数が読み込まれること |
 
 Git hook のテストは Docker を模擬するため、実際の secretlint による secret 検出は確認しません。Bash 構文は `make lint` で確認します。
