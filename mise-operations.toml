@@ -65,8 +65,8 @@ description = "Test Makefile mise discovery"
 run = 'MISE_CONFIG_FILE="$DOTFILES/mise.toml" mise exec -- node --test tests/make.test.js'
 
 [tasks."dotfiles:test"]
-description = "Run bootstrap dry-run, Makefile, Git hook and textlint tests"
-run = ['mise run dotfiles:test:bootstrap-dry-run', 'mise run dotfiles:test:make', 'mise run dotfiles:test:git-hooks', 'mise run dotfiles:test:textlint']
+description = "Run bootstrap dry-run, Makefile, Git hook, textlint and Codex tests"
+run = ['mise run dotfiles:test:bootstrap-dry-run', 'mise run dotfiles:test:make', 'mise run dotfiles:test:git-hooks', 'mise run dotfiles:test:textlint', 'mise run dotfiles:test:codex']
 
 [tasks."dotfiles:test:textlint"]
 description = "Test textlint file discovery and ignores"
@@ -75,3 +75,7 @@ run = 'MISE_CONFIG_FILE="$DOTFILES/mise.toml" mise exec -- node --test tests/tex
 [tasks."dotfiles:ci"]
 description = "Run lint and test sequentially"
 run = ['mise run dotfiles:lint', 'mise run dotfiles:test']
+
+[tasks."dotfiles:test:codex"]
+description = "Test mise Codex config merge"
+run = 'MISE_CONFIG_FILE="$DOTFILES/mise.toml" mise exec -- node --test tests/codex.test.js'
