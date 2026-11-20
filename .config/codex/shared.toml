@@ -1,0 +1,3 @@
+# 全端末で共有する Codex CLI の権限設定。
+sandbox_mode = "workspace-write"
+approval_policy = "on-request"

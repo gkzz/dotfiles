@@ -11,6 +11,8 @@
 .bashrc.local
 
 # machine-local config and credentials
+/.config/codex/local.config.toml
+/.config/codex/local.rules
 .gitconfig.local
 .config/gh/hosts.yml
 .ssh/

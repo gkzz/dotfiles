@@ -1,0 +1,10 @@
+# 必要な項目を ~/.codex/config.toml に転記する。
+# このファイル名では Codex に自動で読み込まれない。
+model = "gpt-6.1-sol"
+model_reasoning_effort = "low"
+
+# 必要になったら設定する。
+# web_search =
+# file_opener =
+# history.max_bytes =
+# sandbox_workspace_write.writable_roots =
