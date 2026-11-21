@@ -9,6 +9,8 @@ Read the Dashboard at the supplied `OWNER/REPO#ISSUE_NUMBER` and report update c
 
 Source: [renodash sample skill (7b956e9)](https://github.com/gkzz/renodash/blob/7b956e97cf2ca9d8818936a18ffdfa257f1738e8/examples/skills/renodash-dashboard/SKILL.md)
 
+Local changes: added the source link and an explicit `renodash version` check before fetching. Copyright and license terms are preserved in [LICENSE](LICENSE).
+
 ## Fetch and parse
 
 Fetch and parse the target issue with:
