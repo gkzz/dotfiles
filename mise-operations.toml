@@ -19,11 +19,11 @@ description = "Apply dotfiles install"
 run = 'MISE_CONFIG_FILE="$DOTFILES/mise.toml" mise bootstrap --yes ${MISE_BOOTSTRAP_ARGS:-}'
 
 [tasks."dotfiles:uninstall"]
-description = "dry-run managed symlink removal"
+description = "dry-run managed dotfile removal"
 run = 'MISE_CONFIG_FILE="$DOTFILES/mise.toml" mise bootstrap dotfiles unapply --dry-run'
 
 [tasks."dotfiles:uninstall:apply"]
-description = "Remove managed symlinks"
+description = "Remove managed dotfiles"
 run = 'MISE_CONFIG_FILE="$DOTFILES/mise.toml" mise bootstrap dotfiles unapply --yes'
 
 [tasks."dotfiles:verify"]
@@ -35,7 +35,7 @@ description = "Check mise-managed dotfiles status"
 run = 'MISE_CONFIG_FILE="$DOTFILES/mise.toml" mise bootstrap dotfiles status --missing'
 
 [tasks."dotfiles:verify:uninstalled"]
-description = "Verify all managed symlinks are absent"
+description = "Verify all managed dotfiles are absent"
 run = """
 MISE_CONFIG_FILE="$DOTFILES/mise.toml" mise bootstrap dotfiles status --json | jq -e '.files | length == 12 and all(.[]; .state == "missing")' >/dev/null
 """
@@ -77,5 +77,5 @@ description = "Run lint and test sequentially"
 run = ['mise run dotfiles:lint', 'mise run dotfiles:test']
 
 [tasks."dotfiles:test:codex"]
-description = "Test mise Codex config merge"
+description = "Test mise Codex config merge and agent deployment"
 run = 'MISE_CONFIG_FILE="$DOTFILES/mise.toml" mise exec -- node --test tests/codex.test.js'

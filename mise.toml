@@ -34,7 +34,9 @@ direnv = "2.38.2"
 "brew:git" = "latest"
 
 [dotfiles]
-"~/.codex/agents/code-analysis.toml" = { source = ".agents/subagents/code-analysis.toml", mode = "symlink" }
+# Codex opens agent definitions with O_NOFOLLOW, so deploy a regular file.
+# A symlink caused "agent type is currently not available": https://github.com/openai/codex/issues/40131
+"~/.codex/agents/code-analysis.toml" = { source = ".agents/subagents/code-analysis.toml", mode = "copy" }
 "~/.codex/config.toml/shared" = { source = ".config/codex/shared.toml", merge = true, permissions = "0600" }
 "~/.dotfiles" = { source = ".", mode = "symlink" }
 "~/.bashrc" = { source = ".bashrc", mode = "symlink" }

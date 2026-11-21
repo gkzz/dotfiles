@@ -50,13 +50,13 @@ make uninstall       # 解除内容を確認（dry-run）
 make uninstall-apply # dotfile のリンクを解除
 ```
 
-解除対象は mise が管理する dotfile のリンクです。Codex にマージした設定は残ります。Homebrew、mise 本体、リポジトリ、パッケージ、開発ツールは残ります。
+解除対象は mise が管理する dotfile のリンクと、コピーしたサブエージェント定義です。Codex にマージした設定は残ります。Homebrew、mise 本体、リポジトリ、パッケージ、開発ツールは残ります。
 
 ## 管理対象と端末固有の設定
 
 - `.bashrc`、`.bash_profile`、`.gitconfig`
 - `~/.codex/config.toml` の共通の権限設定（マージ）
-- `~/.codex/agents/code-analysis.toml` の調査専用サブエージェント定義
+- `~/.codex/agents/code-analysis.toml` の調査専用サブエージェント定義（コピー）
 - `~/.dotfiles`（実際の checkout へのリンク。Git フックはこのリンク経由で参照）
 - `~/.config/mise/config.toml`（リポジトリルートの `mise.toml` へのリンク）
 - `~/.agents/skills/` のリポジトリ管理スキル（Codex もこの場所から読み込みます）
