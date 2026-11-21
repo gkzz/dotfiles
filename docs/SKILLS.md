@@ -1,6 +1,6 @@
 # Agent Skills の管理方針
 
-スキルを追加・更新する開発者と、その作業を行うエージェント向けの管理方針です。
+スキルを追加・更新する開発者と、その作業をするエージェント向けの管理方針です。
 
 スキルは `.agents/skills/<name>/SKILL.md` に配置し、`mise.toml` で `~/.agents/skills/<name>` へのリンクを管理します。
 各スキルは Agent Skills の仕様に準拠し、frontmatter に `name` と `description` を定義します。
