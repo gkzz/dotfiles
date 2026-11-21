@@ -34,6 +34,7 @@ direnv = "2.38.2"
 "brew:git" = "latest"
 
 [dotfiles]
+"~/.codex/config.toml/shared" = { source = ".config/codex/shared.toml", merge = true, permissions = "0600" }
 "~/.dotfiles" = { source = ".", mode = "symlink" }
 "~/.bashrc" = { source = ".bashrc", mode = "symlink" }
 "~/.bash_profile" = { source = ".bash_profile", mode = "symlink" }

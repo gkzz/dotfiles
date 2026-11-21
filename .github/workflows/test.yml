@@ -116,4 +116,7 @@ jobs:
       - name: Verify dotfiles are uninstalled
         env:
           HOME: ${{ runner.temp }}/dotfiles-home
-        run: make verify-uninstalled
+        run: |
+          make verify-uninstalled
+          test -f "$HOME/.codex/config.toml"
+          test ! -L "$HOME/.codex/config.toml"

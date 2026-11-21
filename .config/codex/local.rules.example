@@ -1,0 +1,43 @@
+# ~/.codex/rules/local.rules にコピーし、端末ごとに編集する。
+# サンドボックス外での実行時の承認を設定する。変更後は Codex を再起動する。
+
+# GitHub の閲覧・検索操作は承認なしで実行する。
+prefix_rule(
+    pattern = ["gh", "issue", ["list", "view", "status"]],
+    decision = "allow",
+)
+prefix_rule(
+    pattern = ["gh", "pr", ["list", "view", "status", "diff", "checks"]],
+    decision = "allow",
+)
+prefix_rule(
+    pattern = ["gh", "run", ["list", "view"]],
+    decision = "allow",
+)
+prefix_rule(
+    pattern = ["gh", "workflow", ["list", "view"]],
+    decision = "allow",
+)
+# リポジトリ情報・README の閲覧と、ソースコードを含む検索。
+prefix_rule(
+    pattern = ["gh", "repo", "view"],
+    decision = "allow",
+)
+prefix_rule(
+    pattern = ["gh", "search", ["issues", "prs", "repos", "code", "commits"]],
+    decision = "allow",
+)
+# gh api は更新操作も実行できるため、一括では許可しない。
+
+prefix_rule(
+    pattern = ["git", "push"],
+    decision = "prompt",
+    justification = "リモートへの反映前に確認する",
+)
+
+# -i / --interactive の違いや引数の順序に依存しないよう rebase 全体を対象にする。
+prefix_rule(
+    pattern = ["git", "rebase"],
+    decision = "prompt",
+    justification = "履歴の変更前に確認する",
+)
