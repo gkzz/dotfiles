@@ -56,6 +56,7 @@ make uninstall-apply # dotfile のリンクを解除
 
 - `.bashrc`、`.bash_profile`、`.gitconfig`
 - `~/.codex/config.toml` の共通の権限設定（マージ）
+- `~/.codex/agents/code-analysis.toml` の調査専用サブエージェント定義
 - `~/.dotfiles`（実際の checkout へのリンク。Git フックはこのリンク経由で参照）
 - `~/.config/mise/config.toml`（リポジトリルートの `mise.toml` へのリンク）
 - `~/.agents/skills/` のリポジトリ管理スキル（Codex もこの場所から読み込みます）
@@ -75,3 +76,5 @@ HTTPS での Git 認証には、端末ごとに Git Credential Manager を導入
 Codex の設定は[設定ガイド](docs/CODEX.md)を参照してください。共通の権限設定を mise でマージし、端末固有の設定は手元のファイルに残します。
 
 導入・適用の詳細は[使い方](docs/USAGE.md)、目的別の案内は[ドキュメント一覧](docs/README.md)を参照してください。
+
+スキルの追加・更新時は [Agent Skills の管理方針](docs/SKILLS.md)を参照してください。

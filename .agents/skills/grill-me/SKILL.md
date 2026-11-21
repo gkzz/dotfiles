@@ -8,7 +8,7 @@ metadata:
   source_copyright: "Copyright (c) 2026 Matt Pocock"
   origin: adapted
   language: ja
-  local_modifications: "adapted for this global skills collection"
+  local_modifications: "日本語化し、質問形式、調査範囲、終了条件と実装への移行条件を具体化"
 ---
 
 # Grill Me
@@ -52,3 +52,7 @@ metadata:
 - 次に取る行動（必要な場合のみ）
 
 インタビューの完了は、その後の実装や外部変更への承認を意味しない。追加の作業はユーザーの依頼または確認を得てから行う。
+
+## 出典
+
+参照元とコミットは metadata に記載しています。元の質問による設計検証を基に、日本語の手順へ再構成しました。著作権表示と利用条件は [LICENSE](LICENSE) を参照してください。

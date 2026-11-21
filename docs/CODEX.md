@@ -1,5 +1,46 @@
 # Codex の設定
 
+## コードレビュー用スキル
+
+`code-review` は `mise.toml` で管理し、既存の `make install` → `make install-apply` で
+`~/.agents/skills/code-review` へリンクします。適用後に Codex を起動し直し、任意のリポジトリで呼び出します。
+
+```text
+$code-review
+$code-review ステージ済みの変更
+$code-review 未ステージの変更
+$code-review origin/main をベースとする変更
+$code-review abc123 と def456 のコミット間
+$code-review src/auth/
+```
+
+対象省略時は、ステージ済み・未ステージを区別して未追跡を含むローカル変更全体を確認します。
+ローカル変更がなければ、取得済みの `origin/HEAD` が示すブランチとの分岐点からレビューします。
+自動 fetch はせず、比較先を特定できない場合は質問します。
+パスだけを指定した場合は、その範囲のコード全体を対象にします。
+
+指摘は日本語とし、根拠、発生条件・影響、修正案を添えて P0〜P3 の順に報告します。
+レビュー対象コードは原則変更せず、最後に要約とテストの実行結果・未確認事項を示します。
+詳しい手順と出典は [SKILL.md](../.agents/skills/code-review/SKILL.md) を参照してください。
+
+`code-review` は、[code-analysis](../.agents/subagents/code-analysis.toml) サブエージェント1つへ
+差分・既存実装・呼び出し経路・影響範囲・関連テストの調査を委譲します。
+定義の正本は `.agents/subagents/` に置き、同じ適用手順で `~/.codex/agents/code-analysis.toml` にリンクします。
+`code-analysis` はスキルとして直接呼び出すものではありません。
+まとまった追加調査は同じエージェントへ再依頼し、局所的な確認は親が行います。
+
+調査側はファイルを変更せず、テストも実行しません。不具合の確定や重要度の分類は親に任せます。
+親が調査結果を独立して検証し、テスト実行と最終レビューを担当します。
+判定に影響する仕様・意図が調査で解消できない場合は、親が `grill-me` で一問ずつ確認します。
+回答を得るまで、その論点に依存する仮説や指摘へ進めません。
+委譲が利用できない場合や完了しない場合は、親が調査を引き継ぎます。
+
+読み取り専用はエージェントへの指示であり、権限による隔離ではありません。
+サブエージェントは親のサンドボックス設定を引き継ぎます。
+カスタムエージェントの仕様は [Codex の公式ドキュメント](https://learn.chatgpt.com/docs/agent-configuration/subagents)を参照してください。
+
+## 共通の権限設定
+
 共通の権限設定は `.config/codex/shared.toml` で管理します。
 mise の `merge = true` で、`~/.codex/config.toml` の次の2項目を適用時に上書きします。
 モデル、MCP、プロジェクトの信頼設定など、他の項目は保持します。
