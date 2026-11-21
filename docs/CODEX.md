@@ -1,5 +1,30 @@
 # Codex の設定
 
+## コードレビュー用スキル
+
+`code-review` は `mise.toml` で管理し、既存の `make install` → `make install-apply` で
+`~/.agents/skills/code-review` へリンクします。適用後に Codex を起動し直し、任意のリポジトリで呼び出します。
+
+```text
+$code-review
+$code-review ステージ済みの変更
+$code-review 未ステージの変更
+$code-review origin/main をベースとする変更
+$code-review abc123 と def456 のコミット間
+$code-review src/auth/
+```
+
+対象省略時は、ステージ済み・未ステージを区別して未追跡を含むローカル変更全体を確認します。
+ローカル変更がなければ、取得済みの `origin/HEAD` が示すブランチとの分岐点からレビューします。
+自動 fetch はせず、比較先を特定できない場合は質問します。
+パスだけを指定した場合は、その範囲のコード全体を対象にします。
+
+指摘は日本語とし、根拠、発生条件・影響、修正案を添えて P0〜P3 の順に報告します。
+レビュー対象コードは原則変更せず、最後に要約とテストの実行結果・未確認事項を示します。
+詳しい手順と出典は [SKILL.md](../.agents/skills/code-review/SKILL.md) を参照してください。
+
+## 共通の権限設定
+
 共通の権限設定は `.config/codex/shared.toml` で管理します。
 mise の `merge = true` で、`~/.codex/config.toml` の次の2項目を適用時に上書きします。
 モデル、MCP、プロジェクトの信頼設定など、他の項目は保持します。

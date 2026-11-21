@@ -40,6 +40,7 @@ direnv = "2.38.2"
 "~/.bash_profile" = { source = ".bash_profile", mode = "symlink" }
 "~/.gitconfig" = { source = ".gitconfig", mode = "symlink" }
 "~/.config/mise/config.toml" = { source = "mise.toml", mode = "symlink" }
+"~/.agents/skills/code-review" = { source = ".agents/skills/code-review", mode = "symlink" }
 "~/.agents/skills/git-command" = { source = ".agents/skills/git-command", mode = "symlink" }
 "~/.agents/skills/grill-me" = { source = ".agents/skills/grill-me", mode = "symlink" }
 "~/.agents/skills/natural-japanese-lite" = { source = ".agents/skills/natural-japanese-lite", mode = "symlink" }
