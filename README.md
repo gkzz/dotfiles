@@ -56,6 +56,7 @@ make uninstall-apply # dotfile のリンクを解除
 
 - `.bashrc`、`.bash_profile`、`.gitconfig`
 - `~/.codex/config.toml` の共通の権限設定（マージ）
+- `~/.codex/agents/code-analysis.toml` の調査専用サブエージェント定義
 - `~/.dotfiles`（実際の checkout へのリンク。Git フックはこのリンク経由で参照）
 - `~/.config/mise/config.toml`（リポジトリルートの `mise.toml` へのリンク）
 - `~/.agents/skills/` のリポジトリ管理スキル（Codex もこの場所から読み込みます）
