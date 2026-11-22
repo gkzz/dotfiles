@@ -1,19 +1,31 @@
-# 使い方
+# Usage
 
-## 初回導入
+## Getting Started
 
-dotfiles を clone したら、checkout のルートで最初に `make setup` を実行し、Homebrew と mise 本体を準備してください。このコマンドで mise bootstrap 自体を実行することはありません。準備後、dry-run の内容を確認してから適用します。
+macOS で Git と make を利用できない場合は、先に Command Line Tools を導入してください。
 
 ```bash
+xcode-select --install
+```
+
+macOS の Homebrew は `/opt/homebrew` を利用します。macOS で Homebrew を初めて導入する場合は、ターミナルで `sudo -v` を実行してから次の手順へ進んでください。
+
+リポジトリを任意の場所に clone し、ルートで準備、適用内容の確認、適用、状態確認の順に進めます。
+
+```bash
+git clone https://github.com/gkzz/dotfiles.git
+cd dotfiles
 make setup
-make install       # 適用内容を確認
+make install       # 適用内容を確認（dry-run）
 make install-apply # 適用
 make verify        # 状態を確認
 ```
 
-Homebrew のインストール時に OS や権限の確認を求められる場合があります。`make setup` は実行元 checkout を使います。Git のグローバル `pre-commit` hook はこのリポジトリで管理しており、実行には Docker が必要です。
+macOS の標準シェルが zsh でも make の各コマンドは実行できます。適用したシェル設定を利用するときは、ターミナルで `/bin/bash -l` を起動してください。
 
-## 既存環境からの移行
+Homebrew のインストール時に OS や権限の確認を求められる場合があります。
+
+## Migration
 
 mise のグローバル設定先は `~/.config/mise/config.toml` に固定します。独自の `XDG_CONFIG_HOME` を設定している端末では、設定内の必要な内容を保存し、旧設定先の管理リンクを手動で解除してから、独自指定を外してください。シェル起動ファイルや `~/.bashrc.local` の指定も確認し、新しいシェルで移行を進めます。
 
@@ -21,19 +33,25 @@ mise のグローバル設定先は `~/.config/mise/config.toml` に固定しま
 
 `~/.agents/skills/` の管理対象スキルが実ディレクトリや別のリンクとして存在する場合も、内容と参照先を確認して退避してから適用してください。mise はリポジトリの各スキルへリンクし、Codex もこの場所からスキルを読み込みます。
 
-## 適用と状態確認
+## Local Settings
+
+端末固有の Git 設定は `~/.gitconfig.local`、シェル設定は `~/.bashrc.local` に置きます。
+Codex は[設定ガイド](CODEX.md)、HTTPS での Git 認証は [GCM の設定](GIT-CREDENTIAL-MANAGER.md)を参照してください。
+
+## Apply and Verify
 
 リポジトリルートから Makefile の target を実行します。`setup` 以外は `mise-operations.toml` に定義したタスクを呼ぶラッパーです。たとえば `make install` は `MISE_CONFIG_FILE="$PWD/mise-operations.toml" mise run dotfiles:install` を実行します。
 
 ```bash
-make install
-make install-apply
-make verify
+make install         # 適用内容を確認（dry-run）
+make install-apply   # 適用
+make verify          # bootstrap 全体の状態を確認
+make verify-dotfiles # dotfile の状態を確認
 ```
 
-適用前に dry-run の出力を確認してください。bootstrap は宣言されたパッケージ、dotfile、ツールを順に適用します。競合が起きたら mise の診断を確認し、対象を個別に解消して再実行してください。処理の途中で失敗した場合、それ以前の変更は残ることがあります。同じ HOME への適用・解除は同時に実行しないでください。
+適用前に dry-run の出力を確認してください。bootstrap は宣言されたパッケージ、dotfile、ツールを順に適用します。失敗時の対応は[トラブルシューティング](TROUBLESHOOTING.md#apply-failures)を参照してください。同じ HOME への適用・解除は同時に実行しないでください。
 
-## 解除
+## Uninstall
 
 ```bash
 make uninstall       # 解除内容を確認
@@ -42,13 +60,11 @@ make uninstall-apply # 解除
 
 mise が管理する dotfile のリンクと、コピーしたサブエージェント定義を削除します。Homebrew、mise 本体、リポジトリ、パッケージ、開発ツールは残ります。変更されたファイルなど mise が安全に識別できない対象は、表示された診断に従って個別に対応してください。
 
+Codex にマージした設定も残ります。詳細は [Codex の設定](CODEX.md#backup-and-apply)を参照してください。
+
 インストール前の状態へ戻す処理は用意していません。`setup` で準備した環境の削除は、利用状況に応じて判断してください。
 
-## Git Credential Manager の設定
-
-Git Credential Manager (GCM) は端末ごとに導入します。Homebrew の自動導入対象には含めません。Windows（WSL2）では Windows 側の GCM、macOS では手動導入した GCM と Keychain を使います。導入先と端末固有の設定については [GCM の設定](GIT-CREDENTIAL-MANAGER.md)を参照してください。
-
-## mise の導入とバージョン確認
+## mise Installation and Version Checks
 
 `make setup` は mise が見つからない場合、固定バージョンを導入します。手動で導入する場合は次を実行してください。
 
@@ -67,7 +83,7 @@ mise version
 
 mise 本体は Renovate が `min_version` と `mise.env` の3環境分の SHA-256 checksum を同じ PR で更新します。共有設定の公開後14日間の待機期間と Dependency Dashboard での事前承認が適用されます。手動で更新する場合も、`min_version`、各 checksum、その直前のバージョンコメントを合わせて更新してください。
 
-### mise 本体の更新
+### Updating mise
 
 `min_version` は mise の最低要求バージョンです。このリポジトリでは、初回導入と本体更新のバージョン指定にも使います。
 
@@ -86,7 +102,7 @@ make ci
 
 `make setup` は既にインストール済みの mise を更新しません。`./setup/mise-install.sh --apply` も初回導入用で、インストール先にファイルが存在するとエラーになります。また、`mise upgrade` は管理対象ツールの更新用であり、mise 本体の更新には使いません。
 
-## 依存パッケージの脆弱性検査
+## Dependency Vulnerability Checks
 
 [Lint ワークフロー](../.github/workflows/lint.yml)は、main への push、pull request、手動実行時に、独立したジョブで `pnpm audit` を実行します。
 textlint 用の開発依存も含め、重大度による絞り込みや例外を指定せず、既定の失敗条件に該当する脆弱性があればジョブを失敗させます。
@@ -103,7 +119,7 @@ mise exec -- pnpm audit
 検査には脆弱性データベースへのネットワーク接続が必要です。検出内容を確認してから、依存パッケージの更新や例外の必要性を判断してください。
 Bash には依存パッケージの定義がなく、Go・Python のモジュールや依存ファイルもないため、これらの依存検査は追加していません。
 
-## GitHub Actions の依存関係の更新
+## GitHub Actions Dependency Updates
 
 [共有プリセット](../renovate.json5)を使い、Action の依存関係を `.github/workflows/actions.lock` に記録します。
 導入・手動更新・検証の共通手順は、[共有ガイド](https://github.com/gkzz/renovate-config/blob/main/docs/actions-lock.md)を参照してください。
@@ -113,7 +129,7 @@ Bash には依存パッケージの定義がなく、Go・Python のモジュー
 - [検証ワークフロー](../.github/workflows/verify-lockfile.yml)は、main への push、pull request、手動実行時にロックファイルの整合性と依存先を検証します。
 - 共通 Action の参照には `$/` を使い、内部の `actions/cache` もロック対象にしています。
 
-## 開発用コマンド
+## Development Commands
 
 初回と依存関係の更新後は、固定したツールとパッケージを導入します。
 
@@ -122,15 +138,7 @@ mise install --locked node pnpm
 mise exec -- pnpm install --frozen-lockfile
 ```
 
-```bash
-make docs-lint # 日本語の文章を検査
-make lint
-make test
-make ci
-```
-
-`make lint` は Bash 構文と日本語の文章を検査します。`make ci` は lint とテストを順に実行します。
-文章の自動修正には `mise exec -- pnpm run lint:docs:fix` を使い、変更内容を確認してください。執筆方針は[日本語の執筆ガイド](writing.ja.md)を参照してください。テストの実行方法と確認範囲は[テスト](TESTING.md)を参照してください。
+文章の検査・自動修正は[日本語の執筆ガイド](writing.ja.md#linting-with-textlint)、lint とテストの実行方法・確認範囲は[テスト](TESTING.md)を参照してください。
 
 タスクは checkout のルートで実行されます。`MISE_BOOTSTRAP_ARGS` は導入タスクへ渡せます（例：`make install MISE_BOOTSTRAP_ARGS="--only dotfiles"`）。
 

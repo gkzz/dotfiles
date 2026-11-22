@@ -1,20 +1,20 @@
-# テスト
+# Testing
 
-このリポジトリは mise bootstrap を利用します。CI では mise のパッケージや dotfile の処理を再実装せず、help の出力、bootstrap の dry-run、dotfile の適用と解除に加え、Git フックの既存テストを実行します。
+CI では Linux と macOS で、以下の自動テストを実行します。mise のパッケージや dotfile の処理は再実装せず、dry-run と一時 HOME への適用・解除で確認します。
 
-## 実行方法
+## Running Tests
 
 リポジトリルートで実行します。
 
 ```bash
 make ci                              # lint とテスト
-make test                            # bootstrap dry-run、Makefile、Git hook、textlint、Codex のテスト
+make test                            # bootstrap dry-run と各種自動テスト
 make test-bootstrap-packages-dry-run # パッケージの dry-run
 ```
 
 `make test` の dry-run は packages と dotfiles を除いて実行します。パッケージの宣言と解決は別の dry-run で、一時 HOME への dotfile の適用・状態確認・解除は GitHub Actions で確認します。
 
-## 自動テスト
+## Automated Tests
 
 textlint のテストには依存パッケージが必要です。初回は `mise exec -- pnpm install --frozen-lockfile` を実行してください。
 
@@ -22,6 +22,7 @@ textlint のテストには依存パッケージが必要です。初回は `mis
 | --- | --- | --- |
 | Lint | `make lint` | hook、setup、補助スクリプトの Bash 構文と日本語の文章 |
 | Makefile | `mise run dotfiles:test:make`（操作用設定を指定） | 追加した PATH からの mise 検出、空白を含むパス、mise 未導入時の案内 |
+| シェル起動 | `mise run dotfiles:test:shell`（操作用設定を指定） | [起動テスト7件](#shell-startup-tests)で OS ごとの初期化と PATH を確認 |
 | Git hook | `make test-git-hooks` | 既存16ケースでステージ済み内容、ignore、設定、失敗時の処理、Git からのフック実行を確認 |
 | textlint | `mise run dotfiles:test:textlint`（操作用設定を指定） | 再帰探索、隠しディレクトリ、ignore、全件除外、対象なしの挙動 |
 | Codex | `mise run dotfiles:test:codex`（操作用設定を指定） | 一時 HOME で mise のマージ、既存設定の保持、再適用、解除、不正な設定での停止を確認 |
@@ -33,8 +34,23 @@ textlint のテストには依存パッケージが必要です。初回は `mis
 
 Git hook のテストは Docker を模擬するため、実際の secretlint による secret 検出は確認しません。Bash 構文は `make lint` で確認します。
 
-GitHub Actions では help、dry-run、Makefile、Git hook、dotfile の適用と解除を Linux と macOS の両方で確認します。
+## Shell Startup Tests
 
-## テスト対象外
+[tests/shell.test.js](../tests/shell.test.js) は、一時 HOME と制御した PATH で対話 Bash を起動します。
+親シェルの環境変数は引き継がず、OS 判定と外部コマンドを代替してホスト環境への依存を抑えます。
+共通設定のうち PATH 設定は読み込み、無関係な補完やプロンプト設定は読み込みません。
+
+| 条件 | 件数 | 確認内容 |
+| --- | --- | --- |
+| 通常の Linux。mise を HOME 配下または PATH に配置 | 2 | Homebrew → mise → direnv の順序、管理対象ツールの実行、SSH 処理が動かないこと |
+| WSL | 1 | Linux 共通処理が一度だけ動き、その後に SSH 処理が動くこと |
+| macOS | 1 | macOS の初期化が動き、Linux・WSL 固有処理が動かないこと |
+| ツール未導入の Linux、WSL、macOS | 3 | シェルが起動できること |
+
+全ケースで `~/.bashrc.local` が最後に読み込まれることも確認します。
+このテストは分岐とコマンドの呼び出しを検証し、実際のツールや SSH agent の動作は検証しません。
+macOS で適用したファイルからの起動は、表中の「macOS Bash 起動」で別途確認します。
+
+## Out of Scope
 
 `make setup` がネットワーク経由で Homebrew や mise を実際に導入する処理、全パッケージのインストール成功、mise 自身による競合解決や unapply の実装は、自動テストの対象外です。実環境に bootstrap を適用する前に dry-run を確認してください。
