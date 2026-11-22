@@ -1,11 +1,11 @@
 import assert from "node:assert/strict";
-import { lstatSync, mkdirSync, mkdtempSync, readFileSync, rmSync, symlinkSync, writeFileSync } from "node:fs";
+import { closeSync, constants, existsSync, lstatSync, mkdirSync, mkdtempSync, openSync, readFileSync, rmSync, symlinkSync, writeFileSync } from "node:fs";
 import os from "node:os";
 import path from "node:path";
 import { test } from "node:test";
 import { run, assertExit, repositoryRoot } from "./helpers/process.js";
 
-function fixture(t) {
+function fixture(t, target = "~/.codex/config.toml/shared", source = ".config/codex/shared.toml") {
   const root = mkdtempSync(path.join(os.tmpdir(), "codex merge "));
   t.after(() => rmSync(root, { recursive: true, force: true }));
   const home = path.join(root, "home");
@@ -13,9 +13,9 @@ function fixture(t) {
   mkdirSync(path.dirname(config), { recursive: true });
   // Use the real declaration without loading unrelated tools or dotfiles.
   const declaration = readFileSync(path.join(repositoryRoot, "mise.toml"), "utf8")
-    .split("\n").find((line) => line.startsWith('"~/.codex/config.toml/shared"'));
+    .split("\n").find((line) => line.startsWith(`"${target}"`));
   assert.ok(declaration);
-  writeFileSync(path.join(root, "mise.toml"), `[dotfiles]\n${declaration.replace('.config/codex/shared.toml', path.join(repositoryRoot, '.config/codex/shared.toml'))}\n`);
+  writeFileSync(path.join(root, "mise.toml"), `[dotfiles]\n${declaration.replace(source, path.join(repositoryRoot, source))}\n`);
   const invoke = (...args) => run("mise", ["-C", root, "dot", ...args], {
     cwd: root,
     env: {
@@ -29,7 +29,35 @@ function fixture(t) {
       MISE_TRUSTED_CONFIG_PATHS: root,
     },
   });
-  return { root, config, invoke };
+  return { root, home, config, invoke };
+}
+
+for (const existingLink of [false, true]) {
+  test(`mise deploys a regular agent definition ${existingLink ? "over the previous symlink" : "on a new machine"}`, (t) => {
+    const source = path.join(repositoryRoot, ".agents/subagents/code-analysis.toml");
+    const { home, invoke } = fixture(t, "~/.codex/agents/code-analysis.toml", ".agents/subagents/code-analysis.toml");
+    const agent = path.join(home, ".codex/agents/code-analysis.toml");
+    const original = readFileSync(source, "utf8");
+    if (existingLink) {
+      mkdirSync(path.dirname(agent), { recursive: true });
+      symlinkSync(source, agent);
+    }
+    assertExit(invoke("apply", "--dry-run"), 0, "agent dry-run");
+    assert.equal(existsSync(agent), existingLink);
+    if (existingLink) assert.equal(lstatSync(agent).isSymbolicLink(), true);
+    assertExit(invoke("apply", "--yes"), 0, "agent apply");
+    assert.equal(lstatSync(agent).isFile(), true);
+    assert.equal(readFileSync(agent, "utf8"), original);
+    // Codex uses O_NOFOLLOW when opening agent definitions on Unix.
+    const fd = openSync(agent, constants.O_RDONLY | constants.O_NOFOLLOW);
+    closeSync(fd);
+    assertExit(invoke("status", "--missing"), 0, "agent status");
+    assertExit(invoke("apply", "--yes"), 0, "agent reapply");
+    assert.equal(readFileSync(source, "utf8"), original);
+    assertExit(invoke("unapply", "--yes"), 0, "agent unapply");
+    assert.equal(existsSync(agent), false);
+    assert.equal(readFileSync(source, "utf8"), original);
+  });
 }
 
 test("mise preserves local settings, reapplies shared keys and leaves merged config on unapply", (t) => {

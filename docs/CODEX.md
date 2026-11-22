@@ -25,7 +25,10 @@ $code-review src/auth/
 
 `code-review` は、[code-analysis](../.agents/subagents/code-analysis.toml) サブエージェント1つへ
 差分・既存実装・呼び出し経路・影響範囲・関連テストの調査を委譲します。
-定義の正本は `.agents/subagents/` に置き、同じ適用手順で `~/.codex/agents/code-analysis.toml` にリンクします。
+定義の正本は `.agents/subagents/` に置き、同じ適用手順で `~/.codex/agents/code-analysis.toml` にコピーします。
+Codex は起動時に定義ファイルのシンボリックリンクを拒否するため、通常ファイルとして配置します。
+定義を更新したときは、再度適用してください。
+以前の設定でリンクを配置済みの場合も、再度適用すると通常ファイルに置き換わります。
 `code-analysis` はスキルとして直接呼び出すものではありません。
 まとまった追加調査は同じエージェントへ再依頼し、局所的な確認は親が行います。
 
