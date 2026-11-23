@@ -8,7 +8,7 @@ metadata:
   source_copyright: "Copyright (c) 2025 awesome-skills"
   origin: adapted
   language: ja
-  local_modifications: "Codex 向けの対象選択、P0〜P3、日本語出力、調査委譲、設計・影響経路の検証とレビュー評価に再構成"
+  local_modifications: "Codex 向けの対象選択、P0〜P3、日本語出力、調査委譲、設計・影響経路の検証に再構成"
 ---
 
 # Code Review
@@ -172,11 +172,6 @@ Analysis Report は参考情報として扱い、親の `code-review` が根拠�
 テストは何の振る舞いを実証したか、未実行なら理由を示す。Git 状態の変化と残存リスクも記載する。
 指摘がなければ「今回確認した範囲では、根拠を示せる問題は見つかりませんでした」と伝える。
 問題がないことや安全性を保証せず、未実行のテストを実行済みと主張しない。
-
-## スキル変更時の評価
-
-レビュー手順を変えたときは [評価ケース](references/evaluation.md) を使い、
-実際の実行結果と期待する動作を比較する。形式検証だけでレビュー品質の向上を主張しない。
 
 ## 出典
 
