@@ -3,11 +3,10 @@
 ## Workflow
 
 ```mermaid
-%%{init: {"flowchart": {"htmlLabels": true}}}%%
 flowchart LR
-    user([利用者]) --> makefile["<div style='text-align: left'>Makefile<br/>setup<br/>install<br/>install-apply<br/>verify<br/>verify-dotfiles<br/>uninstall<br/>uninstall-apply</div>"]
-    makefile --> setup[setup/init.sh]
-    setup --> brew[Homebrew]
+    user([利用者]) --> makefile[Makefile]
+    makefile -->|setup| setup[setup/init.sh]
+    setup --> prerequisites[Homebrew・mise の準備]
     config[mise.toml] --> mise
     operations[mise-operations.toml] --> tasks
     makefile --> tasks[mise run dotfiles:*]
@@ -29,20 +28,23 @@ flowchart LR
 
 ## Managed Files and Tools
 
-- `.bashrc`、`.bash_profile`、`.gitconfig`
-- `~/.codex/config.toml` の共通の権限設定（マージ）
-- `~/.codex/agents/code-analysis.toml` の調査専用サブエージェント定義（コピー）
-- `~/.dotfiles`（実際の checkout へのリンク。Git フックはこのリンク経由で参照）
-- `~/.config/mise/config.toml`（リポジトリルートの `mise.toml` へのリンク）
-- `~/.agents/skills/` のリポジトリ管理スキル（Codex もこの場所から読み込みます）
-- mise の `[bootstrap.packages]` に宣言した Homebrew パッケージ
-- `mise.lock` に記録した開発ツール
+| 管理対象 | 適用方法・役割 |
+| --- | --- |
+| `~/.bashrc`、`~/.bash_profile`、`~/.gitconfig` | 共通設定へのリンク |
+| `~/.codex/config.toml` | 共通の権限設定をマージ |
+| `~/.codex/agents/code-analysis.toml` | 調査専用サブエージェント定義をコピー |
+| `~/.dotfiles` | checkout へのリンク。Git フックは `~/.dotfiles/git/hooks` を参照 |
+| `~/.config/mise/config.toml` | ルートの `mise.toml` へのリンク |
+| `~/.agents/skills/` の管理対象スキル | 各スキルへのリンク。Codex もここから読み込む |
+| Homebrew の `git` | `[bootstrap.packages]` で管理 |
+| 開発ツール | `[tools]` と `mise.lock` で管理 |
 
 ## Configuration and Symlinks
 
-ルートの `mise.toml` が bootstrap の宣言元です。`[dotfiles]` は、この設定ファイルと同じディレクトリにある `.bashrc`、`.bash_profile`、`.gitconfig`、`mise.toml`、`.agents/skills/` の各スキルを symlink します。リンク元には相対パスを使い、任意の clone 先から適用できます。`~/.dotfiles` も checkout へのリンクとして管理し、Git フックは `~/.dotfiles/git/hooks` を参照します。
+ルートの `mise.toml` が bootstrap の宣言元です。
+`[dotfiles]` のリンク元は、このファイルからの相対パスで指定し、任意の clone 先から適用できます。
 
-`[bootstrap.packages]` は Homebrew の `git` を管理します。開発ツールは `[tools]` と `mise.lock` で管理します。Git フックの動作と必要な環境は[トラブルシューティング](TROUBLESHOOTING.md#pre-commit-hook-failures)を参照してください。Git Credential Manager は端末ごとに導入し、Git 設定を `~/.gitconfig.local` に保存します。手順は [GCM の設定](GIT-CREDENTIAL-MANAGER.md)を参照してください。
+端末固有の設定先は[使い方](USAGE.md#local-settings)、Git フックの動作と必要な環境は[トラブルシューティング](TROUBLESHOOTING.md#pre-commit-hook-failures)を参照してください。
 
 ## Shell Startup Configuration
 
@@ -58,9 +60,7 @@ flowchart LR
 Homebrew、mise、direnv はこの順でシェルから利用できるようにします。未導入のツールは読み飛ばします。
 最後に `~/.bashrc.local` を読み込み、端末固有の設定を適用します。
 
-SSH agent の起動・再利用と鍵の自動追加は WSL のみ対応しています。
-通常の Linux と macOS では、この dotfiles による自動設定は未対応です。
-必要な場合は、端末側の設定や `~/.bashrc.local` で対応してください。
+通常の Linux と macOS で SSH agent や鍵の自動設定が必要な場合は、端末側の設定や `~/.bashrc.local` で対応してください。
 
 ## File Responsibilities
 

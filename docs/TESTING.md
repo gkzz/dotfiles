@@ -1,6 +1,6 @@
 # Testing
 
-CI では Linux と macOS で、以下の自動テストを実行します。mise のパッケージや dotfile の処理は再実装せず、dry-run と一時 HOME への適用・解除で確認します。
+CI では Linux と macOS で自動テストを実行します。
 
 ## Running Tests
 
@@ -32,7 +32,7 @@ textlint のテストには依存パッケージが必要です。初回は `mis
 | Dotfiles lifecycle | [test.yml](../.github/workflows/test.yml) | 一時 HOME で install の dry-run/apply 後に `status --missing` が成功し、unapply 後はリンクが missing と判定され、Codex のマージ済み設定が残ること |
 | macOS Bash 起動 | [test.yml](../.github/workflows/test.yml) | 一時 HOME への適用後、`/bin/bash -ilc` で `DOTFILES`、`ll` alias、mise のシェル関数が読み込まれること |
 
-Git hook のテストは Docker を模擬するため、実際の secretlint による secret 検出は確認しません。Bash 構文は `make lint` で確認します。
+Git hook のテストは Docker を模擬し、実際の secretlint による secret 検出は確認しません。
 
 ## Shell Startup Tests
 
@@ -53,4 +53,10 @@ macOS で適用したファイルからの起動は、表中の「macOS Bash 起
 
 ## Out of Scope
 
-`make setup` がネットワーク経由で Homebrew や mise を実際に導入する処理、全パッケージのインストール成功、mise 自身による競合解決や unapply の実装は、自動テストの対象外です。実環境に bootstrap を適用する前に dry-run を確認してください。
+次の処理は自動テストの対象外です。
+
+- `make setup` による Homebrew・mise の実導入
+- 全パッケージのインストール成功
+- mise 自身による競合解決や unapply の実装
+
+実環境に bootstrap を適用する前に dry-run を確認してください。
