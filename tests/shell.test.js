@@ -30,7 +30,7 @@ function startShell({ platform = "Linux", wsl = false, tools = true, localMise =
     // Retain PATH setup; omit unrelated completion and prompt dependencies on the host.
     writeFileSync(`${dotfiles}/bash/path.bash`, readFileSync(`${repo}/bash/path.bash`));
     script(`${bin}/uname`, `echo '${platform}'`);
-    script(`${bin}/grep`, `exit ${wsl ? 0 : 1}`);
+    script(`${bin}/grep`, '/usr/bin/grep "$@"');
     script(`${bin}/dirname`, '/usr/bin/dirname "$@"');
     if (tools) {
       script(`${bin}/brew`, 'echo brew >> "$CALLS"; echo "export BREW_READY=1"');
