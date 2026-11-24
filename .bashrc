@@ -29,7 +29,8 @@ done
 
 case "$(uname -s)" in
     Linux*)
-        if [ -r /proc/sys/kernel/osrelease ] && grep -qiE 'microsoft|wsl' /proc/sys/kernel/osrelease; then
+        [ -r "$DOTFILES/bash/linux.bash" ] && . "$DOTFILES/bash/linux.bash"
+        if [ -r /proc/sys/kernel/osrelease ] && command grep -qiE 'microsoft|wsl' /proc/sys/kernel/osrelease; then
             [ -r "$DOTFILES/bash/wsl.bash" ] && . "$DOTFILES/bash/wsl.bash"
         fi
         ;;

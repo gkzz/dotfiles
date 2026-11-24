@@ -1,6 +1,6 @@
-# Codex の設定
+# Codex Configuration
 
-## コードレビュー用スキル
+## Code Review Skill
 
 `code-review` は `mise.toml` で管理し、既存の `make install` → `make install-apply` で
 `~/.agents/skills/code-review` へリンクします。適用後に Codex を起動し直し、任意のリポジトリで呼び出します。
@@ -14,10 +14,13 @@ $code-review abc123 と def456 のコミット間
 $code-review src/auth/
 ```
 
-対象省略時は、ステージ済み・未ステージを区別して未追跡を含むローカル変更全体を確認します。
-ローカル変更がなければ、取得済みの `origin/HEAD` が示すブランチとの分岐点からレビューします。
+| 指定 | レビュー対象 |
+| --- | --- |
+| 省略（ローカル変更あり） | ステージ済み・未ステージを区別し、未追跡も含む変更全体 |
+| 省略（ローカル変更なし） | 取得済みの `origin/HEAD` が示すブランチとの分岐点からの変更 |
+| パスのみ | 指定範囲のコード全体 |
+
 自動 fetch はせず、比較先を特定できない場合は質問します。
-パスだけを指定した場合は、その範囲のコード全体を対象にします。
 
 指摘は日本語とし、根拠、発生条件・影響、修正案を添えて P0〜P3 の順に報告します。
 レビュー対象コードは原則変更せず、最後に要約とテストの実行結果・未確認事項を示します。
@@ -42,7 +45,7 @@ Codex は起動時に定義ファイルのシンボリックリンクを拒否�
 サブエージェントは親のサンドボックス設定を引き継ぎます。
 カスタムエージェントの仕様は [Codex の公式ドキュメント](https://learn.chatgpt.com/docs/agent-configuration/subagents)を参照してください。
 
-## 共通の権限設定
+## Shared Permissions
 
 共通の権限設定は `.config/codex/shared.toml` で管理します。
 mise の `merge = true` で、`~/.codex/config.toml` の次の2項目を適用時に上書きします。
@@ -58,7 +61,7 @@ approval_policy = "on-request"
 
 端末ごとの設定は[設定例](../.config/codex/local.config.toml.example)、コマンドの承認ルールは[ルール例](../.config/codex/local.rules.example)を参照してください。
 
-## バックアップと適用
+## Backup and Apply
 
 Codex を終了し、リポジトリのルートで実行します。
 既存の `~/.codex/config.toml` が通常ファイルなら、最初に退避します。
@@ -94,7 +97,7 @@ Codex が共有キーを変更した場合は、次の適用で共通設定に�
 末尾の `/shared` は編集ルールの ID で、実際のファイルは `~/.codex/config.toml` です。
 仕組みの詳細は [mise の公式ドキュメント](https://mise.jdx.dev/dotfiles/edits.html)を参照してください。
 
-## 退避した設定に戻す
+## Restore from Backup
 
 Codex を終了し、バックアップ時に設定した `backup` 変数で退避ディレクトリを参照します。
 別のシェルで復元する場合は、`backup` に既存の退避ディレクトリのパスを設定してください。
