@@ -24,8 +24,8 @@ textlint のテストには依存パッケージが必要です。初回は `mis
 | Makefile | `mise run dotfiles:test:make`（操作用設定を指定） | 追加した PATH からの mise 検出、空白を含むパス、mise 未導入時の案内 |
 | シェル起動 | `mise run dotfiles:test:shell`（操作用設定を指定） | [起動テスト7件](#shell-startup-tests)で OS ごとの初期化と PATH を確認 |
 | Git hook | `make test-git-hooks` | 既存16ケースでステージ済み内容、ignore、設定、失敗時の処理、Git からのフック実行を確認 |
-| textlint | `mise run dotfiles:test:textlint`（操作用設定を指定） | 再帰探索、隠しディレクトリ、ignore、全件除外、対象なしの挙動 |
-| Codex | `mise run dotfiles:test:codex`（操作用設定を指定） | 一時 HOME で mise のマージ、既存設定の保持、再適用、解除、不正な設定での停止を確認 |
+| textlint | `mise run dotfiles:test:textlint`（操作用設定を指定） | 本番コマンドと設定による README・docs・隠しディレクトリ内のスキルの選択、ignore と対象外ファイルの除外 |
+| Codex | `mise run dotfiles:test:codex`（操作用設定を指定） | 共通設定の上書き、モデル初期値の補完、端末固有設定の保持、通常ファイルと権限、再適用・解除、共有承認ルールの判定 |
 | Help | [test.yml](../.github/workflows/test.yml) | Makefile と補助スクリプトの help 出力 |
 | Dry-run | [test.yml](../.github/workflows/test.yml) | packages と dotfiles を除いた bootstrap の dry-run が完了すること |
 | Package dry-run | [test.yml](../.github/workflows/test.yml) | Homebrew package bootstrap の dry-run が完了すること |
@@ -33,6 +33,9 @@ textlint のテストには依存パッケージが必要です。初回は `mis
 | macOS Bash 起動 | [test.yml](../.github/workflows/test.yml) | 一時 HOME への適用後、`/bin/bash -ilc` で `DOTFILES`、`ll` alias、mise のシェル関数が読み込まれること |
 
 Git hook のテストは Docker を模擬し、実際の secretlint による secret 検出は確認しません。
+
+mise と textlint のテストは、このリポジトリの宣言・設定と本番コマンドの組み合わせを確認します。
+不正な TOML や外部シンボリックリンクに対する mise の保護処理、textlint API の全件除外・対象なしの挙動は、外部ツールの仕様として扱います。
 
 ## Shell Startup Tests
 
