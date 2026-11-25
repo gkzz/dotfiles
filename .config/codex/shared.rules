@@ -1,0 +1,35 @@
+# 共通ルールの正本。変更はリポジトリで行い、mise で再適用する。
+# コマンドの引数の接頭辞を評価する。完全なセキュリティ境界ではない。
+prefix_rule(
+    pattern = ["git", ["push", "rebase", "reset", "clean", "restore"]],
+    decision = "prompt",
+    justification = "リモート、履歴、作業ツリーの変更前に確認する",
+    match = ["git push", "git rebase main", "git reset --hard HEAD", "git clean -fd", "git restore ."],
+    not_match = ["git status", "git diff", "git log", "git -C repo reset --hard HEAD"],
+)
+prefix_rule(
+    pattern = ["git", "checkout", "--"],
+    decision = "prompt",
+    justification = "作業ツリーの変更を破棄する前に確認する",
+    match = ["git checkout -- file"],
+    not_match = ["git checkout main", "git checkout HEAD -- file"],
+)
+prefix_rule(
+    pattern = ["git", "branch", ["-d", "-D", "--delete"]],
+    decision = "prompt",
+    justification = "ブランチの削除前に確認する",
+    match = ["git branch -d topic", "git branch -D topic", "git branch --delete topic"],
+    not_match = ["git branch --force --delete topic"],
+)
+prefix_rule(
+    pattern = ["git", "stash", ["drop", "clear"]],
+    decision = "prompt",
+    justification = "stash の削除前に確認する",
+    match = ["git stash drop", "git stash clear"],
+)
+prefix_rule(
+    pattern = ["rm"],
+    decision = "prompt",
+    justification = "ファイルやディレクトリの削除前に確認する",
+    match = ["rm file", "rm -f file", "rm -rf directory", "rm --recursive directory", "rm directory -r -f"],
+)

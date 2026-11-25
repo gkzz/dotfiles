@@ -35,8 +35,8 @@ jobs:
           make help
           ./setup/mise-install.sh --help
 
-      - name: Install documentation lint tools
-        run: mise install --locked node pnpm
+      - name: Install documentation lint tools and Codex
+        run: mise install --locked node pnpm codex
 
       - name: Install documentation lint dependencies
         run: mise exec -- pnpm install --frozen-lockfile

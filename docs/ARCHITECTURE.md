@@ -31,7 +31,8 @@ flowchart LR
 | 管理対象 | 適用方法・役割 |
 | --- | --- |
 | `~/.bashrc`、`~/.bash_profile`、`~/.gitconfig` | 共通設定へのリンク |
-| `~/.codex/config.toml` | 共通の権限設定をマージ |
+| `~/.codex/config.toml` | 共通の権限設定と、未設定のモデル初期値をマージ |
+| `~/.codex/rules/shared.rules` | 共通のコマンド承認ルールをコピー |
 | `~/.codex/agents/code-analysis.toml` | 調査専用サブエージェント定義をコピー |
 | `~/.dotfiles` | checkout へのリンク。Git フックは `~/.dotfiles/git/hooks` を参照 |
 | `~/.config/mise/config.toml` | ルートの `mise.toml` へのリンク |
