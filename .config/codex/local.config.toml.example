@@ -1,10 +1,11 @@
 # 必要な項目を ~/.codex/config.toml に転記する。
-# このファイル名では Codex に自動で読み込まれない。
-model = "gpt-6.1-sol"
-model_reasoning_effort = "low"
+# この example 自体は Codex に読み込まれない。
+# model と model_reasoning_effort の初期値は defaults.toml で補完する。
+# 端末側の config.toml や /model で変更した値は再適用でも保持する。
+
+# VS Code でファイルへのリンクを開く場合。
+file_opener = "vscode"
 
 # 必要になったら設定する。
-# web_search =
-# file_opener =
-# history.max_bytes =
-# sandbox_workspace_write.writable_roots =
+# web_search = "live"
+# history.max_bytes = 10485760
