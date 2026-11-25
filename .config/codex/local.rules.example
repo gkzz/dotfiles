@@ -1,5 +1,6 @@
 # ~/.codex/rules/local.rules にコピーし、端末ごとに編集する。
 # サンドボックス外での実行時の承認を設定する。変更後は Codex を再起動する。
+# 共通ルールは shared.rules で管理する。このファイルと default.rules は mise 管理外。
 
 # GitHub の閲覧・検索操作は承認なしで実行する。
 prefix_rule(
@@ -28,16 +29,3 @@ prefix_rule(
     decision = "allow",
 )
 # gh api は更新操作も実行できるため、一括では許可しない。
-
-prefix_rule(
-    pattern = ["git", "push"],
-    decision = "prompt",
-    justification = "リモートへの反映前に確認する",
-)
-
-# -i / --interactive の違いや引数の順序に依存しないよう rebase 全体を対象にする。
-prefix_rule(
-    pattern = ["git", "rebase"],
-    decision = "prompt",
-    justification = "履歴の変更前に確認する",
-)
