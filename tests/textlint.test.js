@@ -25,6 +25,7 @@ describe("documentation lint integration", () => {
       "docs/nested/guide.md",
       ".agents/skills/example/SKILL.md",
       ".agents/skills/renodash-dashboard/SKILL.md",
+      ".agents/skills/renodash-weekly-review/SKILL.md",
       "other/note.md",
       "node_modules/example/skip.md",
       ".git/skip.md",
