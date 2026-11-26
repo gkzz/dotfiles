@@ -15,6 +15,8 @@
 
 外部スキルを改変するときは、元の有用な設計と動作を維持することを優先し、形式の統一だけを目的とした既存スキルの書き換えは行いません。
 
-## renodash-dashboard Distribution
+## renodash Skill Distribution
 
-`renodash-dashboard` スキルは、[renodash のサンプル（7b956e9）](https://github.com/gkzz/renodash/blob/7b956e97cf2ca9d8818936a18ffdfa257f1738e8/examples/skills/renodash-dashboard/SKILL.md)を正本とします。dotfiles には配布用のコピーを置き、更新時に正本と照合します。mise はそのコピーを `~/.agents/skills/renodash-dashboard` にリンクします。renodash リポジトリを clone する必要はありません。
+renodash の [examples/skills](https://github.com/gkzz/renodash/tree/main/examples/skills) を正本とし、dotfiles で `renodash-dashboard` と `renodash-weekly-review` の配布用コピーを管理します。参照したコミットは各スキルに記録します。更新時は正本と照合します。各スキルが使うオプションを、mise で固定した CLI がサポートしていることも確認します。
+
+mise は各コピーを `~/.agents/skills/<name>` にリンクします。スキルの利用には renodash CLI と認証済みの `gh` が必要です。
