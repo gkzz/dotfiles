@@ -102,7 +102,7 @@ checksum = "sha256:91a44a2b8a716600ad94a4f143e156116620db8828086a6e3602291be9bd0
 url = "https://dl.google.com/go/go1.27.4.darwin-arm64.tar.gz"
 
 [[tools."go:github.com/gkzz/renodash"]]
-version = "0.0.6"
+version = "0.0.8"
 backend = "go:github.com/gkzz/renodash"
 
 [[tools.java]]

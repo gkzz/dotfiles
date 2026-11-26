@@ -21,7 +21,7 @@ mise exec -- pnpm run lint:docs:fix
 
 自動修正後は差分を読み、意味が変わっていないか確認してください。
 
-対象は README、`docs/`、`.agents/skills/` の Markdown です。英語で管理する `renodash-dashboard` は除外します。英語専用ルールは導入していません。
+対象は README、`docs/`、`.agents/skills/` の Markdown です。英語で管理する `renodash-dashboard` と `renodash-weekly-review` は除外します。英語専用ルールは導入していません。
 
 設定は `.config/textlint/` に置きます。日本語の技術文書向けプリセットを使い、一文の長さは120文字を上限とします。上限を超えると検査はエラーになります。文体の混在、漢字の連続、弱い表現のルールは無効にしています。スキルの指示文や技術用語も扱うためです。
 

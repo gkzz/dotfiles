@@ -1,2 +1,3 @@
 # English upstream skill; no English rules are configured.
 .agents/skills/renodash-dashboard/SKILL.md
+.agents/skills/renodash-weekly-review/SKILL.md
